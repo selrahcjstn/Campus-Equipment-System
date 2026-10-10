@@ -1,0 +1,9 @@
+{% url 'logout' as logout_url %}
+{% if logout_url %}
+<form method="POST" action="{{ logout_url }}">
+    {% csrf_token %}
+    <button class="nav-item logout-button" type="submit">{% include "components/icon.html" with name="logout" %}<span>Logout</span></button>
+</form>
+{% else %}
+<button class="nav-item logout-button is-unavailable" type="button" disabled>{% include "components/icon.html" with name="logout" %}<span>Logout</span><span class="nav-soon">Soon</span></button>
+{% endif %}

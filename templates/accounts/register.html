@@ -1,0 +1,20 @@
+{% extends "base_auth.html" %}
+{% block title %}Register | Campus Equipment System{% endblock %}
+{% block auth_shell_class %}auth-shell--register{% endblock %}
+{% block auth_content %}
+<div class="auth-heading">
+    <span class="eyebrow">JOIN THE PORTAL</span>
+    <h1 id="auth-title">Create your account</h1>
+    <p>Use your campus details to get started.</p>
+</div>
+{% include "components/messages.html" %}
+<form method="POST" class="auth-form auth-form--register">
+    {% csrf_token %}
+    {% include "components/form_errors.html" %}
+    {% for field in form %}
+        {% include "components/input.html" with field=field %}
+    {% endfor %}
+    {% include "components/button.html" with label="Create account" type="submit" variant="primary" full_width=True %}
+</form>
+<p class="auth-switch">Already registered? <a href="{% url 'login' %}">Log in</a></p>
+{% endblock %}

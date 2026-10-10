@@ -1,0 +1,11 @@
+{% for message in messages %}
+    {% if message.level == DEFAULT_MESSAGE_LEVELS.ERROR %}
+        {% include "components/alert.html" with variant="error" message=message %}
+    {% elif message.level == DEFAULT_MESSAGE_LEVELS.SUCCESS %}
+        {% include "components/alert.html" with variant="success" message=message %}
+    {% elif message.level == DEFAULT_MESSAGE_LEVELS.WARNING %}
+        {% include "components/alert.html" with variant="warning" message=message %}
+    {% else %}
+        {% include "components/alert.html" with variant="info" message=message %}
+    {% endif %}
+{% endfor %}

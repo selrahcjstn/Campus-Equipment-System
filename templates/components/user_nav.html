@@ -1,0 +1,12 @@
+<div class="nav-group">
+    <h2 class="nav-group-label">Main</h2>
+    {# Dashboard: the named /portal/ route has a path fallback. #}
+    {% include "components/nav_item.html" with label="Dashboard" icon="dashboard" route="user_dashboard" key="dashboard" href="/portal/" %}
+    {# Equipment catalog: Raj. #}
+    {% include "components/nav_item.html" with label="Equipment Catalog" icon="catalog" route="equipment_catalog" key="catalog" %}
+    {# Borrowing requests: Clark. #}
+    {% include "components/nav_item.html" with label="My Borrowing Requests" icon="requests" route="my_requests" key="requests" %}
+    {# Loans and history: Janelle. #}
+    {% include "components/nav_item.html" with label="My Loans" icon="loans" route="my_loans" key="loans" %}
+    {% include "components/nav_item.html" with label="Borrowing History" icon="history" route="borrowing_history" key="history" %}
+</div>

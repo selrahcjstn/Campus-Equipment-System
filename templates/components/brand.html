@@ -1,0 +1,4 @@
+{% if href %}<a class="brand" href="{{ href }}" aria-label="Campus Equipment home">{% else %}<span class="brand">{% endif %}
+    <span class="brand-mark">{% include "components/icon.html" with name="equipment" %}</span>
+    <span class="brand-copy"><span>Campus Equipment</span><small>Borrowing &amp; Inventory</small></span>
+{% if href %}</a>{% else %}</span>{% endif %}

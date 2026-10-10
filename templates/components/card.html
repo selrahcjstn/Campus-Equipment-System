@@ -1,0 +1,9 @@
+<section class="card"{% if id %} id="{{ id }}"{% endif %}>
+    {% if title or description or actions_template %}
+    <div class="card-heading">
+        <div>{% if title %}<h2 class="card-title">{{ title }}</h2>{% endif %}{% if description %}<p class="text-secondary">{{ description }}</p>{% endif %}</div>
+        {% if actions_template %}<div class="card-actions">{% include actions_template %}</div>{% endif %}
+    </div>
+    {% endif %}
+    {% if content_template %}{% include content_template %}{% endif %}
+</section>

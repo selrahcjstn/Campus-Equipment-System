@@ -1,0 +1,12 @@
+<dialog class="modal" id="{{ id }}" aria-labelledby="{{ id }}-title"{% if description %} aria-describedby="{{ id }}-description"{% endif %}>
+    <div class="modal-heading">
+        <h2 id="{{ id }}-title">{{ title }}</h2>
+        <button class="icon-button" type="button" data-modal-close aria-label="Close dialog">{% include "components/icon.html" with name="close" %}</button>
+    </div>
+    {% if description %}<p id="{{ id }}-description" class="text-secondary">{{ description }}</p>{% endif %}
+    {% if content_template %}<div class="modal-content">{% include content_template %}</div>{% endif %}
+    <div class="modal-actions">
+        <button class="button button--secondary" type="button" data-modal-close>Cancel</button>
+        {% if actions_template %}{% include actions_template %}{% endif %}
+    </div>
+</dialog>

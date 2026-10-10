@@ -1,0 +1,33 @@
+<div class="nav-group">
+    <h2 class="nav-group-label">Overview</h2>
+    {# Dashboard: Miah. #}
+    {% include "components/nav_item.html" with label="Dashboard" icon="dashboard" route="admin_dashboard" key="dashboard" %}
+</div>
+<div class="nav-group">
+    <h2 class="nav-group-label">User Management</h2>
+    {# Users: Charles. #}
+    {% include "components/nav_item.html" with label="Users" icon="users" route="user_management" key="users" %}
+</div>
+<div class="nav-group">
+    <h2 class="nav-group-label">Equipment Management</h2>
+    {# Categories and inventory: Raj. #}
+    {% include "components/nav_item.html" with label="Categories" icon="categories" route="equipment_categories" key="categories" %}
+    {% include "components/nav_item.html" with label="Equipment Inventory" icon="equipment" route="equipment_inventory" key="inventory" %}
+</div>
+<div class="nav-group">
+    <h2 class="nav-group-label">Borrowing Operations</h2>
+    {# Borrowing requests: Clark. #}
+    {% include "components/nav_item.html" with label="Borrowing Requests" icon="requests" route="borrowing_requests" key="requests" %}
+    {# Loan management and returns: Janelle. #}
+    {% include "components/nav_item.html" with label="Loan Management" icon="loans" route="loan_management" key="loans" %}
+    {% include "components/nav_item.html" with label="Returns and Overdue" icon="returns" route="returns_overdue" key="returns" %}
+</div>
+<div class="nav-group">
+    <h2 class="nav-group-label">System Management</h2>
+    {# Maintenance: Francis. #}
+    {% include "components/nav_item.html" with label="Maintenance" icon="maintenance" route="maintenance" key="maintenance" %}
+    {# Reports, audit logs and settings: Miah. #}
+    {% include "components/nav_item.html" with label="Reports" icon="reports" route="reports" key="reports" %}
+    {% include "components/nav_item.html" with label="Audit Logs" icon="audit" route="audit_logs" key="audit" %}
+    {% include "components/nav_item.html" with label="System Settings" icon="settings" route="system_settings" key="settings" %}
+</div>

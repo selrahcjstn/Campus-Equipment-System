@@ -1,0 +1,20 @@
+<aside class="sidebar" id="app-sidebar" aria-label="{{ portal_label }} navigation">
+    <div class="sidebar-brand">
+        {% include "components/brand.html" with href="" %}
+        <button class="icon-button sidebar-close" type="button" data-sidebar-close aria-label="Close navigation">{% include "components/icon.html" with name="close" %}</button>
+    </div>
+    <div class="portal-label">{{ portal_label }}</div>
+    <nav class="sidebar-nav" aria-label="Main navigation">
+        {% include navigation_template %}
+    </nav>
+    <nav class="sidebar-footer" aria-label="Account navigation">
+        <h2 class="nav-group-label">Account</h2>
+        {% if user.role == 'BASIC_USER' %}
+            {% include "components/nav_item.html" with label="My Profile" icon="profile" route="my_profile" key="profile" %}
+        {% endif %}
+        {# Charles owns profile and logout integration. #}
+        {% include "components/logout.html" %}
+        <p class="caption">Campus Equipment System</p>
+    </nav>
+</aside>
+<button class="sidebar-backdrop" type="button" data-sidebar-close tabindex="-1" aria-label="Close navigation" hidden></button>

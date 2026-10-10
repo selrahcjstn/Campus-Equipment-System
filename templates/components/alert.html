@@ -1,0 +1,5 @@
+<div class="alert alert--{{ variant|default:'info' }}"{% if variant == 'error' %} role="alert"{% else %} role="status"{% endif %}>
+    {% if title %}<strong>{{ title }}</strong>{% endif %}
+    {% if message %}<p>{{ message }}</p>{% endif %}
+    {% if content_template %}{% include content_template %}{% endif %}
+</div>

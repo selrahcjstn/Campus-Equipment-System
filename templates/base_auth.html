@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% load static %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">{% endblock %}
+{% block body %}
+<div class="auth-shell {% block auth_shell_class %}{% endblock %}">
+    <aside class="auth-showcase" aria-labelledby="showcase-title">
+        <div class="auth-brand-wrap">
+        {% url 'login' as login_url %}
+            <a class="auth-brand" href="{{ login_url }}" aria-label="Campus Equipment home">
+                <span class="auth-brand-mark">{% include "components/icon.html" with name="equipment" %}</span>
+                <span><strong>Campus Equipment</strong><small>Borrowing &amp; Inventory</small></span>
+            </a>
+        </div>
+        <div class="auth-showcase-content">
+            <span class="auth-kicker">CAMPUS RESOURCES, CONNECTED</span>
+            <h2 id="showcase-title">Borrow smarter.<br>Stay ready.</h2>
+            <p>Find what you need, submit requests, and keep every loan on track from one simple portal.</p>
+            <div class="auth-journey" aria-hidden="true">
+                <div class="journey-item is-current"><span>{% include "components/icon.html" with name="catalog" %}</span><small>Discover</small></div>
+                <span class="journey-line"></span>
+                <div class="journey-item"><span>{% include "components/icon.html" with name="requests" %}</span><small>Request</small></div>
+                <span class="journey-line"></span>
+                <div class="journey-item"><span>{% include "components/icon.html" with name="loans" %}</span><small>Track</small></div>
+            </div>
+        </div>
+        <p class="auth-showcase-footer">Built for students, faculty, and campus teams.</p>
+    </aside>
+    <main id="main-content" class="auth-panel" tabindex="-1">
+        <div class="auth-mobile-brand">
+            <a class="auth-brand auth-brand--mobile" href="{{ login_url }}" aria-label="Campus Equipment home">
+                <span class="auth-brand-mark">{% include "components/icon.html" with name="equipment" %}</span>
+                <span><strong>Campus Equipment</strong><small>Borrowing &amp; Inventory</small></span>
+            </a>
+        </div>
+        <section class="auth-card" aria-labelledby="auth-title">
+            {% block auth_content %}{% endblock %}
+        </section>
+        <p class="auth-panel-footer">Campus Equipment Borrowing &amp; Inventory System</p>
+    </main>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% if href and not disabled %}
+<a class="button button--{{ variant|default:'primary' }}{% if full_width %} button--full{% endif %}" href="{{ href }}">{{ label }}</a>
+{% else %}
+<button class="button button--{{ variant|default:'primary' }}{% if full_width %} button--full{% endif %}" type="{{ type|default:'button' }}"{% if disabled %} disabled{% endif %}{% if modal_target %} data-modal-target="{{ modal_target }}"{% endif %}>{{ label }}</button>
+{% endif %}

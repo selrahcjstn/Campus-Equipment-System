@@ -1,0 +1,12 @@
+<header class="navbar">
+    <div class="navbar-start">
+        {% if user.is_authenticated %}{% if user.role == 'ADMIN' or user.role == 'BASIC_USER' %}
+            <button class="icon-button sidebar-toggle" type="button" data-sidebar-toggle aria-controls="app-sidebar" aria-expanded="false" aria-label="Open navigation">{% include "components/icon.html" with name="menu" %}</button>
+        {% endif %}{% endif %}
+        <span class="navbar-title">{% if user.role == 'ADMIN' %}Admin Portal{% elif user.role == 'BASIC_USER' %}User Portal{% else %}Campus Equipment{% endif %}</span>
+    </div>
+    <div class="navbar-account">
+        <span class="account-avatar">{% include "components/icon.html" with name="profile" %}</span>
+        <span class="account-name">{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% else %}Campus member{% endif %}</span>
+    </div>
+</header>

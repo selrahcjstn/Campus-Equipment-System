@@ -1,0 +1,7 @@
+<div class="table-container" tabindex="0" role="region" aria-label="{{ caption|default:'Data table' }}">
+    <table class="data-table">
+        <caption>{{ caption|default:'Data table' }}</caption>
+        <thead>{% if header_template %}{% include header_template %}{% endif %}</thead>
+        <tbody>{% if body_template %}{% include body_template %}{% endif %}</tbody>
+    </table>
+</div>
