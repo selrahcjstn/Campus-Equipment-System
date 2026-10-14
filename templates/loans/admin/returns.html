@@ -1,0 +1,13 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}Returns and Overdue | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Returns and Overdue</h1><p>Receive individual equipment units and follow up on overdue loans.</p></div><a class="button button--secondary" href="{% url 'loan_management' %}">Loan management</a></header>
+<div class="section-stack">
+    {% include "components/messages.html" %}
+    {% if overdue_count %}<div class="alert alert--warning" role="status"><strong>{{ overdue_count }} overdue loan{{ overdue_count|pluralize }}</strong><p>Overdue status follows the due date automatically while units remain outstanding.</p></div>{% endif %}
+    {% include "loans/_filters.html" %}
+    {% include "loans/_loan_table.html" with admin=True table_title="Active loans awaiting returns" empty_title="No active loans in this view" empty_message="Try clearing your filters. Completed loans are removed from this queue." %}
+</div>
+{% endblock %}

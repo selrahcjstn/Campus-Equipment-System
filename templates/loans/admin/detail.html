@@ -1,0 +1,12 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}Loan #{{ loan.pk }} | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Loan #{{ loan.pk }}</h1><p>Issued equipment and the complete return record.</p></div><div class="page-actions">
+    <a href="{% url 'borrowing_slip' loan.pk %}" class="button button--secondary">Printable borrowing slip</a>
+    {% if not loan.completed_at %}<a href="{% url 'return_equipment' loan.pk %}" class="button button--primary">Process returns</a>{% endif %}
+    <a href="{% url 'returns_overdue' %}" class="button button--secondary">Back to returns</a>
+</div></header>
+<div class="section-stack">{% include "components/messages.html" %}{% include "loans/_detail_body.html" %}</div>
+{% endblock %}

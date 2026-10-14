@@ -1,0 +1,6 @@
+<dialog class="modal" id="operation-confirmation" aria-labelledby="operation-confirmation-title">
+    <div class="modal-heading"><h2 id="operation-confirmation-title">{{ confirmation_title }}</h2><button type="button" class="icon-button" data-modal-close aria-label="Close confirmation">{% include "components/icon.html" with name="close" %}</button></div>
+    <p>{{ confirmation_message }}</p>
+    <ul class="loan-confirm-summary" data-confirm-summary></ul>
+    <div class="modal-actions"><button type="button" class="button button--secondary" data-modal-close>Cancel</button><button type="submit" form="{{ operation_form_id }}" class="button button--primary" data-confirmed-submit>{{ confirmation_action }}</button></div>
+</dialog>

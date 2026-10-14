@@ -1,0 +1,21 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}Borrowing Slip #{{ loan.pk }} | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block page_scripts %}<script src="{% static 'js/loans.js' %}" defer></script>{% endblock %}
+{% block content %}
+<div class="page-actions loan-print-actions"><button type="button" class="button button--primary" data-print-slip>Print borrowing slip</button><a class="button button--secondary" href="{% url 'admin_loan_detail' loan.pk %}">Back to loan</a></div>
+<article class="loan-slip section-stack">
+    <header><span class="eyebrow">Campus Equipment System</span><h1>Borrowing slip #{{ loan.pk }}</h1><p class="text-secondary">Borrowing request #{{ loan.request_id }}</p></header>
+    <section><dl class="loan-facts">
+        <div><dt>Borrower</dt><dd>{{ loan.borrower.get_full_name|default:loan.borrower.username }} ({{ loan.borrower.username }})</dd></div>
+        <div><dt>Issued by</dt><dd>{{ loan.issued_by.get_full_name|default:loan.issued_by.username }}</dd></div>
+        <div><dt>Issue date</dt><dd>{{ loan.issued_at|date:"M j, Y, g:i A T" }}</dd></div>
+        <div><dt>Due date</dt><dd>{{ loan.due_at|date:"M j, Y, g:i A T" }}</dd></div>
+        <div><dt>Total physical units</dt><dd>{{ loan.quantity }}</dd></div>
+    </dl><div class="loan-purpose"><strong>Purpose</strong><p>{{ loan.request.purpose|linebreaksbr }}</p></div></section>
+    <div class="table-container"><table class="data-table"><caption>Equipment issued</caption><thead><tr><th scope="col">Equipment</th><th scope="col">Asset tag</th><th scope="col">Quantity</th></tr></thead><tbody>{% for unit in loan.units.all %}<tr><td>{{ unit.equipment_name }}</td><td>{{ unit.asset_tag }}</td><td>1</td></tr>{% endfor %}</tbody></table></div>
+    <p>Please return all listed units by the due date. Any damage will be recorded when the equipment is received.</p>
+    <div class="loan-signatures"><div><span>Borrower signature</span></div><div><span>Releasing Admin signature</span></div></div>
+</article>
+{% endblock %}

@@ -1,0 +1,29 @@
+<div class="table-container">
+    <table class="data-table">
+        <caption>{{ table_title }}</caption>
+        <thead><tr><th scope="col">Loan{% if admin %} / borrower{% endif %}</th><th scope="col">Equipment / quantity</th><th scope="col">Issued</th><th scope="col">Due</th>{% if history %}<th scope="col">Completed</th>{% else %}<th scope="col">Still out</th>{% endif %}<th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+        <tbody>
+        {% for loan in page_obj %}
+            <tr>
+                <td><strong>#{{ loan.pk }}</strong>{% if admin %}<div>{{ loan.borrower.get_full_name|default:loan.borrower.username }}</div><span class="caption">{{ loan.borrower.username }}</span>{% endif %}</td>
+                <td><ul class="loan-equipment-list">{% for equipment in loan.equipment_summary %}<li>{{ equipment.name }} <span class="caption">× {{ equipment.quantity }}</span></li>{% endfor %}</ul>{% if admin %}<div class="caption">Outstanding units: {% for unit in loan.units.all %}{% if not unit.returned_at %}{{ unit.asset_tag }} {% endif %}{% endfor %}</div>{% endif %}</td>
+                <td>{{ loan.issued_at|date:"M j, Y" }}<div class="caption">{{ loan.issued_at|date:"g:i A T" }}</div></td>
+                <td>{{ loan.due_at|date:"M j, Y" }}<div class="caption">{{ loan.due_at|date:"g:i A T" }}</div></td>
+                {% if history %}<td>{{ loan.completed_at|date:"M j, Y" }}<div class="caption">{{ loan.completed_at|date:"g:i A T" }}</div></td>{% else %}<td>{{ loan.outstanding_count }} of {{ loan.quantity }}</td>{% endif %}
+                <td>{% include "components/badge.html" with label=loan.status variant=loan.status_variant %}</td>
+                <td><div class="page-actions">
+                    {% if admin %}
+                        <a class="button button--secondary" href="{% url 'admin_loan_detail' loan.pk %}?from=returns" aria-label="View loan {{ loan.pk }}">View</a>
+                        <a class="button button--primary" href="{% url 'return_equipment' loan.pk %}" aria-label="Return units for loan {{ loan.pk }}">Return units</a>
+                    {% else %}
+                        <a class="button button--secondary" href="{% url 'user_loan_detail' loan.pk %}" aria-label="View loan {{ loan.pk }}">View details</a>
+                    {% endif %}
+                </div></td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="7"><div class="loan-empty"><h2>{{ empty_title }}</h2><p class="text-secondary">{{ empty_message }}</p></div></td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% include "loans/_pagination.html" %}

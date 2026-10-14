@@ -1,0 +1,27 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}Return Loan #{{ loan.pk }} | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block page_scripts %}<script src="{% static 'js/loans.js' %}" defer></script>{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Return units · Loan #{{ loan.pk }}</h1><p>{{ loan.borrower.get_full_name|default:loan.borrower.username }} · Due {{ loan.due_at|date:"M j, Y, g:i A T" }}</p></div><a href="{% url 'admin_loan_detail' loan.pk %}?from=returns" class="button button--secondary">View loan record</a></header>
+{% if loan.completed_at %}<div class="alert alert--success" role="status"><strong>All units have been returned.</strong><p>This loan is completed. Additional returns cannot be recorded.</p></div>
+{% else %}
+<form method="post" id="return-form" class="section-stack" data-confirm-operation="operation-confirmation">
+    {% csrf_token %}{{ formset.management_form }}
+    {% if operation_errors %}<div class="alert alert--error" role="alert"><ul>{% for error in operation_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if formset.non_form_errors %}<div class="alert alert--error" role="alert">{{ formset.non_form_errors }}</div>{% endif %}
+    <div class="alert alert--info"><strong>Partial returns are supported.</strong><p>Select only units physically received. Good units become Available; damaged units go to Maintenance. The loan completes when the last unit is returned.</p></div>
+    {% for form, unit in return_rows %}
+        <section class="card loan-return-unit" data-return-unit data-unit-label="{% if unit %}{{ unit.equipment_name }} ({{ unit.asset_tag }}){% else %}Invalid unit{% endif %}" aria-labelledby="unit-{{ forloop.counter }}-title">
+            <div class="card-heading"><div><h2 id="unit-{{ forloop.counter }}-title">{% if unit %}{{ unit.equipment_name }}{% else %}Invalid or changed unit{% endif %}</h2>{% if unit %}<p class="caption">{{ unit.asset_tag }}</p>{% endif %}</div>{% include "components/badge.html" with label="On loan" variant="info" %}</div>
+            {% include "components/input.html" with field=form.loan_unit_id %}
+            <div class="loan-return-fields">{% include "components/input.html" with field=form.return_now %}{% include "components/input.html" with field=form.condition %}{% include "components/input.html" with field=form.notes %}</div>
+            {% if form.non_field_errors %}<div class="field-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        </section>
+    {% endfor %}
+    <section class="card section-stack">{% include "components/input.html" with field=confirm_form.confirm %}<div class="page-actions"><button class="button button--primary" type="submit">Save selected returns</button><a class="button button--secondary" href="{% url 'admin_loan_detail' loan.pk %}">Cancel</a></div><p class="caption" data-operation-status role="status" aria-live="polite"></p></section>
+</form>
+{% endif %}
+{% endblock %}
+{% block modals %}{% include "loans/_confirmation.html" with operation_form_id="return-form" confirmation_title="Confirm equipment returns" confirmation_message="Check the selected units and conditions below. Unselected units will stay on loan." confirmation_action="Confirm returns" %}{% endblock %}

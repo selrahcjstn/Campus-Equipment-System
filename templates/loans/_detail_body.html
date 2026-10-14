@@ -1,0 +1,27 @@
+<section class="card" aria-labelledby="loan-summary-title">
+    <div class="card-heading"><h2 id="loan-summary-title">Loan summary</h2>{% include "components/badge.html" with label=loan.status variant=loan.status_variant %}</div>
+    <dl class="loan-facts">
+        <div><dt>Borrower</dt><dd>{{ loan.borrower.get_full_name|default:loan.borrower.username }} <span class="caption">({{ loan.borrower.username }})</span></dd></div>
+        <div><dt>Borrowing request</dt><dd>#{{ loan.request_id }}</dd></div>
+        <div><dt>Issued</dt><dd>{{ loan.issued_at|date:"M j, Y, g:i A T" }}</dd></div>
+        <div><dt>Due</dt><dd>{{ loan.due_at|date:"M j, Y, g:i A T" }}</dd></div>
+        <div><dt>Issued by</dt><dd>{{ loan.issued_by.get_full_name|default:loan.issued_by.username }}</dd></div>
+        <div><dt>Outstanding units</dt><dd>{{ loan.outstanding_count }} of {{ loan.quantity }}</dd></div>
+        {% if loan.completed_at %}<div><dt>Completed</dt><dd>{{ loan.completed_at|date:"M j, Y, g:i A T" }}</dd></div>{% endif %}
+    </dl>
+    <div class="loan-purpose"><strong>Purpose</strong><p>{{ loan.request.purpose|linebreaksbr }}</p></div>
+</section>
+{% if loan.is_overdue %}<div class="alert alert--warning" role="status"><strong>This loan is overdue.</strong><p>{{ loan.outstanding_count }} physical unit{{ loan.outstanding_count|pluralize }} still need to be returned.</p></div>{% endif %}
+<section class="table-container">
+    <table class="data-table">
+        <caption>Issued physical units and return history</caption>
+        <thead><tr><th scope="col">Equipment</th><th scope="col">Asset tag</th><th scope="col">Return date</th><th scope="col">Condition / destination</th><th scope="col">Received by / notes</th></tr></thead>
+        <tbody>{% for unit in loan.units.all %}<tr>
+            <td><strong>{{ unit.equipment_name }}</strong>{% if unit.equipment_description %}<p class="caption">{{ unit.equipment_description }}</p>{% endif %}</td>
+            <td>{{ unit.asset_tag }}</td>
+            <td>{% if unit.returned_at %}{{ unit.returned_at|date:"M j, Y, g:i A T" }}{% else %}Not returned{% endif %}</td>
+            <td>{% if unit.returned_at %}{{ unit.get_return_condition_display }}<div class="caption">{% if unit.return_condition == 'DAMAGED' %}Sent to Maintenance{% else %}Made Available{% endif %}</div>{% else %}{% include "components/badge.html" with label="On loan" variant="info" %}{% endif %}</td>
+            <td>{% if unit.received_by %}{{ unit.received_by.get_full_name|default:unit.received_by.username }}{% endif %}{% if unit.return_notes %}<p class="loan-notes">{{ unit.return_notes|linebreaksbr }}</p>{% elif unit.returned_at %}<span class="caption">No additional notes</span>{% else %}—{% endif %}</td>
+        </tr>{% endfor %}</tbody>
+    </table>
+</section>

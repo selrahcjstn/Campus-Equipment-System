@@ -1,0 +1,38 @@
+.loan-filters { display: grid; gap: var(--space-4); }
+.loan-filter-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--space-4); }
+.loan-equipment-list { margin: 0; padding: 0; list-style: none; }
+.loan-equipment-list li + li { margin-top: var(--space-2); }
+.loan-empty { padding: var(--space-8) 0; text-align: center; }
+.loan-empty p { margin-top: var(--space-2); }
+.loan-readiness-error { max-width: 280px; margin: var(--space-2) 0; }
+.loan-pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-4); }
+.loan-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--space-6); margin: var(--space-4) 0 0; }
+.loan-facts dt { color: var(--text-secondary); font-size: var(--font-label); }
+.loan-facts dd { margin: var(--space-1) 0 0; font-weight: var(--weight-medium); overflow-wrap: anywhere; }
+.loan-purpose { margin-top: var(--space-6); }
+.loan-purpose p { margin-top: var(--space-2); overflow-wrap: anywhere; }
+.loan-notes { max-width: 320px; margin-top: var(--space-2); overflow-wrap: anywhere; }
+.loan-return-fields { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(160px, 1fr) minmax(200px, 2fr); gap: var(--space-6); }
+.loan-confirm-summary { padding-left: var(--space-5); margin: var(--space-4) 0; }
+.loan-confirm-summary li + li { margin-top: var(--space-2); }
+.loan-print-actions { margin-bottom: var(--space-8); }
+.loan-slip { background: var(--surface); border: var(--border); border-radius: var(--radius-lg); padding: var(--space-8); }
+.loan-signatures { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-8); padding-top: var(--space-12); }
+.loan-signatures > div { padding-top: var(--space-2); border-top: var(--border-emphasis); }
+@media (max-width: 767px) {
+    .loan-return-fields { grid-template-columns: 1fr; }
+    .loan-slip { padding: var(--space-4); }
+    .loan-signatures { grid-template-columns: 1fr; gap: var(--space-12); }
+}
+@media print {
+    @page { size: A4; margin: 15mm; }
+    .sidebar, .navbar, .skip-link, .loan-print-actions, .sidebar-backdrop { display: none !important; }
+    .has-sidebar .app-workspace { margin-left: 0; }
+    .app-shell, body { min-height: auto; background: white; color: black; }
+    .page-content { padding: 0; max-width: none; }
+    .loan-slip { padding: 0; border: 0; }
+    .table-container { overflow: visible; border: 1px solid #888; }
+    .data-table tr { break-inside: avoid; }
+    .data-table th, .data-table td { padding: 8px 12px; }
+    .loan-signatures { break-inside: avoid; }
+}

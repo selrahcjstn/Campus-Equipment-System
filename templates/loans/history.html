@@ -1,0 +1,11 @@
+{% extends "base_user.html" %}
+{% load static %}
+{% block title %}Borrowing History | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Borrowing History</h1><p>Your completed loans, including return dates and recorded conditions.</p></div><a class="button button--secondary" href="{% url 'my_loans' %}">My loans</a></header>
+<div class="section-stack">
+    {% include "loans/_filters.html" %}
+    {% include "loans/_loan_table.html" with history=True table_title="Completed loans" empty_title="No completed loans in this view" empty_message="Completed borrowing transactions appear here after all equipment units are returned." %}
+</div>
+{% endblock %}

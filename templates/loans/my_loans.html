@@ -1,0 +1,13 @@
+{% extends "base_user.html" %}
+{% load static %}
+{% block title %}My Loans | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>My Loans</h1><p>Track the equipment you have borrowed and when each loan is due.</p></div><a class="button button--secondary" href="{% url 'borrowing_history' %}">Borrowing history</a></header>
+<div class="section-stack">
+    {% include "components/messages.html" %}
+    {% if overdue_count %}<div class="alert alert--warning" role="status"><strong>{{ overdue_count }} overdue loan{{ overdue_count|pluralize }}</strong><p>Please return the outstanding equipment to an Admin.</p></div>{% endif %}
+    {% include "loans/_filters.html" %}
+    {% include "loans/_loan_table.html" with table_title="Active loans" empty_title="No active loans in this view" empty_message="Try clearing your filters. Issued equipment will appear here until every unit is returned." %}
+</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base_user.html" %}
+{% load static %}
+{% block title %}Loan #{{ loan.pk }} | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Loan #{{ loan.pk }}</h1><p>Your equipment and return records.</p></div><a class="button button--secondary" href="{% if loan.completed_at %}{% url 'borrowing_history' %}{% else %}{% url 'my_loans' %}{% endif %}">Back to {% if loan.completed_at %}history{% else %}my loans{% endif %}</a></header>
+<div class="section-stack">{% include "loans/_detail_body.html" %}</div>
+{% endblock %}
