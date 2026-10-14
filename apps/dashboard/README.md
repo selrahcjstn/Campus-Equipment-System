@@ -115,22 +115,22 @@ and paginates newest-first with a timestamp/ID tie-breaker. No audit edit/delete
 endpoint exists. Logging starts with this integration; past actions are not
 fabricated from incomplete historical metadata.
 
-### Charles integration dependency
+### Charles integration
 
-Users and My Profile are still Charles's navigation previews on this branch.
-Miah does not implement their unrelated forms/pages. The Accounts integration
-hook is available for the future user-management UI:
+Users, My Profile and Password Change are now implemented on the Charles branch.
+The custom Users interface calls the Accounts activation and role services:
 
 ```python
-from apps.accounts.services import set_user_active
+from apps.accounts.services import set_user_active, set_user_role
 
 set_user_active(user_id, actor=request.user, is_active=False)
+set_user_role(user_id, actor=request.user, role="ADMIN")
 ```
 
-The hook requires an active Admin, validates boolean state, locks the existing
-account, changes only `is_active` and writes the audit entry atomically. The
-future UI must call it; raw `User.save()`/`QuerySet.update()` calls intentionally
-do not infer an actor or create audit history.
+The services validate current Admin permission under locks, protect self-management
+and the last active Admin, change only the intended account field and write audit
+entries atomically. Role changes use `USER_ROLE_CHANGED`. Raw `User.save()` or
+`QuerySet.update()` calls intentionally do not infer an actor or create audit history.
 
 ## Borrowing settings
 
@@ -221,8 +221,6 @@ For your own testing:
    the new limits apply. Existing approved requests must still release normally.
 5. Open `/portal/` as a Basic User and verify only that user's records appear.
 
-No remaining blocker for Miah's pages. Charles's Users/Profile UI remains an
-external module dependency, with the audited state-change hook ready to use.
-Francis's baseline was saved locally as `093f7ed` and carried onto `miah` with
-permission. Miah's implementation remains uncommitted; nothing was pushed or
-merged into `main`.
+No remaining module dependency on the Charles branch. Miah's work was saved locally
+as `c3731f1` and carried onto `charles` with permission. Nothing was pushed or merged
+into `main`.

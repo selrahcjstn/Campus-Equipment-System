@@ -69,6 +69,9 @@ refuses to overwrite demo records. No fixtures are added automatically.
 - Limits, dates, roles and availability are enforced by the service as well as
   the form. Approval repeats policy and stock checks. Availability shown by the
   browser is informative; posted availability/status/borrower values are ignored.
+- Submission locks and checks the current borrower row before creating a request,
+  so account deactivation or role promotion after authentication cannot be bypassed
+  by an earlier in-memory account state.
 - The brief's `BorrowRequest`, `RequestItem`, `UnitAllocation` and `CatalogItem`
   correspond to the existing `BorrowingRequest`, `BorrowingRequestItem`,
   `Allocation` and `Equipment`. They are reused without creating duplicate tables

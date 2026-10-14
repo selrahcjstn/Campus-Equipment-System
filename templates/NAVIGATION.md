@@ -28,9 +28,10 @@ Both portal entry points use the shared navigation shell: `/portal/` is named
 provide personal borrowing summaries and live Admin KPIs/charts. Authentication
 redirects still target these same paths.
 
-Inventory, Borrowing, Loans, Maintenance, Reports, Audit Logs and System Settings
-now resolve to their implemented module views on this branch. Users and My Profile
-remain Charles's heading-only `TemplateView` previews in `config/urls.py`.
+Inventory, Borrowing, Loans, Maintenance, Reports, Audit Logs, System Settings,
+Users, My Profile and Password Change resolve to implemented, protected views
+on this branch. Both roles have their own My Profile destination in Account
+navigation; Admin profile routes also enforce Admin permission.
 Named routes take precedence over fallback paths. Missing routes still render
 disabled rather than creating broken links. Member names appear only in
 documentation and template comments.

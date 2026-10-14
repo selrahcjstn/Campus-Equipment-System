@@ -44,9 +44,9 @@ produce dead links or `NoReverseMatch` errors. The user Dashboard resolves
 `user_dashboard` at `/portal/`, and the Admin Dashboard resolves
 `admin_dashboard` at `/manage/`. Both now use role-protected Dashboard views:
 Basic Users receive their personal borrowing summary; Admins receive live KPIs
-and charts. Inventory, Borrowing, Loans, Maintenance, Reports, Audit Logs and
-System Settings are implemented on this branch. Users and My Profile remain
-Charles's navigation previews. The authentication redirects remain unchanged.
+and charts. Inventory, Borrowing, Loans, Maintenance, Reports, Audit Logs,
+System Settings, Users, My Profile and Password Change are implemented on this
+branch. The authentication redirects remain unchanged.
 
 Update the `route` value in the appropriate navigation template to match your
 module's actual route name, including any namespace. These names are integration

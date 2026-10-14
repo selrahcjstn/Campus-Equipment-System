@@ -49,7 +49,11 @@ class MaintenanceRecord(models.Model):
         for field in ["responsible_admin", "closed_by"]:
             admin = getattr(self, field, None)
             if admin and admin.role != "ADMIN":
-                raise ValidationError({field: "Select an Admin account."})
+                # A recorded Admin's later role change must not invalidate
+                # maintenance history or block another Admin finishing the work.
+                original_id = None if self._state.adding else MaintenanceRecord.objects.filter(pk=self.pk).values_list(field + "_id", flat=True).first()
+                if original_id != admin.pk:
+                    raise ValidationError({field: "Select an Admin account."})
         if self.source_return_id:
             source = self.source_return
             if source.unit_id != self.unit_id or source.return_condition != "DAMAGED" or source.returned_at is None:

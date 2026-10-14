@@ -11,6 +11,8 @@
         <h2 class="nav-group-label">Account</h2>
         {% if user.role == 'BASIC_USER' %}
             {% include "components/nav_item.html" with label="My Profile" icon="profile" route="my_profile" key="profile" %}
+        {% elif user.role == 'ADMIN' %}
+            {% include "components/nav_item.html" with label="My Profile" icon="profile" route="admin_profile" key="profile" %}
         {% endif %}
         {# Charles owns profile and logout integration. #}
         {% include "components/logout.html" %}

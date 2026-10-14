@@ -15,7 +15,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path, include
-from django.views.generic import TemplateView
 
 urlpatterns = [
     path("", include("apps.accounts.urls")),
@@ -24,7 +23,4 @@ urlpatterns = [
     path("", include("apps.inventory.urls")),
     path("manage/maintenance/", include("apps.maintenance.urls")),
     path("", include("apps.dashboard.urls")),
-    # Navigation previews only; module owners replace these with their real pages.
-    path("portal/profile/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_user.html", "page_title": "My Profile"}), name="my_profile"),
-    path("manage/users/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Users"}), name="user_management"),
 ]

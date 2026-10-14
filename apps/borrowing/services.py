@@ -1,6 +1,7 @@
 """Borrowing rules and atomic transitions; Loans owns equipment issuance."""
 from datetime import datetime
 
+from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import F
@@ -57,6 +58,12 @@ def _validate_items(items, *, limits=None):
 def submit_request(*, borrower, purpose, due_at, items):
     """items contains (equipment_id, quantity), never client availability."""
     _require_role(borrower, "BASIC_USER")
+    # Repeat authorization against the current row and lock it before creating
+    # requests. Account deactivation/promotion can happen after authentication.
+    User = get_user_model()
+    if User.objects.filter(pk=borrower.pk, role="BASIC_USER", is_active=True).update(first_name=F("first_name")) != 1:
+        raise PermissionDenied("Only a currently active Basic User may submit requests.")
+    borrower = User.objects.select_for_update().get(pk=borrower.pk)
     limits = borrowing_limits()
     _validate_items(items, limits=limits)
     validate_due_date(due_at, limits=limits)

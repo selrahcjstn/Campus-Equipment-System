@@ -1,0 +1,12 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}{{ page_title }} | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/accounts.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>{{ page_title }}</h1><p>{{ description }}</p></div><a class="button button--secondary" href="{% url 'user_detail' target_user.pk %}">Back to user</a></header>
+<div class="section-stack"><section class="card"><h2>{{ target_user.username }}</h2><p>{{ target_user.get_full_name|default:"Campus account" }} · {{ target_user.get_role_display }} · {% if target_user.is_active %}Active{% else %}Inactive{% endif %}</p></section>
+    {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    {% if allowed %}<form method="post" id="account-action" class="card section-stack" data-confirm-dialog="account-confirmation">{% csrf_token %}{% for field in form %}{% include "components/input.html" %}{% endfor %}<div><button class="button {% if action == 'deactivate' %}button--destructive{% else %}button--primary{% endif %}" type="submit">{{ page_title }}</button></div></form>{% else %}<div class="alert alert--warning" role="status">This action is unavailable for the current account state or your own Admin account.</div>{% endif %}
+</div>
+{% endblock %}
+{% block modals %}{% if allowed %}{% include "components/modal.html" with id="account-confirmation" title=page_title description=description actions_template="accounts/admin/_confirm_actions.html" %}{% endif %}{% endblock %}

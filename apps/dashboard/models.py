@@ -30,6 +30,7 @@ class AuditLog(models.Model):
     class Action(models.TextChoices):
         USER_ACTIVATED = "USER_ACTIVATED", "User activated"
         USER_DEACTIVATED = "USER_DEACTIVATED", "User deactivated"
+        USER_ROLE_CHANGED = "USER_ROLE_CHANGED", "User role changed"
         CATEGORY_CREATED = "CATEGORY_CREATED", "Category created"
         CATEGORY_UPDATED = "CATEGORY_UPDATED", "Category updated"
         CATEGORY_DELETED = "CATEGORY_DELETED", "Category deleted"
@@ -62,4 +63,4 @@ class AuditLog(models.Model):
     class Meta:
         ordering = ["-occurred_at", "-pk"]
         indexes = [models.Index(fields=["entity_type", "entity_id"], name="audit_entity_lookup")]
-        constraints = [models.CheckConstraint(condition=models.Q(action__in=["USER_ACTIVATED", "USER_DEACTIVATED", "CATEGORY_CREATED", "CATEGORY_UPDATED", "CATEGORY_DELETED", "EQUIPMENT_CREATED", "EQUIPMENT_UPDATED", "EQUIPMENT_ARCHIVED", "EQUIPMENT_RESTORED", "UNIT_ADDED", "UNIT_UPDATED", "UNIT_RETIRED", "REQUEST_APPROVED", "REQUEST_REJECTED", "REQUEST_CANCELLED", "LOAN_RELEASED", "UNITS_RETURNED", "MAINTENANCE_REPORTED", "MAINTENANCE_UPDATED", "MAINTENANCE_REPAIRED", "MAINTENANCE_RETIRED", "SETTINGS_UPDATED"]), name="dashboard_valid_audit_action")]
+        constraints = [models.CheckConstraint(condition=models.Q(action__in=["USER_ACTIVATED", "USER_DEACTIVATED", "USER_ROLE_CHANGED", "CATEGORY_CREATED", "CATEGORY_UPDATED", "CATEGORY_DELETED", "EQUIPMENT_CREATED", "EQUIPMENT_UPDATED", "EQUIPMENT_ARCHIVED", "EQUIPMENT_RESTORED", "UNIT_ADDED", "UNIT_UPDATED", "UNIT_RETIRED", "REQUEST_APPROVED", "REQUEST_REJECTED", "REQUEST_CANCELLED", "LOAN_RELEASED", "UNITS_RETURNED", "MAINTENANCE_REPORTED", "MAINTENANCE_UPDATED", "MAINTENANCE_REPAIRED", "MAINTENANCE_RETIRED", "SETTINGS_UPDATED"]), name="dashboard_valid_audit_action")]
