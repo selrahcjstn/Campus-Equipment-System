@@ -1,0 +1,4 @@
+<form method="get" class="card inventory-filters" aria-label="Filter inventory">
+    <div class="inventory-filter-fields">{% for field in filter_form %}{% include "components/input.html" with field=field %}{% endfor %}</div>
+    <div class="page-actions"><button class="button button--primary" type="submit">Apply filters</button><a class="button button--secondary" href="{{ request.path }}{% if admin_catalog %}?state={% endif %}">Clear filters</a></div>
+</form>

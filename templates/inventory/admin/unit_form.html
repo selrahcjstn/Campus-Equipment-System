@@ -1,0 +1,11 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}{% if unit %}Edit{% else %}Add{% endif %} Physical Unit | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block page_scripts %}<script src="{% static 'js/inventory.js' %}" defer></script>{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>{% if unit %}Edit physical unit{% else %}Add physical unit{% endif %}</h1><p>{{ equipment.name }}{% if unit %} · {{ unit.inventory_status_label }}{% endif %}</p></div><a class="button button--secondary" href="{% url 'admin_equipment_detail' equipment.pk %}">Back to equipment</a></header>
+{% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+{% if allowed %}<form method="post" class="card section-stack" data-inventory-loading>{% csrf_token %}{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}{% if not unit %}<p class="caption">New physical units start as Available.</p>{% endif %}<div class="page-actions"><button class="button button--primary" type="submit">Save unit</button></div></form>
+{% else %}<div class="alert alert--warning" role="status"><strong>This unit operation is unavailable.</strong><p>Archived equipment cannot receive new units. Units with reservations, loans or maintenance must finish the owning workflow before editing.</p></div>{% endif %}
+{% endblock %}

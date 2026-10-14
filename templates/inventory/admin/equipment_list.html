@@ -1,0 +1,15 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}Equipment Inventory | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Equipment Inventory</h1><p>Manage catalog items and stock counted from their physical units.</p></div><div class="page-actions"><a class="button button--primary" href="{% url 'create_equipment' %}">Create catalog item</a><a class="button button--secondary" href="{% url 'equipment_units' %}">All physical units</a></div></header>
+<div class="section-stack">{% include "components/messages.html" %}{% include "inventory/_filters.html" with admin_catalog=True %}
+    <div class="table-container"><table class="data-table"><caption>Catalog items and physical stock</caption><thead><tr><th scope="col">Equipment / category</th><th scope="col">State</th><th scope="col">Total</th><th scope="col">Available</th><th scope="col">Reserved</th><th scope="col">Issued</th><th scope="col">Maintenance</th><th scope="col">Retired</th><th scope="col">Actions</th></tr></thead><tbody>{% for equipment in page_obj %}<tr>
+        <td><strong>{{ equipment.name }}</strong><p class="caption">{{ equipment.category.name|default:"Uncategorized" }}</p></td><td>{% if equipment.is_active %}{% include "components/badge.html" with label="Active" variant="success" %}{% else %}{% include "components/badge.html" with label="Archived" variant="inactive" %}{% endif %}</td>
+        <td>{{ equipment.total_count }}</td><td>{{ equipment.available_count }}</td><td>{{ equipment.reserved_count }}</td><td>{{ equipment.issued_count }}</td><td>{{ equipment.maintenance_count }}</td><td>{{ equipment.retired_count }}</td>
+        <td><a class="button button--secondary" href="{% url 'admin_equipment_detail' equipment.pk %}">Manage</a></td>
+    </tr>{% empty %}<tr><td colspan="9"><div class="inventory-empty"><h2>No catalog items in this view</h2><p class="text-secondary">Create an item or clear the filters.</p></div></td></tr>{% endfor %}</tbody></table></div>
+    {% include "inventory/_pagination.html" %}
+</div>
+{% endblock %}

@@ -6,6 +6,7 @@
 {% block content %}
 <header class="page-heading"><div><h1>New borrowing request</h1><p>Select 1–{{ limits.max_items }} equipment items, up to {{ limits.max_quantity }} units each, for at most {{ limits.max_days }} calendar days.</p></div><a class="button button--secondary" href="{% url 'my_requests' %}">My requests</a></header>
 <div class="section-stack">
+    {% include "components/messages.html" %}
     <section class="card section-stack" aria-labelledby="catalog-title">
         <div><h2 id="catalog-title">Browse equipment</h2><p class="text-secondary">Availability is checked again at submission and approval. A Pending request does not reserve units.</p></div>
         <div class="form-field"><label for="catalog-search">Search the catalog</label><input type="search" id="catalog-search" data-catalog-search placeholder="Equipment name or description"></div>

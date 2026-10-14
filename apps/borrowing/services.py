@@ -4,10 +4,11 @@ from datetime import datetime
 from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
-from django.db.models import Count, Q
+from django.db.models import F
 from django.utils import timezone
 
 from apps.inventory.models import Equipment, EquipmentUnit
+from apps.inventory.services import eligible_units, inventory_queryset
 from .models import Allocation, BorrowingRequest, BorrowingRequestItem
 
 
@@ -25,17 +26,11 @@ def _require_role(actor, role):
 
 
 def available_units():
-    return EquipmentUnit.objects.filter(status=EquipmentUnit.Status.AVAILABLE).exclude(
-        pk__in=Allocation.objects.filter(active=True).values("unit_id")
-    )
+    return eligible_units()
 
 
 def catalog_queryset():
-    active = Allocation.objects.filter(active=True).values("unit_id")
-    return Equipment.objects.annotate(available_count=Count(
-        "units", filter=Q(units__status=EquipmentUnit.Status.AVAILABLE)
-        & ~Q(units__pk__in=active), distinct=True,
-    ))
+    return inventory_queryset().filter(is_active=True)
 
 
 def validate_due_date(due_at, *, requested_at=None):
@@ -73,6 +68,10 @@ def submit_request(*, borrower, purpose, due_at, items):
     validate_due_date(due_at)
     if not isinstance(purpose, str) or not purpose.strip() or len(purpose) > 1000:
         raise ValidationError("Provide a borrowing purpose of at most 1,000 characters.")
+    ids = [entry[0] for entry in items]
+    # Coordinate submission with archiving, including SQLite's writer lock.
+    Equipment.objects.filter(pk=min(ids)).update(is_active=F("is_active"))
+    list(Equipment.objects.select_for_update().filter(pk__in=ids).order_by("pk"))
     catalog = {
         item.pk: item for item in catalog_queryset()
         .filter(pk__in=[entry[0] for entry in items])
@@ -104,6 +103,9 @@ def approve_request(request_id, *, actor, allocations=None):
         raise ValidationError("Only pending requests can be approved.")
     request = BorrowingRequest.objects.select_for_update().get(pk=request_id)
     items = list(request.items.select_for_update().order_by("equipment_id", "pk"))
+    catalog = list(Equipment.objects.select_for_update().filter(pk__in=[item.equipment_id for item in items]).order_by("pk"))
+    if any(not equipment.is_active for equipment in catalog):
+        raise ValidationError("Archived equipment cannot be approved for borrowing.")
     validate_due_date(request.due_at, requested_at=request.requested_at)
     _validate_items([(item.equipment_id, item.quantity) for item in items])
     if request.borrower.role != "BASIC_USER" or not request.borrower.is_active:

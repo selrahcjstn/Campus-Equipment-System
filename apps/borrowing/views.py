@@ -57,7 +57,18 @@ def new_request(request):
     _require_role(request, "BASIC_USER")
     data = request.POST if request.method == "POST" else None
     form = BorrowingRequestForm(data)
-    formset = RequestItemFormSet(data, prefix="items")
+    initial = None
+    if request.method == "GET" and request.GET.get("equipment"):
+        try:
+            equipment_id = int(request.GET["equipment"])
+        except (TypeError, ValueError):
+            equipment_id = None
+        equipment = catalog_queryset().filter(pk=equipment_id, available_count__gt=0).first()
+        if equipment:
+            initial = [{"equipment": equipment.pk, "quantity": 1}]
+        else:
+            messages.info(request, "That equipment is unavailable. Please choose another catalog item.")
+    formset = RequestItemFormSet(data, initial=initial, prefix="items")
     status = 200
     if request.method == "POST":
         form_valid = form.is_valid()
