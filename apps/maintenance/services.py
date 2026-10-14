@@ -5,6 +5,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from apps.borrowing.models import Allocation
+from apps.dashboard.audit import record_event
 from apps.inventory.models import EquipmentUnit
 from apps.loans.models import LoanUnit
 from .models import ACTIVE_STATUSES, MaintenanceRecord
@@ -55,6 +56,7 @@ def create_record(unit_id, *, actor, reason):
     record.full_clean()
     record.save()
     EquipmentUnit.objects.filter(pk=unit.pk).update(status="MAINTENANCE")
+    record_event(actor=actor, action="MAINTENANCE_REPORTED", entity_type="maintenance", entity_id=record.pk, description=f"Reported maintenance for physical unit #{unit.pk}.")
     return record
 
 
@@ -78,6 +80,7 @@ def record_damaged_return(loan_unit_id, *, actor):
     record = MaintenanceRecord(unit=unit, source_return=source, reason=source.return_notes, reported_at=source.returned_at, responsible_admin=actor)
     record.full_clean()
     record.save()
+    record_event(actor=actor, action="MAINTENANCE_REPORTED", entity_type="maintenance", entity_id=record.pk, description=f"Opened maintenance from damaged return #{source.pk} for unit #{unit.pk}.")
     return record
 
 
@@ -101,9 +104,12 @@ def update_record(record_id, *, actor, status, repair_notes):
     record, _ = _active_record(record_id)
     if status not in ACTIVE_STATUSES or (record.status == "IN_PROGRESS" and status != "IN_PROGRESS"):
         raise ValidationError("Progress can move from Reported to In progress. Use repair or retirement to resolve it.")
+    previous = (record.status, record.repair_notes)
     record.status, record.repair_notes = status, repair_notes
     record.full_clean()
     record.save(update_fields=["status", "repair_notes"])
+    if previous != (record.status, record.repair_notes):
+        record_event(actor=actor, action="MAINTENANCE_UPDATED", entity_type="maintenance", entity_id=record.pk, description=f"Updated maintenance progress to {record.get_status_display()} for unit #{record.unit_id}.")
     return record
 
 
@@ -121,4 +127,5 @@ def resolve_record(record_id, *, actor, outcome, repair_notes):
     record.full_clean()
     record.save(update_fields=["status", "repair_notes", "completed_at", "closed_by"])
     EquipmentUnit.objects.filter(pk=unit.pk, status="MAINTENANCE").update(status="AVAILABLE" if outcome == "REPAIRED" else "RETIRED")
+    record_event(actor=actor, action="MAINTENANCE_REPAIRED" if outcome == "REPAIRED" else "MAINTENANCE_RETIRED", entity_type="maintenance", entity_id=record.pk, description=f"Resolved maintenance as {record.get_status_display()} for unit #{unit.pk}.")
     return record

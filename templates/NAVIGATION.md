@@ -22,18 +22,17 @@ above the content.
 
 ## Destinations and owners
 
-Both portal entry points render the shared navigation shell: `/portal/` is named
+Both portal entry points use the shared navigation shell: `/portal/` is named
 `user_dashboard` and extends `base_user.html`; `/manage/` is named
-`admin_dashboard` and extends `base_admin.html`. They use Django's built-in
-`TemplateView` solely to render the layouts. Their content shows a large Dashboard
-heading. Authentication redirects still target these same paths.
+`admin_dashboard` and extends `base_admin.html`. Role-protected Dashboard views
+provide personal borrowing summaries and live Admin KPIs/charts. Authentication
+redirects still target these same paths.
 
-All module entries now resolve to heading-only navigation previews under
-`/portal/` or `/manage/`. They render `navigation/page.html` through Django's
-`TemplateView`; they do not implement module functionality. Module owners replace
-the preview entry in `config/urls.py` with their real page using the existing
-name. Named routes take precedence over fallback paths. Missing routes still
-render disabled rather than creating broken links. Member names appear only in
+Inventory, Borrowing, Loans, Maintenance, Reports, Audit Logs and System Settings
+now resolve to their implemented module views on this branch. Users and My Profile
+remain Charles's heading-only `TemplateView` previews in `config/urls.py`.
+Named routes take precedence over fallback paths. Missing routes still render
+disabled rather than creating broken links. Member names appear only in
 documentation and template comments.
 
 | Portal / section | Label | Route slot or existing path | Owner |

@@ -5,6 +5,7 @@ from django.db.models import F
 from django.utils import timezone
 
 from apps.borrowing.models import Allocation, BorrowingRequest
+from apps.dashboard.audit import record_event
 from apps.inventory.models import EquipmentUnit
 from .models import Loan, LoanUnit
 
@@ -90,6 +91,7 @@ def release_request(request_id, *, actor):
             equipment_description=unit.equipment.description,
             asset_tag=unit.asset_tag,
         )
+    record_event(actor=actor, action="LOAN_RELEASED", entity_type="loan", entity_id=loan.pk, description=f"Released {len(allocations)} physical unit(s) for request #{request.pk}.")
     return loan
 
 
@@ -183,4 +185,6 @@ def process_returns(loan_id, *, actor, returns):
         loan.save(update_fields=["completed_at"])
         request.status = BorrowingRequest.Status.COMPLETED
         request.save(update_fields=["status"])
+    damaged = sum(condition == LoanUnit.Condition.DAMAGED for _, condition, _ in returns)
+    record_event(actor=actor, action="UNITS_RETURNED", entity_type="loan", entity_id=loan.pk, description=f"Returned {len(returns)} physical unit(s); {damaged} sent to Maintenance.")
     return loan

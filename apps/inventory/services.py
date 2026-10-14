@@ -8,6 +8,7 @@ from django.db.models import Count, Exists, F, OuterRef, Q
 from django.db.models.deletion import ProtectedError
 
 from apps.borrowing.models import Allocation
+from apps.dashboard.audit import record_event
 from apps.loans.models import LoanUnit
 from apps.maintenance.models import ACTIVE_STATUSES, MaintenanceRecord
 from .models import Category, Equipment, EquipmentUnit
@@ -57,9 +58,12 @@ def save_category(*, actor, name, description="", category_id=None):
         category = Category.objects.select_for_update().get(pk=category_id)
     else:
         category = Category()
+    previous = (category.name, category.description)
     category.name, category.description = name, description
     category.full_clean()
     category.save()
+    if not category_id or previous != (category.name, category.description):
+        record_event(actor=actor, action="CATEGORY_UPDATED" if category_id else "CATEGORY_CREATED", entity_type="category", entity_id=category.pk, description="Updated category metadata." if category_id else "Created category.")
     return category
 
 
@@ -74,6 +78,7 @@ def delete_category(category_id, *, actor):
         category.delete()
     except ProtectedError as error:
         raise ValidationError("This category has linked records and cannot be deleted.") from error
+    record_event(actor=actor, action="CATEGORY_DELETED", entity_type="category", entity_id=category_id, description="Deleted unused category.")
 
 
 @transaction.atomic
@@ -84,12 +89,15 @@ def save_equipment(*, actor, name, category_id, description="", equipment_id=Non
         equipment = Equipment.objects.select_for_update().get(pk=equipment_id)
     else:
         equipment = Equipment()
+    previous = (equipment.name, equipment.category_id, equipment.description)
     if not Category.objects.filter(pk=category_id).exists():
         raise ValidationError({"category": "Select an existing category."})
     equipment.name, equipment.category_id, equipment.description = name, category_id, description
     # is_active and stock quantities are deliberately not accepted as inputs.
     equipment.full_clean()
     equipment.save()
+    if not equipment_id or previous != (equipment.name, equipment.category_id, equipment.description):
+        record_event(actor=actor, action="EQUIPMENT_UPDATED" if equipment_id else "EQUIPMENT_CREATED", entity_type="equipment", entity_id=equipment.pk, description="Updated catalog metadata." if equipment_id else "Created catalog equipment.")
     return equipment
 
 
@@ -102,6 +110,7 @@ def archive_equipment(equipment_id, *, actor):
     equipment = Equipment.objects.select_for_update().get(pk=equipment_id)
     if equipment_in_use(equipment.pk):
         raise ValidationError("This equipment has active reservations or issued units. Cancel or finish those transactions before archiving.")
+    record_event(actor=actor, action="EQUIPMENT_ARCHIVED", entity_type="equipment", entity_id=equipment.pk, description="Archived catalog equipment.")
     return equipment
 
 
@@ -118,6 +127,7 @@ def restore_equipment(equipment_id, *, actor):
     _require_admin(actor)
     if Equipment.objects.filter(pk=equipment_id, is_active=False).update(is_active=True) != 1:
         raise ValidationError("Only archived catalog items can be restored.")
+    record_event(actor=actor, action="EQUIPMENT_RESTORED", entity_type="equipment", entity_id=equipment_id, description="Restored catalog equipment.")
     return Equipment.objects.get(pk=equipment_id)
 
 
@@ -131,6 +141,7 @@ def add_unit(equipment_id, *, actor, asset_tag):
     unit = EquipmentUnit(equipment=equipment, asset_tag=asset_tag)
     unit.full_clean()
     unit.save()
+    record_event(actor=actor, action="UNIT_ADDED", entity_type="equipment_unit", entity_id=unit.pk, description=f"Added physical unit to equipment #{equipment_id}.")
     return unit
 
 
@@ -150,9 +161,12 @@ def _idle_unit(unit_id):
 def edit_unit(unit_id, *, actor, asset_tag):
     _require_admin(actor)
     unit = _idle_unit(unit_id)
+    previous = unit.asset_tag
     unit.asset_tag = asset_tag
     unit.full_clean()
     unit.save(update_fields=["asset_tag"])
+    if previous != unit.asset_tag:
+        record_event(actor=actor, action="UNIT_UPDATED", entity_type="equipment_unit", entity_id=unit.pk, description="Updated physical unit identifier.")
     return unit
 
 
@@ -164,4 +178,5 @@ def retire_unit(unit_id, *, actor):
         raise ValidationError("Only an Available, unallocated unit can be retired.")
     unit.status = EquipmentUnit.Status.RETIRED
     unit.save(update_fields=["status"])
+    record_event(actor=actor, action="UNIT_RETIRED", entity_type="equipment_unit", entity_id=unit.pk, description="Retired Available physical unit.")
     return unit

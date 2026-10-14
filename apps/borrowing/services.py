@@ -1,7 +1,6 @@
 """Borrowing rules and atomic transitions; Loans owns equipment issuance."""
 from datetime import datetime
 
-from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import F
@@ -9,15 +8,9 @@ from django.utils import timezone
 
 from apps.inventory.models import Equipment, EquipmentUnit
 from apps.inventory.services import eligible_units, inventory_queryset
+from apps.dashboard.audit import record_event
+from apps.dashboard.policies import borrowing_limits
 from .models import Allocation, BorrowingRequest, BorrowingRequestItem
-
-
-def borrowing_limits():
-    return {
-        "max_items": getattr(settings, "BORROWING_MAX_ITEMS", 3),
-        "max_quantity": getattr(settings, "BORROWING_MAX_QUANTITY", 3),
-        "max_days": getattr(settings, "BORROWING_MAX_DAYS", 7),
-    }
 
 
 def _require_role(actor, role):
@@ -33,7 +26,7 @@ def catalog_queryset():
     return inventory_queryset().filter(is_active=True)
 
 
-def validate_due_date(due_at, *, requested_at=None):
+def validate_due_date(due_at, *, requested_at=None, limits=None):
     now = timezone.now()
     requested_at = requested_at or now
     if not isinstance(due_at, datetime) or not timezone.is_aware(due_at):
@@ -41,13 +34,13 @@ def validate_due_date(due_at, *, requested_at=None):
     if due_at <= now:
         raise ValidationError("The due date must be in the future.")
     days = (timezone.localdate(due_at) - timezone.localdate(requested_at)).days
-    maximum = borrowing_limits()["max_days"]
+    maximum = (limits if limits is not None else borrowing_limits())["max_days"]
     if days < 0 or days > maximum:
         raise ValidationError(f"Borrowing duration cannot exceed {maximum} calendar days.")
 
 
-def _validate_items(items):
-    limits = borrowing_limits()
+def _validate_items(items, *, limits=None):
+    limits = limits if limits is not None else borrowing_limits()
     if not 1 <= len(items) <= limits["max_items"]:
         raise ValidationError(f"Select 1–{limits['max_items']} distinct equipment items.")
     ids = [item[0] for item in items]
@@ -64,8 +57,9 @@ def _validate_items(items):
 def submit_request(*, borrower, purpose, due_at, items):
     """items contains (equipment_id, quantity), never client availability."""
     _require_role(borrower, "BASIC_USER")
-    _validate_items(items)
-    validate_due_date(due_at)
+    limits = borrowing_limits()
+    _validate_items(items, limits=limits)
+    validate_due_date(due_at, limits=limits)
     if not isinstance(purpose, str) or not purpose.strip() or len(purpose) > 1000:
         raise ValidationError("Provide a borrowing purpose of at most 1,000 characters.")
     ids = [entry[0] for entry in items]
@@ -106,8 +100,9 @@ def approve_request(request_id, *, actor, allocations=None):
     catalog = list(Equipment.objects.select_for_update().filter(pk__in=[item.equipment_id for item in items]).order_by("pk"))
     if any(not equipment.is_active for equipment in catalog):
         raise ValidationError("Archived equipment cannot be approved for borrowing.")
-    validate_due_date(request.due_at, requested_at=request.requested_at)
-    _validate_items([(item.equipment_id, item.quantity) for item in items])
+    limits = borrowing_limits()
+    validate_due_date(request.due_at, requested_at=request.requested_at, limits=limits)
+    _validate_items([(item.equipment_id, item.quantity) for item in items], limits=limits)
     if request.borrower.role != "BASIC_USER" or not request.borrower.is_active:
         raise ValidationError("The borrower must be an active Basic User.")
     if hasattr(request, "loan") or request.items.filter(allocations__active=True).exists():
@@ -154,6 +149,7 @@ def approve_request(request_id, *, actor, allocations=None):
     request.approved_at = timezone.now()
     request.approved_by = actor
     request.save(update_fields=["approved_at", "approved_by"])
+    record_event(actor=actor, action="REQUEST_APPROVED", entity_type="borrowing_request", entity_id=request.pk, description=f"Approved request and reserved {len(ids)} physical unit(s).")
     return request
 
 
@@ -174,6 +170,7 @@ def reject_request(request_id, *, actor, reason):
     request.rejected_at = timezone.now()
     request.rejected_by = actor
     request.save(update_fields=["rejection_reason", "rejected_at", "rejected_by"])
+    record_event(actor=actor, action="REQUEST_REJECTED", entity_type="borrowing_request", entity_id=request.pk, description="Rejected pending borrowing request.")
     return request
 
 
@@ -213,4 +210,5 @@ def cancel_request(request_id, *, actor):
     request.cancelled_at = timezone.now()
     request.cancelled_by = actor
     request.save(update_fields=["cancelled_at", "cancelled_by"])
+    record_event(actor=actor, action="REQUEST_CANCELLED", entity_type="borrowing_request", entity_id=request.pk, description=f"Cancelled request and released {len(allocations)} reservation(s).")
     return request

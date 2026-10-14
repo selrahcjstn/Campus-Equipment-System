@@ -1,0 +1,29 @@
+.dashboard-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6); }
+.dashboard-kpis h2 { font-size: var(--font-card); }
+.dashboard-stat { margin: var(--space-3) 0; font-size: var(--font-title); font-weight: var(--weight-bold); }
+.dashboard-filters { display: grid; gap: var(--space-4); }
+.dashboard-filter-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--space-4); }
+.dashboard-chart { margin: 0; min-width: 0; }
+.dashboard-chart svg { display: block; width: 100%; height: auto; }
+.chart-axis { stroke: var(--border-strong); stroke-width: 2; }
+.chart-bar { fill: var(--accent); }
+.dashboard-chart-range { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); font-size: var(--font-caption); color: var(--text-secondary); }
+.dashboard-status-chart { display: grid; gap: var(--space-4); margin: 0 0 var(--space-6); }
+.dashboard-status-chart dd { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-1) 0 0; }
+.dashboard-status-chart strong { min-width: 3ch; text-align: right; }
+.dashboard-status-track { flex: 1; height: var(--space-4); border-radius: var(--radius-sm); background: var(--surface-muted); overflow: hidden; }
+.dashboard-status-fill { display: block; height: 100%; background: var(--info); }
+.status-available { background: var(--success); }
+.status-reserved { background: var(--warning); }
+.status-maintenance { background: var(--error); }
+.status-retired { background: var(--inactive); }
+.dashboard-empty { padding: var(--space-8); text-align: center; }
+.dashboard-empty p { margin-top: var(--space-2); }
+.dashboard-unit-list { margin: var(--space-2) 0 0; padding: 0; list-style: none; overflow-wrap: anywhere; }
+.dashboard-unit-list li + li { margin-top: var(--space-2); }
+.dashboard-audit-description { max-width: 400px; overflow-wrap: anywhere; }
+.dashboard-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-4); }
+.dashboard-charts details summary { cursor: pointer; color: var(--accent); }
+.dashboard-charts details[open] summary { margin-bottom: var(--space-4); }
+@media (max-width: 1100px) { .dashboard-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 639px) { .dashboard-kpis { grid-template-columns: 1fr; } }

@@ -15,10 +15,11 @@ class BorrowingRequestForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         today = timezone.localdate()
-        latest = today + timedelta(days=borrowing_limits()["max_days"])
+        limits = borrowing_limits()
+        latest = today + timedelta(days=limits["max_days"])
         self.fields["due_date"].initial = latest
         self.fields["due_date"].widget.attrs.update(min=today.isoformat(), max=latest.isoformat())
-        self.fields["due_date"].help_text = f"Return by the end of this date ({timezone.get_current_timezone_name()}). Maximum {borrowing_limits()['max_days']} calendar days from today."
+        self.fields["due_date"].help_text = f"Return by the end of this date ({timezone.get_current_timezone_name()}). Maximum {limits['max_days']} calendar days from today."
 
     def clean(self):
         data = super().clean()
@@ -45,8 +46,9 @@ class RequestItemForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["equipment"].queryset = catalog_queryset().filter(available_count__gt=0)
-        self.fields["quantity"].max_value = borrowing_limits()["max_quantity"]
-        self.fields["quantity"].widget.attrs.update(min=1, max=borrowing_limits()["max_quantity"])
+        maximum = borrowing_limits()["max_quantity"]
+        self.fields["quantity"].max_value = maximum
+        self.fields["quantity"].widget.attrs.update(min=1, max=maximum)
 
     def clean(self):
         data = super().clean()

@@ -58,10 +58,13 @@ refuses to overwrite demo records. No fixtures are added automatically.
 ## Rules and compatibility
 
 - Default limits are three distinct catalog types, three physical units per type
-  and seven calendar days. They can be configured with `BORROWING_MAX_ITEMS`,
-  `BORROWING_MAX_QUANTITY` and `BORROWING_MAX_DAYS` in Django settings.
+  and seven calendar days. Admins configure them at `/manage/settings/` through
+  the database policy in `apps.dashboard.policies`. Before a policy is saved,
+  `BORROWING_MAX_ITEMS`, `BORROWING_MAX_QUANTITY` and `BORROWING_MAX_DAYS` in
+  Django settings remain the fallback. New submissions and pending approvals
+  use current limits; existing approvals and issued loans retain their terms.
 - Due dates entered on the form mean the end of the selected calendar date in
-  the application's configured timezone, currently UTC. Duration is measured
+  the application's configured timezone, currently Asia/Manila. Duration is measured
   by local calendar-date difference from submission, not by 24-hour intervals.
 - Limits, dates, roles and availability are enforced by the service as well as
   the form. Approval repeats policy and stock checks. Availability shown by the

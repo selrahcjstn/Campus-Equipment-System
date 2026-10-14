@@ -42,9 +42,11 @@ Navigation is presentation only. Each item attempts `{% url route as resolved_ur
 Missing route names render non-interactive items marked “Soon”; they do not
 produce dead links or `NoReverseMatch` errors. The user Dashboard resolves
 `user_dashboard` at `/portal/`, and the Admin Dashboard resolves
-`admin_dashboard` at `/manage/`. Both entry points render the shared layouts
-with large Dashboard headings. Other module destinations currently render
-heading-only navigation previews. The authentication redirects remain unchanged.
+`admin_dashboard` at `/manage/`. Both now use role-protected Dashboard views:
+Basic Users receive their personal borrowing summary; Admins receive live KPIs
+and charts. Inventory, Borrowing, Loans, Maintenance, Reports, Audit Logs and
+System Settings are implemented on this branch. Users and My Profile remain
+Charles's navigation previews. The authentication redirects remain unchanged.
 
 Update the `route` value in the appropriate navigation template to match your
 module's actual route name, including any namespace. These names are integration

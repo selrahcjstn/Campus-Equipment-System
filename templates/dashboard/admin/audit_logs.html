@@ -1,0 +1,11 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}Audit Logs | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Audit Logs</h1><p>Read-only history of recorded account, inventory, borrowing and maintenance operations.</p></div></header>
+<div class="section-stack">{% include "dashboard/_filters.html" with filter_label="Search audit logs" clear_url="audit_logs" %}<p class="caption">Newest first · Inclusive date filters in {{ timezone_name }} · {{ page_obj.paginator.count }} matching entr{{ page_obj.paginator.count|pluralize:"y,ies" }}</p>
+    <div class="table-container"><table class="data-table"><caption>Recorded activity</caption><thead><tr><th scope="col">Date / time</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Affected entity</th><th scope="col">Description</th></tr></thead><tbody>{% for entry in page_obj %}<tr><td>{{ entry.occurred_at|date:"M j, Y, g:i A T" }}</td><td>{{ entry.actor_username }}</td><td>{{ entry.get_action_display }}</td><td>{{ entry.entity_type }} #{{ entry.entity_id }}</td><td class="dashboard-audit-description">{{ entry.description }}</td></tr>{% empty %}<tr><td colspan="5"><div class="dashboard-empty"><h2>No recorded activity in this view</h2><p class="text-secondary">Clear your filters or perform a supported operation. Logging begins when this module is installed.</p></div></td></tr>{% endfor %}</tbody></table></div>
+    {% include "dashboard/_pagination.html" with pagination_label="Audit log pages" %}
+</div>
+{% endblock %}
