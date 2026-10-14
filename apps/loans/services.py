@@ -39,6 +39,8 @@ def validate_handover(request, items, allocations, units, *, at=None):
                 raise ValidationError("An allocated unit does not match the requested equipment.")
             if unit.status != EquipmentUnit.Status.RESERVED:
                 raise ValidationError("All allocated units must still be reserved for this request.")
+            if unit.maintenance_records.filter(status__in=["REPORTED", "IN_PROGRESS"]).exists():
+                raise ValidationError("An allocated unit has active maintenance and cannot be released.")
 
 
 @transaction.atomic
@@ -150,6 +152,8 @@ def process_returns(loan_id, *, actor, returns):
             raise ValidationError("The issued unit's allocation is inconsistent. No returns were saved.")
         if unit.status != EquipmentUnit.Status.ON_LOAN:
             raise ValidationError("A selected unit is no longer marked as on loan.")
+        if unit.maintenance_records.filter(status__in=["REPORTED", "IN_PROGRESS"]).exists():
+            raise ValidationError("This issued unit has conflicting active maintenance. Review its history before returning it.")
         returned = LoanUnit.objects.filter(
             pk=item.pk, returned_at__isnull=True
         ).update(
@@ -170,6 +174,9 @@ def process_returns(loan_id, *, actor, returns):
             raise ValidationError("The unit's status changed. Reload the loan and try again.")
         if Allocation.objects.filter(pk=allocation.pk, active=True).update(active=False) != 1:
             raise ValidationError("The unit's reservation changed. Reload the loan and try again.")
+        if condition == LoanUnit.Condition.DAMAGED:
+            from apps.maintenance.services import record_damaged_return
+            record_damaged_return(item.pk, actor=actor)
 
     if not loan.units.filter(returned_at__isnull=True).exists():
         loan.completed_at = now

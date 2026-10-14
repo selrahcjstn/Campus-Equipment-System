@@ -88,7 +88,10 @@ class EquipmentUnit(models.Model):
             allocated = self.allocations.filter(active=True).exists()
         if issued is None:
             issued = self.loan_units.filter(returned_at__isnull=True).exists()
-        return not allocated and not issued
+        maintenance = getattr(self, "has_active_maintenance", None)
+        if maintenance is None:
+            maintenance = self.maintenance_records.filter(status__in=["REPORTED", "IN_PROGRESS"]).exists()
+        return not allocated and not issued and not maintenance
 
     @property
     def can_retire(self):

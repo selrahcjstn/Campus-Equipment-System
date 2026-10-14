@@ -9,6 +9,7 @@ from django.db.models.deletion import ProtectedError
 
 from apps.borrowing.models import Allocation
 from apps.loans.models import LoanUnit
+from apps.maintenance.models import ACTIVE_STATUSES, MaintenanceRecord
 from .models import Category, Equipment, EquipmentUnit
 
 
@@ -20,13 +21,16 @@ def _require_admin(actor):
 def eligible_units():
     return EquipmentUnit.objects.filter(status=EquipmentUnit.Status.AVAILABLE, equipment__is_active=True).exclude(
         pk__in=Allocation.objects.filter(active=True).values("unit_id")
-    ).exclude(pk__in=LoanUnit.objects.filter(returned_at__isnull=True).values("unit_id"))
+    ).exclude(pk__in=LoanUnit.objects.filter(returned_at__isnull=True).values("unit_id")).exclude(
+        pk__in=MaintenanceRecord.objects.filter(status__in=ACTIVE_STATUSES).values("unit_id")
+    )
 
 
 def inventory_queryset():
     allocated = Allocation.objects.filter(active=True).values("unit_id")
     issued = LoanUnit.objects.filter(returned_at__isnull=True).values("unit_id")
-    available = Q(units__status=EquipmentUnit.Status.AVAILABLE) & ~Q(units__pk__in=allocated) & ~Q(units__pk__in=issued)
+    maintenance = MaintenanceRecord.objects.filter(status__in=ACTIVE_STATUSES).values("unit_id")
+    available = Q(units__status=EquipmentUnit.Status.AVAILABLE) & ~Q(units__pk__in=allocated) & ~Q(units__pk__in=issued) & ~Q(units__pk__in=maintenance)
     return Equipment.objects.select_related("category").annotate(
         total_count=Count("units", distinct=True),
         available_count=Count("units", filter=available, distinct=True),
@@ -41,6 +45,7 @@ def unit_queryset():
     return EquipmentUnit.objects.select_related("equipment", "equipment__category").annotate(
         has_active_allocation=Exists(Allocation.objects.filter(unit_id=OuterRef("pk"), active=True)),
         has_outstanding_loan=Exists(LoanUnit.objects.filter(unit_id=OuterRef("pk"), returned_at__isnull=True)),
+        has_active_maintenance=Exists(MaintenanceRecord.objects.filter(unit_id=OuterRef("pk"), status__in=ACTIVE_STATUSES)),
     )
 
 
@@ -136,6 +141,8 @@ def _idle_unit(unit_id):
     unit = EquipmentUnit.objects.select_for_update().get(pk=unit_id)
     if unit.allocations.filter(active=True).exists() or unit.loan_units.filter(returned_at__isnull=True).exists():
         raise ValidationError("This unit has an active borrowing or loan record and cannot be modified.")
+    if unit.maintenance_records.filter(status__in=ACTIVE_STATUSES).exists():
+        raise ValidationError("This unit has active maintenance and cannot be modified through inventory.")
     return unit
 
 

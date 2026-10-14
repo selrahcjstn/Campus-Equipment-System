@@ -22,6 +22,7 @@ urlpatterns = [
     path("", include("apps.loans.urls")),
     path("", include("apps.borrowing.urls")),
     path("", include("apps.inventory.urls")),
+    path("manage/maintenance/", include("apps.maintenance.urls")),
     path(
         "portal/",
         TemplateView.as_view(template_name="dashboard/user_portal.html"),
@@ -35,7 +36,6 @@ urlpatterns = [
     # Navigation previews only; module owners replace these with their real pages.
     path("portal/profile/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_user.html", "page_title": "My Profile"}), name="my_profile"),
     path("manage/users/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Users"}), name="user_management"),
-    path("manage/maintenance/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Maintenance"}), name="maintenance"),
     path("manage/reports/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Reports"}), name="reports"),
     path("manage/audit-logs/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Audit Logs"}), name="audit_logs"),
     path("manage/settings/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "System Settings"}), name="system_settings"),

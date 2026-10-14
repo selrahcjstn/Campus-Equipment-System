@@ -98,3 +98,21 @@ document.querySelectorAll('dialog.modal').forEach((modal) => {
         document.body.classList.toggle('modal-open', Boolean(document.querySelector('dialog[open]')));
     });
 });
+
+// Reusable form confirmation; server-side confirmation remains required.
+document.querySelectorAll('form[data-confirm-dialog], form[data-submit-loading]').forEach((form) => {
+    form.addEventListener('submit', (event) => {
+        const dialog = document.getElementById(form.dataset.confirmDialog);
+        if (dialog instanceof HTMLDialogElement && !event.submitter?.hasAttribute('data-confirmed')) {
+            event.preventDefault();
+            if (!dialog.open) dialog.showModal();
+            document.body.classList.add('modal-open');
+            return;
+        }
+        form.setAttribute('aria-busy', 'true');
+        if (event.submitter && !event.submitter.name) {
+            event.submitter.disabled = true;
+            event.submitter.textContent = 'Saving…';
+        }
+    });
+});

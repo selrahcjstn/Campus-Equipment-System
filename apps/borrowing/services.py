@@ -143,6 +143,8 @@ def approve_request(request_id, *, actor, allocations=None):
                 raise ValidationError("An allocated unit does not match the requested equipment.")
             if Allocation.objects.filter(unit=unit, active=True).exists():
                 raise ValidationError("An equipment unit already has an active reservation.")
+            if not available_units().filter(pk=unit.pk).exists():
+                raise ValidationError("An equipment unit is unavailable or has active maintenance or a loan.")
             changed = EquipmentUnit.objects.filter(
                 pk=unit.pk, status=EquipmentUnit.Status.AVAILABLE,
             ).update(status=EquipmentUnit.Status.RESERVED)
