@@ -1,0 +1,8 @@
+{% extends "base_user.html" %}
+{% load static %}
+{% block title %}My Borrowing Requests | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/borrowing.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>My Borrowing Requests</h1><p>Follow your requests from review to equipment return.</p></div><a class="button button--primary" href="{% url 'new_borrowing_request' %}">New request</a></header>
+<div class="section-stack">{% include "borrowing/_request_list.html" %}</div>
+{% endblock %}

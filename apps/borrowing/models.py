@@ -20,6 +20,11 @@ class BorrowingRequest(models.Model):
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     approved_at = models.DateTimeField(null=True, blank=True)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="approved_borrowing_requests", null=True, blank=True)
+    rejection_reason = models.TextField(max_length=1000, blank=True)
+    rejected_at = models.DateTimeField(null=True, blank=True)
+    rejected_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="rejected_borrowing_requests", null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancelled_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="cancelled_borrowing_requests", null=True, blank=True)
 
     class Meta:
         ordering = ["-requested_at", "-pk"]
@@ -31,6 +36,25 @@ class BorrowingRequest(models.Model):
     @property
     def quantity(self):
         return sum(item.quantity for item in self.items.all())
+
+    @property
+    def can_cancel(self):
+        return self.status in [self.Status.PENDING, self.Status.APPROVED]
+
+    @property
+    def workflow_label(self):
+        # Return progress belongs to Loans, not a second stored workflow.
+        if self.status == self.Status.COMPLETED:
+            return "Returned"
+        loan = getattr(self, "loan", None)
+        if self.status == self.Status.ISSUED and loan:
+            if any(unit.returned_at for unit in loan.units.all()):
+                return "Partially Returned"
+        return self.get_status_display()
+
+    @property
+    def status_variant(self):
+        return {self.Status.PENDING: "warning", self.Status.APPROVED: "success", self.Status.REJECTED: "error", self.Status.CANCELLED: "inactive", self.Status.ISSUED: "info", self.Status.COMPLETED: "success"}.get(self.status, "inactive")
 
     def __str__(self):
         return f"Request #{self.pk}"

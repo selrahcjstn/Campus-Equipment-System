@@ -1,0 +1,13 @@
+{% extends "base_admin.html" %}
+{% load static %}
+{% block title %}Review Request #{{ borrowing.pk }} | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/borrowing.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Request #{{ borrowing.pk }}</h1><p>Review the borrower, requested quantities and physical allocations.</p></div><div class="page-actions">
+    {% if borrowing.status == 'PENDING' %}<a class="button button--primary" href="{% url 'approve_borrowing_request' borrowing.pk %}">Approve request</a><a class="button button--secondary" href="{% url 'reject_borrowing_request' borrowing.pk %}">Reject request</a>{% endif %}
+    {% if borrowing.status == 'APPROVED' %}<a class="button button--primary" href="{% url 'release_equipment' borrowing.pk %}">Review equipment release</a>{% endif %}
+    {% if borrowing.can_cancel %}<a class="button button--secondary" href="{% url 'admin_cancel_borrowing_request' borrowing.pk %}">Cancel request</a>{% endif %}
+    <a class="button button--secondary" href="{% url 'borrowing_requests' %}">Back to request queue</a>
+</div></header>
+<div class="section-stack">{% include "borrowing/_detail_body.html" %}</div>
+{% endblock %}

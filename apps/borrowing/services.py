@@ -1,36 +1,127 @@
-"""The minimal approval/allocation foundation consumed by Loans.
+"""Borrowing rules and atomic transitions; Loans owns equipment issuance."""
+from datetime import datetime
 
-The Borrowing module can call approve_request from its own approval UI later.
-"""
+from django.conf import settings
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
+from django.db.models import Count, Q
 from django.utils import timezone
 
-from apps.inventory.models import EquipmentUnit
-from .models import Allocation, BorrowingRequest
+from apps.inventory.models import Equipment, EquipmentUnit
+from .models import Allocation, BorrowingRequest, BorrowingRequestItem
+
+
+def borrowing_limits():
+    return {
+        "max_items": getattr(settings, "BORROWING_MAX_ITEMS", 3),
+        "max_quantity": getattr(settings, "BORROWING_MAX_QUANTITY", 3),
+        "max_days": getattr(settings, "BORROWING_MAX_DAYS", 7),
+    }
+
+
+def _require_role(actor, role):
+    if not actor.is_authenticated or not actor.is_active or actor.role != role:
+        raise PermissionDenied(f"This operation requires an active {role} account.")
+
+
+def available_units():
+    return EquipmentUnit.objects.filter(status=EquipmentUnit.Status.AVAILABLE).exclude(
+        pk__in=Allocation.objects.filter(active=True).values("unit_id")
+    )
+
+
+def catalog_queryset():
+    active = Allocation.objects.filter(active=True).values("unit_id")
+    return Equipment.objects.annotate(available_count=Count(
+        "units", filter=Q(units__status=EquipmentUnit.Status.AVAILABLE)
+        & ~Q(units__pk__in=active), distinct=True,
+    ))
+
+
+def validate_due_date(due_at, *, requested_at=None):
+    now = timezone.now()
+    requested_at = requested_at or now
+    if not isinstance(due_at, datetime) or not timezone.is_aware(due_at):
+        raise ValidationError("Provide a valid due date in the application's timezone.")
+    if due_at <= now:
+        raise ValidationError("The due date must be in the future.")
+    days = (timezone.localdate(due_at) - timezone.localdate(requested_at)).days
+    maximum = borrowing_limits()["max_days"]
+    if days < 0 or days > maximum:
+        raise ValidationError(f"Borrowing duration cannot exceed {maximum} calendar days.")
+
+
+def _validate_items(items):
+    limits = borrowing_limits()
+    if not 1 <= len(items) <= limits["max_items"]:
+        raise ValidationError(f"Select 1–{limits['max_items']} distinct equipment items.")
+    ids = [item[0] for item in items]
+    if len(set(ids)) != len(ids):
+        raise ValidationError("Each equipment item can be selected only once.")
+    for equipment_id, quantity in items:
+        if type(equipment_id) is not int or equipment_id < 1:
+            raise ValidationError("Select valid equipment from the catalog.")
+        if type(quantity) is not int or not 1 <= quantity <= limits["max_quantity"]:
+            raise ValidationError(f"Each quantity must be between 1 and {limits['max_quantity']}.")
 
 
 @transaction.atomic
-def approve_request(request_id, *, actor, allocations):
-    """Reserve exact quantities: allocations maps request-item IDs to unit IDs."""
-    if not actor.is_authenticated or not actor.is_active or actor.role != "ADMIN":
-        raise PermissionDenied("Only an active Admin may approve requests.")
+def submit_request(*, borrower, purpose, due_at, items):
+    """items contains (equipment_id, quantity), never client availability."""
+    _require_role(borrower, "BASIC_USER")
+    _validate_items(items)
+    validate_due_date(due_at)
+    if not isinstance(purpose, str) or not purpose.strip() or len(purpose) > 1000:
+        raise ValidationError("Provide a borrowing purpose of at most 1,000 characters.")
+    catalog = {
+        item.pk: item for item in catalog_queryset()
+        .filter(pk__in=[entry[0] for entry in items])
+    }
+    for equipment_id, quantity in items:
+        if equipment_id not in catalog:
+            raise ValidationError("One or more selected equipment items do not exist.")
+        if catalog[equipment_id].available_count < quantity:
+            raise ValidationError(f"Not enough available units of {catalog[equipment_id].name}.")
+    request = BorrowingRequest.objects.create(
+        borrower=borrower, purpose=purpose.strip(), due_at=due_at,
+    )
+    BorrowingRequestItem.objects.bulk_create([
+        BorrowingRequestItem(request=request, equipment_id=equipment_id, quantity=quantity)
+        for equipment_id, quantity in items
+    ])
+    return request
 
-    # Claim the transition before reading units. This also acquires SQLite's
-    # write lock, where select_for_update alone cannot serialize writers.
-    changed = BorrowingRequest.objects.filter(
-        pk=request_id, status=BorrowingRequest.Status.PENDING
+
+@transaction.atomic
+def approve_request(request_id, *, actor, allocations=None):
+    """Auto-allocate units; explicit mappings remain compatible with Loans."""
+    _require_role(actor, "ADMIN")
+    # Claim first, including on SQLite where SELECT FOR UPDATE has no effect.
+    claimed = BorrowingRequest.objects.filter(
+        pk=request_id, status=BorrowingRequest.Status.PENDING,
     ).update(status=BorrowingRequest.Status.APPROVED)
-    if changed != 1:
+    if claimed != 1:
         raise ValidationError("Only pending requests can be approved.")
     request = BorrowingRequest.objects.select_for_update().get(pk=request_id)
-    items = list(request.items.select_for_update().order_by("pk"))
-    now = timezone.now()
-    if request.due_at <= now:
-        raise ValidationError("The due date must be in the future.")
+    items = list(request.items.select_for_update().order_by("equipment_id", "pk"))
+    validate_due_date(request.due_at, requested_at=request.requested_at)
+    _validate_items([(item.equipment_id, item.quantity) for item in items])
     if request.borrower.role != "BASIC_USER" or not request.borrower.is_active:
         raise ValidationError("The borrower must be an active Basic User.")
-    if not items or set(allocations) != {item.pk for item in items}:
+    if hasattr(request, "loan") or request.items.filter(allocations__active=True).exists():
+        raise ValidationError("This request already has active allocations or a loan.")
+
+    if allocations is None:
+        allocations = {}
+        for item in items:
+            selected = list(
+                available_units().select_for_update()
+                .filter(equipment_id=item.equipment_id).order_by("pk")[:item.quantity]
+            )
+            if len(selected) != item.quantity:
+                raise ValidationError(f"Not enough available units of {item.equipment.name}. Nothing was reserved.")
+            allocations[item.pk] = [unit.pk for unit in selected]
+    if set(allocations) != {item.pk for item in items}:
         raise ValidationError("Allocate every requested equipment item.")
     ids = [unit_id for values in allocations.values() for unit_id in values]
     if len(ids) != len(set(ids)):
@@ -50,13 +141,72 @@ def approve_request(request_id, *, actor, allocations):
                 raise ValidationError("An allocated unit does not match the requested equipment.")
             if Allocation.objects.filter(unit=unit, active=True).exists():
                 raise ValidationError("An equipment unit already has an active reservation.")
-            reserved = EquipmentUnit.objects.filter(
-                pk=unit.pk, status=EquipmentUnit.Status.AVAILABLE
+            changed = EquipmentUnit.objects.filter(
+                pk=unit.pk, status=EquipmentUnit.Status.AVAILABLE,
             ).update(status=EquipmentUnit.Status.RESERVED)
-            if reserved != 1:
+            if changed != 1:
                 raise ValidationError("Only available equipment units can be reserved.")
             Allocation.objects.create(request_item=item, unit=unit)
-    request.approved_at = now
+    request.approved_at = timezone.now()
     request.approved_by = actor
     request.save(update_fields=["approved_at", "approved_by"])
+    return request
+
+
+@transaction.atomic
+def reject_request(request_id, *, actor, reason):
+    _require_role(actor, "ADMIN")
+    if not isinstance(reason, str) or not reason.strip() or len(reason) > 1000:
+        raise ValidationError("Provide a rejection reason of at most 1,000 characters.")
+    changed = BorrowingRequest.objects.filter(
+        pk=request_id, status=BorrowingRequest.Status.PENDING,
+    ).update(status=BorrowingRequest.Status.REJECTED)
+    if changed != 1:
+        raise ValidationError("Only pending requests can be rejected.")
+    request = BorrowingRequest.objects.select_for_update().get(pk=request_id)
+    if hasattr(request, "loan") or request.items.filter(allocations__active=True).exists():
+        raise ValidationError("This request has reservations or a loan and cannot be rejected.")
+    request.rejection_reason = reason.strip()
+    request.rejected_at = timezone.now()
+    request.rejected_by = actor
+    request.save(update_fields=["rejection_reason", "rejected_at", "rejected_by"])
+    return request
+
+
+@transaction.atomic
+def cancel_request(request_id, *, actor):
+    if not actor.is_authenticated or not actor.is_active or actor.role not in ["ADMIN", "BASIC_USER"]:
+        raise PermissionDenied("Only an active Admin or the borrower may cancel a request.")
+    eligible = BorrowingRequest.objects.filter(
+        pk=request_id, status__in=[BorrowingRequest.Status.PENDING, BorrowingRequest.Status.APPROVED],
+    )
+    if actor.role == "BASIC_USER":
+        eligible = eligible.filter(borrower=actor)
+    if eligible.update(status=BorrowingRequest.Status.CANCELLED) != 1:
+        request = BorrowingRequest.objects.filter(pk=request_id).first()
+        if request and actor.role == "BASIC_USER" and request.borrower_id != actor.pk:
+            raise PermissionDenied("You can only cancel your own borrowing requests.")
+        raise ValidationError("Only Pending or Approved requests can be cancelled before issuance.")
+    request = BorrowingRequest.objects.select_for_update().get(pk=request_id)
+    if hasattr(request, "loan"):
+        raise ValidationError("Equipment has already been issued for this request.")
+    allocations = list(
+        Allocation.objects.select_for_update()
+        .filter(request_item__request=request, active=True).order_by("unit_id")
+    )
+    units = {
+        unit.pk: unit for unit in EquipmentUnit.objects.select_for_update()
+        .filter(pk__in=[allocation.unit_id for allocation in allocations]).order_by("pk")
+    }
+    for allocation in allocations:
+        unit = units[allocation.unit_id]
+        changed = EquipmentUnit.objects.filter(
+            pk=unit.pk, status=EquipmentUnit.Status.RESERVED,
+        ).update(status=EquipmentUnit.Status.AVAILABLE)
+        if changed != 1:
+            raise ValidationError("A reservation changed or was issued. No cancellation was saved.")
+        Allocation.objects.filter(pk=allocation.pk, active=True).update(active=False)
+    request.cancelled_at = timezone.now()
+    request.cancelled_by = actor
+    request.save(update_fields=["cancelled_at", "cancelled_by"])
     return request

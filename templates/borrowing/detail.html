@@ -1,0 +1,8 @@
+{% extends "base_user.html" %}
+{% load static %}
+{% block title %}Request #{{ borrowing.pk }} | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/borrowing.css' %}">{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>Request #{{ borrowing.pk }}</h1><p>Your requested equipment and review status.</p></div><div class="page-actions">{% if borrowing.can_cancel %}<a class="button button--secondary" href="{% url 'cancel_borrowing_request' borrowing.pk %}">Cancel request</a>{% endif %}<a class="button button--secondary" href="{% url 'my_requests' %}">Back to my requests</a></div></header>
+<div class="section-stack">{% include "borrowing/_detail_body.html" %}</div>
+{% endblock %}

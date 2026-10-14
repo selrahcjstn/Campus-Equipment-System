@@ -1,0 +1,26 @@
+{% extends "base_user.html" %}
+{% load static %}
+{% block title %}New Borrowing Request | Campus Equipment System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/borrowing.css' %}">{% endblock %}
+{% block page_scripts %}<script src="{% static 'js/borrowing.js' %}" defer></script>{% endblock %}
+{% block content %}
+<header class="page-heading"><div><h1>New borrowing request</h1><p>Select 1–{{ limits.max_items }} equipment items, up to {{ limits.max_quantity }} units each, for at most {{ limits.max_days }} calendar days.</p></div><a class="button button--secondary" href="{% url 'my_requests' %}">My requests</a></header>
+<div class="section-stack">
+    <section class="card section-stack" aria-labelledby="catalog-title">
+        <div><h2 id="catalog-title">Browse equipment</h2><p class="text-secondary">Availability is checked again at submission and approval. A Pending request does not reserve units.</p></div>
+        <div class="form-field"><label for="catalog-search">Search the catalog</label><input type="search" id="catalog-search" data-catalog-search placeholder="Equipment name or description"></div>
+        <div class="content-grid">
+            {% for equipment in catalog %}<article class="card borrowing-catalog-item" data-catalog-entry data-search-text="{{ equipment.name }} {{ equipment.description }}"><h3>{{ equipment.name }}</h3><p class="caption">{{ equipment.description }}</p><p>{{ equipment.available_count }} available unit{{ equipment.available_count|pluralize }}</p><button type="button" class="button button--secondary" data-select-equipment="{{ equipment.pk }}"{% if not equipment.available_count %} disabled{% endif %}>Select {{ equipment.name }}</button></article>
+            {% empty %}<p class="text-secondary">There is no catalog equipment yet. Inventory needs equipment types and physical units before requests can be submitted.</p>{% endfor %}
+        </div>
+        <p class="caption" data-catalog-status role="status" aria-live="polite"></p>
+    </section>
+    <form method="post" class="section-stack" id="borrowing-request-form" data-submit-loading>
+        {% csrf_token %}{{ formset.management_form }}
+        {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+        {% if formset.non_form_errors %}<div class="alert alert--error" role="alert">{{ formset.non_form_errors }}</div>{% endif %}
+        <section class="card section-stack"><h2>Requested equipment</h2><p class="caption">Leave unused equipment slots blank.</p>{% for item_form in formset %}<fieldset class="borrowing-item-row"><legend>Equipment {{ forloop.counter }}</legend>{% include "components/input.html" with field=item_form.equipment %}{% include "components/input.html" with field=item_form.quantity %}{% if item_form.non_field_errors %}<div class="field-errors" role="alert">{{ item_form.non_field_errors }}</div>{% endif %}</fieldset>{% endfor %}</section>
+        <section class="card section-stack"><h2>Borrowing details</h2>{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}<div class="page-actions"><button type="submit" class="button button--primary">Submit request</button><a href="{% url 'my_requests' %}" class="button button--secondary">Cancel</a></div></section>
+    </form>
+</div>
+{% endblock %}

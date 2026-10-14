@@ -20,6 +20,7 @@ from django.views.generic import TemplateView
 urlpatterns = [
     path("", include("apps.accounts.urls")),
     path("", include("apps.loans.urls")),
+    path("", include("apps.borrowing.urls")),
     path(
         "portal/",
         TemplateView.as_view(template_name="dashboard/user_portal.html"),
@@ -32,12 +33,10 @@ urlpatterns = [
     ),
     # Navigation previews only; module owners replace these with their real pages.
     path("portal/equipment/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_user.html", "page_title": "Equipment Catalog"}), name="equipment_catalog"),
-    path("portal/requests/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_user.html", "page_title": "My Borrowing Requests"}), name="my_requests"),
     path("portal/profile/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_user.html", "page_title": "My Profile"}), name="my_profile"),
     path("manage/users/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Users"}), name="user_management"),
     path("manage/categories/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Categories"}), name="equipment_categories"),
     path("manage/equipment/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Equipment Inventory"}), name="equipment_inventory"),
-    path("manage/requests/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Borrowing Requests"}), name="borrowing_requests"),
     path("manage/maintenance/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Maintenance"}), name="maintenance"),
     path("manage/reports/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Reports"}), name="reports"),
     path("manage/audit-logs/", TemplateView.as_view(template_name="navigation/page.html", extra_context={"portal_base": "base_admin.html", "page_title": "Audit Logs"}), name="audit_logs"),
