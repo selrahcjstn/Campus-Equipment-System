@@ -1,0 +1,29 @@
+<form method="get" class="filter-toolbar" role="search" aria-label="{{ filter_label|default:'Filter results' }}" data-filter-toolbar>
+    {% if filter_form.non_field_errors %}<div class="filter-toolbar__errors field-errors" role="alert">{{ filter_form.non_field_errors }}</div>{% endif %}
+    {% for name, values in request.GET.lists %}{% if name not in filter_form.fields and name != 'page' and name != 'units_page' and name != 'request_page' and name != 'loan_page' %}{% for value in values %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}{% endif %}{% endfor %}
+    {% if filter_form.q %}
+    <div class="filter-toolbar__search form-field{% if filter_form.q.errors %} has-errors{% endif %}">
+        <label for="{{ filter_form.q.id_for_label }}">Search<span class="sr-only"> · {{ filter_form.q.label }}</span></label>
+        <div class="filter-toolbar__search-input">
+            {% include "components/icon.html" with name="search" %}
+            <input type="search" name="{{ filter_form.q.html_name }}" id="{{ filter_form.q.id_for_label }}" value="{{ filter_form.q.value|default_if_none:'' }}" placeholder="{{ search_placeholder|default:'Search equipment...' }}" maxlength="{{ filter_form.q.field.max_length }}"{% if filter_form.q.errors %} aria-invalid="true" aria-describedby="{{ filter_form.q.auto_id }}_error"{% endif %}>
+        </div>
+        {% if filter_form.q.errors %}<div class="field-errors" id="{{ filter_form.q.auto_id }}_error" role="alert">{{ filter_form.q.errors }}</div>{% endif %}
+    </div>
+    {% endif %}
+    {% if not filter_form.q or filter_form.fields|length > 1 %}
+    <details class="filter-toolbar__secondary{% if filter_form.q and filter_form.fields|length == 2 %} filter-toolbar__secondary--single{% endif %}" open>
+        <summary>{% include "components/icon.html" with name="filter" %}<span>Filters</span><span class="filter-toolbar__count" hidden></span>{% include "components/icon.html" with name="chevron" %}</summary>
+        <div class="filter-toolbar__controls">
+            {% for field in filter_form %}{% if field.name != 'q' %}{% include "components/input.html" %}{% endif %}{% endfor %}
+        </div>
+    </details>
+    {% endif %}
+    <div class="filter-toolbar__actions">
+        <button class="filter-toolbar__submit" type="submit">{% if filter_form.q %}Search{% else %}Filter{% endif %}</button>
+        <a class="filter-toolbar__reset" href="{{ request.path }}{% if reset_query %}?{{ reset_query }}{% endif %}">Reset filters</a>
+        {% if filter_actions %}{% include filter_actions %}{% endif %}
+    </div>
+    <div class="filter-toolbar__chips" aria-label="Active filters" hidden></div>
+    {% if filter_help %}<p class="filter-toolbar__help caption">{{ filter_help }}</p>{% endif %}
+</form>

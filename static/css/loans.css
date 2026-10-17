@@ -1,5 +1,3 @@
-.loan-filters { display: grid; gap: var(--space-4); }
-.loan-filter-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--space-4); }
 .loan-equipment-list { margin: 0; padding: 0; list-style: none; }
 .loan-equipment-list li + li { margin-top: var(--space-2); }
 .loan-empty { padding: var(--space-8) 0; text-align: center; }

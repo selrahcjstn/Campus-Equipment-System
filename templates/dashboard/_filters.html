@@ -1,5 +1,1 @@
-<form method="get" class="card dashboard-filters" role="search" aria-label="{{ filter_label }}">
-    {% if filter_form.non_field_errors %}<div class="alert alert--error" role="alert">{{ filter_form.non_field_errors }}</div>{% endif %}
-    <div class="dashboard-filter-fields">{% for field in filter_form %}{% include "components/input.html" %}{% endfor %}</div>
-    <div class="page-actions"><button class="button button--primary" type="submit">Apply filters</button><a class="button button--secondary" href="{% url clear_url %}">Clear filters</a></div>
-</form>
+{% include "components/filter_toolbar.html" with search_placeholder="Search activity..." %}

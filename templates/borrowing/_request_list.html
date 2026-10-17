@@ -1,8 +1,5 @@
 {% include "components/messages.html" %}
-<form method="get" class="card borrowing-filters" aria-label="Filter borrowing requests">
-    <div class="borrowing-filter-fields">{% for field in filter_form %}{% include "components/input.html" with field=field %}{% endfor %}</div>
-    <div class="page-actions"><button type="submit" class="button button--primary">Apply filters</button><a class="button button--secondary" href="{{ request.path }}?status=">Show all</a>{% if admin_view %}<a class="button button--secondary" href="{% url 'borrowing_requests' %}?status=PENDING">Pending queue ({{ pending_count }})</a>{% endif %}</div>
-</form>
+{% include "components/filter_toolbar.html" with filter_label="Filter borrowing requests" search_placeholder="Search requests..." reset_query="status=" filter_actions="borrowing/_filter_shortcuts.html" %}
 <div class="table-container"><table class="data-table">
     <caption>{% if admin_view %}Borrowing request queue{% else %}Your borrowing requests{% endif %}</caption>
     <thead><tr><th scope="col">Request{% if admin_view %} / borrower{% endif %}</th><th scope="col">Equipment</th><th scope="col">Submitted</th><th scope="col">Due</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>

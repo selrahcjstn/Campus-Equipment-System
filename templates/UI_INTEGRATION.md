@@ -111,6 +111,35 @@ unrelated values for self-contained components.
   drawer supports Escape, focus trapping, focus restoration, and inert content.
   Navigation remains visible when JavaScript is disabled.
 
+## Search and filter toolbars
+
+Use `components/filter_toolbar.html` for GET-based search and filters, with the
+existing `filter_form` and `request` in context:
+
+```django
+{% include "components/filter_toolbar.html" with filter_label="Filter equipment" search_placeholder="Search equipment..." %}
+```
+
+The `q` field becomes a labelled search input with an icon. All remaining fields
+keep their original Django widgets, labels, choices and errors. Optional arguments
+are `reset_query` (for example `state=` or `status=` to preserve an explicit
+all-results reset), `filter_help`, and `filter_actions` (a shortcut partial).
+
+`filters.css` and `filters.js` load through `base.html`. Dropdown and date changes
+submit the existing GET form; search waits 350 ms and respects IME composition.
+Unchanged values do not trigger another automatic submission. The form preserves
+unrelated query parameters, including repeated values, and omits pagination keys
+so a changed filter starts at the first page. Existing pagination links continue
+to use Django's `querystring` tag. No client-side data filtering or extra fetches
+are introduced.
+
+On mobile, native `details` groups secondary fields while search stays visible.
+Removable chips summarize secondary filters on mobile only; required chart dates
+use the range reset instead. Keyboard focus and expanded filters are restored
+after an automatic GET submission when browser session storage is available.
+Validation errors expand the filter group. Without JavaScript, fields remain
+available in the native disclosure and a normal submit button is visible.
+
 ## Modals
 
 Native `<dialog>` provides keyboard containment and Escape dismissal. Include

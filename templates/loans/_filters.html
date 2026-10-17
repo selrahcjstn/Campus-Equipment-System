@@ -1,10 +1,5 @@
-<form method="get" class="card loan-filters" aria-label="Filter {{ filter_label|default:'loans' }}">
-    {% if filter_form.non_field_errors %}<div class="field-errors" role="alert">{{ filter_form.non_field_errors }}</div>{% endif %}
-    <div class="loan-filter-fields">
-        {% for field in filter_form %}{% include "components/input.html" with field=field %}{% endfor %}
-    </div>
-    <div class="page-actions">
-        <button class="button button--primary" type="submit">Apply filters</button>
-        <a class="button button--secondary" href="{{ request.path }}">Clear filters</a>
-    </div>
-</form>
+{% if filter_label == 'approved requests' %}
+    {% include "components/filter_toolbar.html" with filter_label="Search approved requests" search_placeholder="Search requests..." %}
+{% else %}
+    {% include "components/filter_toolbar.html" with filter_label="Filter loans" search_placeholder="Search loans..." %}
+{% endif %}

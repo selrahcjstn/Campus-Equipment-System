@@ -1,8 +1,6 @@
 .dashboard-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-6); }
 .dashboard-kpis h2 { font-size: var(--font-card); }
 .dashboard-stat { margin: var(--space-3) 0; font-size: var(--font-title); font-weight: var(--weight-bold); }
-.dashboard-filters { display: grid; gap: var(--space-4); }
-.dashboard-filter-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--space-4); }
 .dashboard-chart { margin: 0; min-width: 0; }
 .dashboard-chart svg { display: block; width: 100%; height: auto; }
 .chart-axis { stroke: var(--border-strong); stroke-width: 2; }

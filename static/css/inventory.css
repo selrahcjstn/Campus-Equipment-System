@@ -1,5 +1,3 @@
-.inventory-filters { display: grid; gap: var(--space-4); }
-.inventory-filter-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--space-4); }
 .inventory-catalog-card { display: grid; align-content: start; gap: var(--space-6); }
 .inventory-catalog-card .page-actions { align-self: end; }
 .inventory-catalog-card h2 { margin-top: var(--space-2); }

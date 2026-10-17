@@ -1,6 +1,5 @@
 .maintenance-summary h2 { font-size: var(--font-card); }
 .maintenance-stat { font-size: var(--font-title); font-weight: var(--weight-bold); margin: var(--space-3) 0; }
-.maintenance-filter-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--space-4); }
 .maintenance-issue { max-width: 320px; overflow-wrap: anywhere; }
 .maintenance-empty { padding: var(--space-8); text-align: center; }
 .maintenance-empty p { margin-top: var(--space-2); }

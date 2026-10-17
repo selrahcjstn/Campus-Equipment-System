@@ -1,4 +1,9 @@
-<form method="get" class="card inventory-filters" aria-label="Filter inventory">
-    <div class="inventory-filter-fields">{% for field in filter_form %}{% include "components/input.html" with field=field %}{% endfor %}</div>
-    <div class="page-actions"><button class="button button--primary" type="submit">Apply filters</button><a class="button button--secondary" href="{{ request.path }}{% if admin_catalog %}?state={% endif %}">Clear filters</a></div>
-</form>
+{% if filter_form.state %}
+    {% include "components/filter_toolbar.html" with filter_label="Filter inventory" reset_query="state=" %}
+{% elif filter_form.equipment %}
+    {% include "components/filter_toolbar.html" with filter_label="Filter physical units" search_placeholder="Search units..." %}
+{% elif not filter_form.category %}
+    {% include "components/filter_toolbar.html" with filter_label="Search categories" search_placeholder="Search categories..." %}
+{% else %}
+    {% include "components/filter_toolbar.html" with filter_label="Filter inventory" %}
+{% endif %}
