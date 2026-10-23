@@ -5,7 +5,7 @@
 .filter-toolbar .form-field input:not([type='hidden']):not([type='checkbox']):not([type='radio']), .filter-toolbar .form-field select { font-weight: var(--weight-regular); }
 .filter-toolbar .form-field:not(.has-errors) input:hover, .filter-toolbar .form-field:not(.has-errors) select:hover { --control-border: var(--border-strong); }
 .filter-toolbar .form-field input:focus, .filter-toolbar .form-field select:focus { --control-border: var(--accent); }
-.filter-toolbar .form-field.has-errors input:focus, .filter-toolbar .form-field.has-errors select:focus { --control-border: var(--error); outline-color: var(--error); }
+.filter-toolbar .form-field.has-errors input:focus, .filter-toolbar .form-field.has-errors select:focus { --control-border: var(--error); outline-color: var(--primary); }
 .filter-toolbar__search { flex: 1 1 240px; max-width: 320px; }
 .filter-toolbar__secondary { flex: 1 1 300px; min-width: 0; }
 .filter-toolbar__secondary--single { flex-basis: 160px; max-width: 200px; }
@@ -17,7 +17,7 @@
 .filter-toolbar__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); min-height: var(--control-height); }
 .filter-toolbar__reset, .filter-toolbar__shortcut { display: inline-flex; align-items: center; min-height: var(--control-height); font-size: var(--font-caption); font-weight: var(--weight-medium); text-decoration: none; }
 .filter-toolbar__reset { color: var(--text-secondary); }
-.filter-toolbar__reset:hover { color: var(--primary); text-decoration: underline; }
+.filter-toolbar__reset:hover, .filter-toolbar__shortcut:hover { color: var(--primary); text-decoration: underline; }
 .filter-toolbar__submit { min-height: var(--control-height); padding: var(--space-2) var(--space-3); color: var(--primary); background: var(--surface-muted); border: var(--border); border-radius: var(--radius-md); }
 .filter-toolbar[data-enhanced] .filter-toolbar__submit { display: none; }
 .filter-toolbar__errors, .filter-toolbar__help { flex-basis: 100%; min-width: 0; }
@@ -26,7 +26,7 @@
     .filter-toolbar__search { flex-basis: 100%; max-width: none; }
     .filter-toolbar__secondary { flex: 1 1 140px; max-width: none; }
     .filter-toolbar__secondary[open] { flex-basis: 100%; }
-    .filter-toolbar__secondary > summary { display: flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); padding: var(--space-2) var(--space-3); border: var(--border); border-radius: var(--radius-md); color: var(--text-primary); background: var(--surface); font-size: var(--font-label); font-weight: var(--weight-medium); cursor: pointer; list-style: none; }
+    .filter-toolbar__secondary > summary { display: flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); padding: var(--space-2) var(--space-3); border: var(--border); border-radius: var(--control-radius); color: var(--text-primary); background: var(--surface); font-size: var(--font-label); font-weight: var(--weight-medium); cursor: pointer; list-style: none; }
     .filter-toolbar__secondary > summary::-webkit-details-marker { display: none; }
     .filter-toolbar__secondary > summary > .icon:last-child { margin-left: auto; width: var(--space-4); height: var(--space-4); transform: rotate(90deg); }
     .filter-toolbar__secondary[open] > summary > .icon:last-child { transform: rotate(-90deg); }

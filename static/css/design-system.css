@@ -55,6 +55,7 @@
     --header-height: 60px;
     --shadow-sm: 0 1px 2px rgb(24 24 27 / 3%);
     --control-height: 36px;
+    --control-radius: var(--radius-sm);
     --touch-control-height: 40px;
     --section-gap: 20px;
     --card-padding: 20px;
@@ -114,8 +115,8 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .button--primary:hover { background: var(--primary-hover); color: var(--surface); }
 .button--secondary { background: var(--surface); border: var(--border); color: var(--text-primary); box-shadow: var(--shadow-sm); }
 .button--secondary:hover { background: var(--surface-muted); color: var(--text-primary); }
-.button--destructive { background: var(--error); color: var(--surface); }
-.button--destructive:hover { background: var(--error); outline: var(--border-emphasis); outline-offset: 2px; }
+.button--destructive { background: var(--primary); border-color: var(--primary); color: var(--surface); }
+.button--destructive:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: var(--surface); }
 .button--full { width: 100%; }
 .button:disabled { background: var(--surface-muted); color: var(--text-secondary); border: var(--border); }
 .icon-button { display: inline-flex; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); padding: var(--space-2); border: var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--text-secondary); flex-shrink: 0; }
@@ -126,7 +127,7 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .form-checkbox input[type='checkbox'] { flex-shrink: 0; margin: var(--space-1) 0 0; }
 .required-mark { margin-left: var(--space-1); color: var(--text-secondary); }
 .form-field input:not([type='checkbox']):not([type='radio']):not([type='hidden']), .form-field select, .form-field textarea {
-    width: 100%; min-width: 0; height: var(--control-height); padding: var(--space-2) var(--space-3); border: 1px solid var(--control-border, var(--border-strong)); border-radius: var(--radius-md); background: var(--surface); color: var(--text-primary); font-size: var(--font-body); font-weight: var(--weight-regular);
+    width: 100%; min-width: 0; height: var(--control-height); padding: var(--space-2) var(--space-3); border: 1px solid var(--control-border, var(--border-strong)); border-radius: var(--control-radius); background: var(--surface); color: var(--text-primary); font-size: var(--font-body); font-weight: var(--weight-regular);
 }
 .form-field textarea { height: auto; min-height: 96px; resize: vertical; }
 .search-input { position: relative; }
@@ -135,20 +136,21 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .form-field input::placeholder, .form-field textarea::placeholder { color: var(--text-secondary); font-weight: var(--weight-regular); }
 .form-field:not(.has-errors) input:hover, .form-field:not(.has-errors) select:hover, .form-field:not(.has-errors) textarea:hover { --control-border: var(--border-strong); }
 .form-field input:focus, .form-field select:focus, .form-field textarea:focus { --control-border: var(--accent); border-color: var(--accent); outline: var(--focus); outline-offset: 0; }
-.form-field.has-errors input:focus, .form-field.has-errors select:focus, .form-field.has-errors textarea:focus { --control-border: var(--error); border-color: var(--error); outline-color: var(--error); }
+.form-field.has-errors input:focus, .form-field.has-errors select:focus, .form-field.has-errors textarea:focus { --control-border: var(--error); border-color: var(--error); outline-color: var(--primary); }
 .form-field input[readonly] { background: var(--background); }
 .form-page, .form-panel { width: 100%; max-width: var(--form-width); }
 .form-page--narrow, .form-panel--narrow { max-width: var(--form-width-narrow); }
 .form-panel--wide { max-width: var(--form-width-wide); }
 .form-page--full, .form-panel--full { max-width: none; }
 .form-panel.section-stack { gap: var(--space-4); }
+.form-panel--full > .form-field { max-width: var(--form-width); }
 .form-panel > .page-actions:last-child { padding-top: var(--space-4); border-top: var(--border); }
 .form-field input[type='checkbox'], .form-field input[type='radio'] { width: var(--space-4); height: var(--space-4); accent-color: var(--accent); }
 .form-field input[type='checkbox'] { border-radius: var(--radius-xs); }
-.form-field input:disabled, .form-field textarea:disabled, .form-field select:disabled { background: var(--surface-muted); color: var(--text-secondary); cursor: not-allowed; }
+.form-field input:disabled, .form-field textarea:disabled, .form-field select:disabled { background: var(--surface-muted); color: var(--text-secondary); opacity: 1; cursor: not-allowed; }
 .form-field.has-errors { --control-border: var(--error); }
 .field-help, .field-errors { font-size: var(--font-caption); overflow-wrap: anywhere; }
-.field-help { color: var(--text-secondary); }
+.field-help { max-width: 65ch; color: var(--text-secondary); line-height: 1.6; }
 .field-errors { color: var(--error); }
 .field-help ul, .field-errors ul { margin: 0; padding-left: var(--space-4); }
 .field-errors .errorlist { padding-left: 0; list-style: none; }
