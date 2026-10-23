@@ -25,8 +25,10 @@ pages. Both extend `base_app.html` and `base.html`. Authentication pages extend
 ```
 
 Place page styling in its own static CSS file; reuse the variables in
-`static/css/design-system.css`. Use `section-stack` for 32px section spacing and
-`content-grid` for a responsive grid with 24px gaps. Inter loads from Google
+`static/css/design-system.css`. Use `section-stack` for 20px section spacing and
+`content-grid` for a responsive grid with 16px gaps. Mobile section gaps are 16px.
+Portal content caps at 1200px with 24px desktop padding and 16px mobile padding.
+Inter loads from Google
 Fonts with a sans-serif fallback if the font service is unavailable.
 
 ## Navigation integration
@@ -161,23 +163,36 @@ Maintenance uses `page`/`units_page`; account history uses
 records regardless of the visible report page.
 
 Tables use shared `table-cell--text`, `--description`, `--identifier`, `--date`,
-`--number`, `--status` and `--actions` classes on headers and their cells. Choose
+`--number`, `--role`, `--status` and `--actions` classes on headers and their cells. Choose
 roles by content rather than assigning equal column widths. Overflow regions are
 labelled and keyboard focusable; printable loan slips retain their print styles.
 
 ## Form widths and empty states
 
-Use `form-panel` on portal POST forms for a 720px maximum width. Add
-`form-panel--narrow` for 560px password/simple confirmation forms, or
-`form-panel--wide` for 960px borrowing/return forms with multiple unit rows.
+Use `form-panel` on portal POST forms for a 640px maximum width. Add
+`form-panel--narrow` for 520px password/simple confirmation forms, or
+`form-panel--wide` for 880px borrowing/return forms with multiple unit rows.
 `form-page` and `form-page--narrow` apply the matching limit to surrounding account
 information and help messages. These limits shrink naturally to the available
 mobile width; original Django widgets, errors, CSRF and confirmation handlers stay
-in place. Authentication forms retain their existing bounded layouts.
+in place. Login caps at 420px and registration at 520px.
 
 Use `empty-state` for shared empty result messages. Table action buttons use the
 compact shared table style and keep 40px minimum targets on coarse-pointer devices.
 Form and filter error borders remain visible on hover and focus.
+
+## Metrics, facts, and search inputs
+
+Use `metric-grid` for dashboard statistics and `metric-grid--three` for three
+metrics. Include `components/metric.html` with `label`, `value`, and optional
+`icon` and `description`; pass `only` so optional content cannot leak from a page.
+Use `facts-grid` on definition lists to share compact label/value styling.
+
+The `search-input` wrapper provides the shared inset icon and input padding.
+Keep the field's label, original input attributes, and its existing GET or
+client-side selection handler. Catalog cards use `inventory-grid` to avoid
+stretching a lone card across a desktop row. See `docs/UI_REDESIGN.md` for
+the full design and verification notes.
 
 ## Modals
 
