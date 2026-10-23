@@ -1,6 +1,6 @@
 <section class="card" aria-labelledby="loan-summary-title">
     <div class="card-heading"><h2 id="loan-summary-title">Loan summary</h2>{% include "components/badge.html" with label=loan.status variant=loan.status_variant %}</div>
-    <dl class="loan-facts">
+    <dl class="facts-grid">
         <div><dt>Borrower</dt><dd>{{ loan.borrower.get_full_name|default:loan.borrower.username }} <span class="caption">({{ loan.borrower.username }})</span></dd></div>
         <div><dt>Borrowing request</dt><dd>#{{ loan.request_id }}</dd></div>
         <div><dt>Issued</dt><dd>{{ loan.issued_at|date:"M j, Y, g:i A T" }}</dd></div>

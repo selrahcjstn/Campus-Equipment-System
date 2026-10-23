@@ -1,0 +1,5 @@
+<section class="card metric">
+    <div class="metric__heading"><h2>{{ label }}</h2>{% if icon %}{% include "components/icon.html" with name=icon %}{% endif %}</div>
+    <p class="metric__value">{{ value }}</p>
+    {% if description %}<p class="metric__description">{{ description }}</p>{% endif %}
+</section>

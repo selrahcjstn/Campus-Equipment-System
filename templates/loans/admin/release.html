@@ -6,7 +6,7 @@
 {% block content %}
 <header class="page-heading"><div><h1>Release request #{{ borrowing.pk }}</h1><p>Verify the reserved units before handing equipment to the borrower.</p></div><a class="button button--secondary" href="{% url 'loan_management' %}">Back to loan management</a></header>
 <div class="section-stack">
-    <section class="card"><h2>Approved handover</h2><dl class="loan-facts">
+    <section class="card"><h2>Approved handover</h2><dl class="facts-grid">
         <div><dt>Borrower</dt><dd>{{ borrowing.borrower.get_full_name|default:borrowing.borrower.username }} ({{ borrowing.borrower.username }})</dd></div>
         <div><dt>Request status</dt><dd>{{ borrowing.get_status_display }}</dd></div>
         <div><dt>Due</dt><dd>{{ borrowing.due_at|date:"M j, Y, g:i A T" }}</dd></div>

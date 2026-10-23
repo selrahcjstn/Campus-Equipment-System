@@ -5,11 +5,11 @@
 {% block content %}
 <header class="page-heading"><div><h1>Dashboard</h1><p>Live inventory and borrowing activity across the campus.</p></div><div class="page-actions"><a class="button button--secondary" href="{% url 'reports' %}">View reports</a><a class="button button--primary" href="{% url 'borrowing_requests' %}">Review requests</a></div></header>
 <div class="section-stack">
-    <div class="dashboard-kpis">
-        <section class="card"><h2>Total inventory</h2><p class="dashboard-stat">{{ statistics.total_units }}</p><p class="caption">All physical units, including archived and Retired</p></section>
-        <section class="card"><h2>Available equipment</h2><p class="dashboard-stat">{{ statistics.available_units }}</p><p class="caption">Borrowable units in the active catalog</p></section>
-        <section class="card"><h2>Active loans</h2><p class="dashboard-stat">{{ statistics.active_loans }}</p><p class="caption">Issued loans with outstanding units</p></section>
-        <section class="card"><h2>Overdue loans</h2><p class="dashboard-stat">{{ statistics.overdue_loans }}</p><p class="caption">Past their due time with units still outstanding</p></section>
+    <div class="metric-grid">
+        {% include "components/metric.html" with label="Total inventory" value=statistics.total_units description="All physical units, including archived and Retired" icon="equipment" only %}
+        {% include "components/metric.html" with label="Available equipment" value=statistics.available_units description="Borrowable units in the active catalog" icon="catalog" only %}
+        {% include "components/metric.html" with label="Active loans" value=statistics.active_loans description="Issued loans with outstanding units" icon="loans" only %}
+        {% include "components/metric.html" with label="Overdue loans" value=statistics.overdue_loans description="Past their due time with units still outstanding" icon="history" only %}
     </div>
     {% with help="Inclusive calendar dates in "|add:timezone_name|add:". Up to 366 dates. Reset for the last 30 days." %}{% include "components/filter_toolbar.html" with filter_label="Borrowing activity chart period" filter_help=help %}{% endwith %}
     <div class="content-grid dashboard-charts">

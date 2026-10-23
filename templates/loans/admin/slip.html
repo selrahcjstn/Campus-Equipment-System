@@ -7,7 +7,7 @@
 <div class="page-actions loan-print-actions"><button type="button" class="button button--primary" data-print-slip>Print borrowing slip</button><a class="button button--secondary" href="{% url 'admin_loan_detail' loan.pk %}">Back to loan</a></div>
 <article class="loan-slip section-stack">
     <header><span class="eyebrow">Campus Equipment System</span><h1>Borrowing slip #{{ loan.pk }}</h1><p class="text-secondary">Borrowing request #{{ loan.request_id }}</p></header>
-    <section><dl class="loan-facts">
+    <section><dl class="facts-grid">
         <div><dt>Borrower</dt><dd>{{ loan.borrower.get_full_name|default:loan.borrower.username }} ({{ loan.borrower.username }})</dd></div>
         <div><dt>Issued by</dt><dd>{{ loan.issued_by.get_full_name|default:loan.issued_by.username }}</dd></div>
         <div><dt>Issue date</dt><dd>{{ loan.issued_at|date:"M j, Y, g:i A T" }}</dd></div>

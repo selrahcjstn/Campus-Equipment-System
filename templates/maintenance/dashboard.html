@@ -6,10 +6,10 @@
 <header class="page-heading"><div><h1>Maintenance</h1><p>Track reported issues, repairs and retirement for each physical unit.</p></div><a class="button button--primary" href="{% url 'maintenance_create' %}">Report maintenance</a></header>
 <div class="section-stack">
     {% include "components/messages.html" %}
-    <div class="content-grid maintenance-summary">
-        <section class="card"><h2>Units in Maintenance</h2><p class="maintenance-stat">{{ maintenance_count }}</p><p class="caption">Current physical unit status</p></section>
-        <section class="card"><h2>Active records</h2><p class="maintenance-stat">{{ counts.active }}</p><p class="caption">Reported and In progress</p></section>
-        <section class="card"><h2>Completed records</h2><p class="maintenance-stat">{{ counts.completed }}</p><p class="caption">Repaired and Retired outcomes</p></section>
+    <div class="metric-grid metric-grid--three">
+        {% include "components/metric.html" with label="Units in Maintenance" value=maintenance_count description="Current physical unit status" icon="maintenance" only %}
+        {% include "components/metric.html" with label="Active records" value=counts.active description="Reported and In progress" icon="requests" only %}
+        {% include "components/metric.html" with label="Completed records" value=counts.completed description="Repaired and Retired outcomes" icon="history" only %}
     </div>
     {% if untracked_count %}<div class="alert alert--warning" role="status"><strong>{{ untracked_count }} Maintenance unit{{ untracked_count|pluralize }} need{{ untracked_count|pluralize:"s," }} a record.</strong><p>Open the unit's history below and report its issue. It remains unavailable while awaiting assessment.</p></div>{% endif %}
     <div class="table-container" tabindex="0" role="region" aria-label="Equipment currently under maintenance"><table class="data-table"><caption>Equipment currently under maintenance</caption><thead><tr><th scope="col" class="table-cell--identifier">Physical unit</th><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--actions">Action</th></tr></thead><tbody>{% for unit in unit_page %}<tr><td class="table-cell--identifier">{{ unit.asset_tag }}</td><td class="table-cell--text">{{ unit.equipment.name }}</td><td class="table-cell--actions"><a class="button button--secondary" href="{% url 'maintenance_history' unit.pk %}">View history and active issue</a></td></tr>{% empty %}<tr><td colspan="3"><div class="empty-state">No physical units are currently in Maintenance.</div></td></tr>{% endfor %}</tbody></table></div>

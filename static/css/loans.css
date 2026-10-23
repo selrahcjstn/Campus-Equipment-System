@@ -1,9 +1,6 @@
 .loan-equipment-list { margin: 0; padding: 0; list-style: none; }
 .loan-equipment-list li + li { margin-top: var(--space-2); }
 .loan-readiness-error { max-width: 280px; margin: var(--space-2) 0; }
-.loan-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--space-6); margin: var(--space-4) 0 0; }
-.loan-facts dt { color: var(--text-secondary); font-size: var(--font-label); }
-.loan-facts dd { margin: var(--space-1) 0 0; font-weight: var(--weight-medium); overflow-wrap: anywhere; }
 .loan-purpose { margin-top: var(--space-6); }
 .loan-purpose p { margin-top: var(--space-2); overflow-wrap: anywhere; }
 .loan-notes { max-width: 320px; margin-top: var(--space-2); overflow-wrap: anywhere; }
