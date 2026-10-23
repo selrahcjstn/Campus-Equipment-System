@@ -2,11 +2,14 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from threading import Barrier
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlsplit
 
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.db import IntegrityError, OperationalError, close_old_connections, connections
-from django.test import Client, TestCase, TransactionTestCase, override_settings
+from django.test import Client, RequestFactory, SimpleTestCase, TestCase, TransactionTestCase, override_settings
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 
@@ -20,6 +23,47 @@ from apps.maintenance.models import MaintenanceRecord
 from apps.maintenance.services import create_record, update_record, resolve_record
 from .models import User
 from .services import change_password, set_user_active, set_user_role, update_profile
+from .templatetags.ui_pagination import pagination_links
+
+
+class PaginationComponentTests(SimpleTestCase):
+    def test_links_preserve_filters_repeated_values_and_other_tables(self):
+        request = RequestFactory().get("/", {"q": "Projector", "sort": "name", "tag": ["AV", "IT"], "page": 4, "units_page": 3})
+        page = Paginator(range(100), 10).get_page(3)
+        links = pagination_links({"request": request}, page, "units_page")
+        query = parse_qs(urlsplit(links["next"]).query)
+        self.assertEqual(query, {"q": ["Projector"], "sort": ["name"], "tag": ["AV", "IT"], "page": ["4"], "units_page": ["4"]})
+
+    def test_effective_pending_and_catalog_defaults_survive_navigation(self):
+        from apps.borrowing.forms import RequestFilterForm
+        from apps.inventory.forms import EquipmentFilterForm
+        page = Paginator(range(21), 10).get_page(1)
+        for form, expected in [(RequestFilterForm({"status": "PENDING"}), {"status": ["PENDING"]}), (EquipmentFilterForm({"state": "active"}), {"state": ["active"]})]:
+            links = pagination_links({"request": RequestFactory().get("/"), "filter_form": form}, page)
+            self.assertEqual(parse_qs(urlsplit(links["next"]).query), {**expected, "page": ["2"]})
+
+    def test_numbered_navigation_elides_large_ranges_without_extra_queries(self):
+        request = RequestFactory().get("/", {"q": "projector"})
+        page = Paginator(range(10000), 10).get_page(500)
+        links = pagination_links({"request": request}, page)
+        self.assertLessEqual(len(links["pages"]), 9)
+        html = render_to_string("components/pagination.html", {"request": request, "page_obj": page})
+        self.assertIn("Showing 4991–5000 of 10000 records.", html)
+        self.assertIn('aria-current="page"', html)
+        self.assertIn('aria-label="Page 501"', html)
+
+    def test_empty_first_last_and_invalid_pages_remain_usable(self):
+        request = RequestFactory().get("/")
+        html = render_to_string("components/pagination.html", {"request": request, "page_obj": Paginator([], 10).get_page("invalid")})
+        self.assertIn("Showing 0–0 of 0 records.", html)
+        self.assertNotIn('class="pagination__pages"', html)
+        paginator = Paginator(range(21), 10)
+        for value, expected in [("invalid", 1), ("999", 3), ("-1", 3)]:
+            page = paginator.get_page(value)
+            self.assertEqual(page.number, expected)
+            links = pagination_links({"request": request}, page)
+            self.assertEqual(links["previous"] is None, expected == 1)
+            self.assertEqual(links["next"] is None, expected == 3)
 
 
 class LandingPageTests(TestCase):
@@ -342,7 +386,7 @@ class AccountManagementTests(AccountsTestCase):
         for index in range(21):
             User.objects.create_user(f"extra-{index}", role="BASIC_USER")
         response = self.client.get(reverse("user_management"), {"role": "BASIC_USER"})
-        self.assertEqual(len(response.context["page_obj"]), 20)
+        self.assertEqual(len(response.context["page_obj"]), 10)
         self.assertContains(response, "role=BASIC_USER&amp;page=2")
 
     def test_activate_and_deactivate_post_are_audited(self):

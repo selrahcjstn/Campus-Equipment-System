@@ -598,10 +598,13 @@ class LoanPageTests(LoanFixtures, TestCase):
             release_request(request.pk, actor=self.admin)
         self.client.force_login(self.borrower)
         first = self.client.get(reverse("my_loans"), {"q": "Projector"})
-        self.assertEqual(len(first.context["page_obj"]), 20)
+        self.assertEqual(len(first.context["page_obj"]), 10)
         self.assertContains(first, "q=Projector&amp;page=2")
         second = self.client.get(reverse("my_loans"), {"q": "Projector", "page": "2"})
-        self.assertEqual(len(second.context["page_obj"]), 1)
+        self.assertEqual(len(second.context["page_obj"]), 10)
+        third = self.client.get(second.wsgi_request.path, {**second.wsgi_request.GET.dict(), "page": "3"})
+        self.assertEqual(len(third.context["page_obj"]), 1)
+        self.assertContains(third, "Showing 21–21 of 21 records.")
         self.assertEqual(self.client.get(reverse("my_loans"), {"page": "invalid"}).status_code, 200)
 
     def test_formset_rejects_forged_excess_rows(self):

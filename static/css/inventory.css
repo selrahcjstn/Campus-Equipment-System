@@ -7,4 +7,3 @@
 .inventory-counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0 0; }
 .inventory-counts dt { font-size: var(--font-label); color: var(--text-secondary); }
 .inventory-counts dd { margin: var(--space-1) 0 0; font-size: var(--font-heading); font-weight: var(--weight-semibold); }
-.inventory-pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-4); }

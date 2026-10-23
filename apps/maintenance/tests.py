@@ -563,13 +563,13 @@ class MaintenanceViewTests(MaintenanceFixtures, TestCase):
             unit = EquipmentUnit.objects.create(equipment=self.equipment, asset_tag=f"EXTRA-{index}")
             create_record(unit.pk, actor=self.admin, reason="Extra issue")
         response = self.client.get(reverse("maintenance"), {"equipment": self.equipment.pk})
-        self.assertEqual(len(response.context["page_obj"]), 20)
-        self.assertEqual(len(response.context["unit_page"]), 20)
+        self.assertEqual(len(response.context["page_obj"]), 10)
+        self.assertEqual(len(response.context["unit_page"]), 10)
         self.assertContains(response, f"equipment={self.equipment.pk}&amp;page=2")
         self.assertContains(response, f"equipment={self.equipment.pk}&amp;units_page=2")
         response = self.client.get(reverse("maintenance"), {"page": 2, "units_page": 2})
-        self.assertEqual(len(response.context["page_obj"]), 1)
-        self.assertEqual(len(response.context["unit_page"]), 1)
+        self.assertEqual(len(response.context["page_obj"]), 10)
+        self.assertEqual(len(response.context["unit_page"]), 10)
 
 
 class ExistingMaintenanceMigrationTests(MaintenanceFixtures, TestCase):

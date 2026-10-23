@@ -62,8 +62,8 @@ def dashboard(request):
     untracked = units.exclude(pk__in=MaintenanceRecord.objects.filter(status__in=ACTIVE_STATUSES).values("unit_id"))
     return render(request, "maintenance/dashboard.html", {
         "active_nav": "maintenance", "filter_form": form,
-        "page_obj": Paginator(records, 20).get_page(request.GET.get("page")),
-        "unit_page": Paginator(units, 20).get_page(request.GET.get("units_page")),
+        "page_obj": Paginator(records, 10).get_page(request.GET.get("page")),
+        "unit_page": Paginator(units, 10).get_page(request.GET.get("units_page")),
         "counts": counts, "maintenance_count": units.count(), "untracked_count": untracked.count(),
     })
 
@@ -80,7 +80,7 @@ def detail(request, pk):
 def unit_history(request, pk):
     unit = get_object_or_404(EquipmentUnit.objects.select_related("equipment"), pk=pk)
     active = unit.maintenance_records.filter(status__in=ACTIVE_STATUSES).first()
-    return render(request, "maintenance/history.html", {"unit": unit, "active_record": active, "active_nav": "maintenance", "page_obj": Paginator(_records().filter(unit=unit), 20).get_page(request.GET.get("page"))})
+    return render(request, "maintenance/history.html", {"unit": unit, "active_record": active, "active_nav": "maintenance", "page_obj": Paginator(_records().filter(unit=unit), 10).get_page(request.GET.get("page"))})
 
 
 @admin_required

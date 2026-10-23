@@ -41,7 +41,7 @@ def _list_context(request, *, admin=False):
             records = records.filter(status=values["status"])
     else:
         records = records.none()
-    return {"page_obj": Paginator(records, 20).get_page(request.GET.get("page")), "filter_form": form, "pending_count": pending_count, "admin_view": admin, "active_nav": "requests"}
+    return {"page_obj": Paginator(records, 10).get_page(request.GET.get("page")), "filter_form": form, "pending_count": pending_count, "admin_view": admin, "active_nav": "requests"}
 
 
 @login_required(login_url="login")

@@ -171,7 +171,7 @@ def user_management(request):
             users = users.filter(role=data["role"])
     else:
         users = users.none()
-    return render(request, "accounts/admin/users.html", {"filter_form": form, "page_obj": Paginator(users, 20).get_page(request.GET.get("page")), "active_nav": "users"})
+    return render(request, "accounts/admin/users.html", {"filter_form": form, "page_obj": Paginator(users, 10).get_page(request.GET.get("page")), "active_nav": "users"})
 
 
 @account_required(admin=True)

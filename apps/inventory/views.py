@@ -18,7 +18,7 @@ def _role(request, role):
 
 
 def _page(request, records):
-    return Paginator(records, 20).get_page(request.GET.get("page"))
+    return Paginator(records, 10).get_page(request.GET.get("page"))
 
 
 def _filter_catalog(records, form):

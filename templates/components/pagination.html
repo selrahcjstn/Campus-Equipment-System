@@ -1,0 +1,14 @@
+{% load ui_pagination %}
+{% pagination_links page_obj page_param|default:'page' as links %}
+<nav class="pagination" aria-label="{{ pagination_label|default:'Result pages' }}">
+    <p class="pagination__summary">Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} records.</p>
+    {% if page_obj.paginator.num_pages > 1 %}
+    <ul class="pagination__pages">
+        <li>{% if links.previous %}<a class="pagination__link" href="{{ links.previous }}" aria-label="Previous page">Previous</a>{% else %}<span class="pagination__link is-disabled" aria-disabled="true">Previous</span>{% endif %}</li>
+        {% for item in links.pages %}
+        <li>{% if not item.url %}<span class="pagination__ellipsis" aria-hidden="true">{{ item.number }}</span><span class="sr-only">More pages</span>{% elif item.number == page_obj.number %}<span class="pagination__link is-current" aria-current="page" aria-label="Page {{ item.number }}">{{ item.number }}</span>{% else %}<a class="pagination__link" href="{{ item.url }}" aria-label="Page {{ item.number }}">{{ item.number }}</a>{% endif %}</li>
+        {% endfor %}
+        <li>{% if links.next %}<a class="pagination__link" href="{{ links.next }}" aria-label="Next page">Next</a>{% else %}<span class="pagination__link is-disabled" aria-disabled="true">Next</span>{% endif %}</li>
+    </ul>
+    {% endif %}
+</nav>

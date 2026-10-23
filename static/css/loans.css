@@ -3,7 +3,6 @@
 .loan-empty { padding: var(--space-8) 0; text-align: center; }
 .loan-empty p { margin-top: var(--space-2); }
 .loan-readiness-error { max-width: 280px; margin: var(--space-2) 0; }
-.loan-pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-4); }
 .loan-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--space-6); margin: var(--space-4) 0 0; }
 .loan-facts dt { color: var(--text-secondary); font-size: var(--font-label); }
 .loan-facts dd { margin: var(--space-1) 0 0; font-weight: var(--weight-medium); overflow-wrap: anywhere; }

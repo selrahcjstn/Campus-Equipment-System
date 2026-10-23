@@ -359,7 +359,7 @@ class ReportsTests(DashboardFixtures, TestCase):
             loan = self.issue()
             self.complete(loan)
         response = self.client.get(reverse("reports"), {"report": "loans"})
-        self.assertEqual(len(response.context["rows"]), 20)
+        self.assertEqual(len(response.context["rows"]), 10)
         self.assertContains(response, "report=loans&amp;page=2")
         rows = self.csv_rows(self.client.get(reverse("export_reports"), {"report": "loans", "page": 2}))
         self.assertEqual(len(rows), 21)
@@ -629,7 +629,7 @@ class AuditViewTests(DashboardFixtures, TestCase):
         for index in range(26):
             self.log(entity_id=index + 1)
         response = self.client.get(reverse("audit_logs"), {"q": "equipment"})
-        self.assertEqual(len(response.context["page_obj"]), 25)
+        self.assertEqual(len(response.context["page_obj"]), 10)
         self.assertContains(response, "q=equipment&amp;page=2")
 
     def test_invalid_filters_show_errors(self):

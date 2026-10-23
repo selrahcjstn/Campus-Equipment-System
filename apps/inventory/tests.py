@@ -511,10 +511,13 @@ class InventoryPageTests(InventoryFixtures, TestCase):
         for index in range(20):
             save_equipment(actor=self.admin, name=f"Projector extra {index}", category_id=self.category.pk)
         first = self.client.get(reverse("equipment_catalog"), {"category": self.category.pk})
-        self.assertEqual(len(first.context["page_obj"]), 20)
+        self.assertEqual(len(first.context["page_obj"]), 10)
         self.assertContains(first, f"category={self.category.pk}&amp;page=2")
         second = self.client.get(reverse("equipment_catalog"), {"category": self.category.pk, "page": "2"})
-        self.assertEqual(len(second.context["page_obj"]), 1)
+        self.assertEqual(len(second.context["page_obj"]), 10)
+        third = self.client.get(second.wsgi_request.path, {**second.wsgi_request.GET.dict(), "page": "3"})
+        self.assertEqual(len(third.context["page_obj"]), 1)
+        self.assertContains(third, "Showing 21–21 of 21 records.")
         self.assertEqual(self.client.get(reverse("equipment_catalog"), {"page": "invalid"}).status_code, 200)
 
 

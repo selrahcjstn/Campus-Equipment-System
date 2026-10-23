@@ -63,7 +63,7 @@ def reports(request):
     form = _report_form(request)
     valid = form.is_valid()
     records = loan_report(form.cleaned_data, at=now) if valid else loan_report({"report": "loans"}, at=now).none()
-    page = Paginator(records, 20).get_page(request.GET.get("page"))
+    page = Paginator(records, 10).get_page(request.GET.get("page"))
     return render(request, "dashboard/admin/reports.html", {"active_nav": "reports", "filter_form": form, "page_obj": page, "rows": [report_row(loan, at=now) for loan in page], "valid_filters": valid, "timezone_name": timezone.get_current_timezone_name(), "generated_at": now})
 
 
@@ -107,7 +107,7 @@ def export_reports(request):
 def audit_logs(request):
     form = AuditFilterForm(request.GET)
     records = audit_records(form.cleaned_data) if form.is_valid() else audit_records({}).none()
-    return render(request, "dashboard/admin/audit_logs.html", {"active_nav": "audit_logs", "filter_form": form, "page_obj": Paginator(records, 25).get_page(request.GET.get("page")), "timezone_name": timezone.get_current_timezone_name()})
+    return render(request, "dashboard/admin/audit_logs.html", {"active_nav": "audit_logs", "filter_form": form, "page_obj": Paginator(records, 10).get_page(request.GET.get("page")), "timezone_name": timezone.get_current_timezone_name()})
 
 
 @role_required("ADMIN")

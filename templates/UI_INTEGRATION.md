@@ -140,6 +140,31 @@ after an automatic GET submission when browser session storage is available.
 Validation errors expand the filter group. Without JavaScript, fields remain
 available in the native disclosure and a normal submit button is visible.
 
+## Pagination and table layouts
+
+List views use Django `Paginator` with 10 records per page and `get_page()` for
+empty, malformed and out-of-range page requests. Use the shared component below;
+it displays the record range even for a single or empty page and elides long
+number ranges. Dashboard summaries and transaction-unit tables keep their
+complete, deliberately bounded context rather than introducing extra page state.
+
+```django
+{% include "components/pagination.html" with page_obj=page_obj pagination_label="Equipment pages" %}
+{% include "components/pagination.html" with page_obj=unit_page page_param="units_page" pagination_label="Maintenance unit pages" %}
+```
+
+The `ui_pagination` template library lives in Accounts, an existing installed app.
+It copies the current query string, retains repeated values and unrelated page
+keys, and carries effective bound-form defaults forward. It adds no ORM queries.
+Maintenance uses `page`/`units_page`; account history uses
+`request_page`/`loan_page` independently. CSV exports still include all matching
+records regardless of the visible report page.
+
+Tables use shared `table-cell--text`, `--description`, `--identifier`, `--date`,
+`--number`, `--status` and `--actions` classes on headers and their cells. Choose
+roles by content rather than assigning equal column widths. Overflow regions are
+labelled and keyboard focusable; printable loan slips retain their print styles.
+
 ## Modals
 
 Native `<dialog>` provides keyboard containment and Escape dismissal. Include

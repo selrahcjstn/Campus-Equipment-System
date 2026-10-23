@@ -168,6 +168,15 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .data-table .table-cell--actions .button + .button { margin-left: var(--space-1); }
 .data-table .table-cell--actions .page-actions { gap: var(--space-1); min-width: 7rem; max-width: 20rem; }
 .data-table .table-cell--actions .caption { white-space: normal; max-width: 18rem; }
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.pagination__summary { color: var(--text-secondary); font-size: var(--font-caption); font-variant-numeric: tabular-nums; }
+.pagination__pages { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.pagination__link, .pagination__ellipsis { display: inline-flex; justify-content: center; align-items: center; min-width: 32px; min-height: 36px; padding: var(--space-1) var(--space-2); font-size: var(--font-caption); border: var(--border); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-primary); text-decoration: none; }
+a.pagination__link:hover { background: var(--surface-muted); color: var(--primary); border-color: var(--border-strong); }
+.pagination__link.is-current { color: var(--surface); background: var(--primary); border-color: var(--primary); }
+.pagination__link.is-disabled { color: var(--text-secondary); background: var(--background); }
+.pagination__ellipsis { border-color: transparent; background: transparent; color: var(--text-secondary); }
+@media (max-width: 639px) { .pagination__summary { flex-basis: 100%; } .pagination__link { min-height: var(--control-height); } }
 @media (pointer: coarse) { .data-table .table-cell--actions .button { min-height: var(--control-height); } }
 .modal { width: min(100% - var(--space-8), 560px); max-height: calc(100dvh - var(--space-8)); margin: auto; padding: var(--space-6); color: var(--text-primary); background: var(--surface); border: var(--border); border-radius: var(--radius-xl); }
 .modal::backdrop { background: var(--overlay); }

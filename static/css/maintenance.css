@@ -3,7 +3,6 @@
 .maintenance-issue { max-width: 320px; overflow-wrap: anywhere; }
 .maintenance-empty { padding: var(--space-8); text-align: center; }
 .maintenance-empty p { margin-top: var(--space-2); }
-.maintenance-pagination { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--space-4); }
 .maintenance-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--space-6); margin: 0; }
 .maintenance-facts dt { color: var(--text-secondary); font-size: var(--font-label); }
 .maintenance-facts dd { margin: var(--space-1) 0 0; overflow-wrap: anywhere; }

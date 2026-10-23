@@ -56,7 +56,7 @@ def _filtered_loans(queryset, form, *, admin=False):
 
 
 def _page(request, queryset):
-    return Paginator(queryset, 20).get_page(request.GET.get("page"))
+    return Paginator(queryset, 10).get_page(request.GET.get("page"))
 
 
 def _release_review(borrowing):
