@@ -1,6 +1,6 @@
 {% if filter_form.state %}
     {% include "components/filter_toolbar.html" with filter_label="Filter inventory" reset_query="state=" %}
-{% elif filter_form.equipment %}
+{% elif filter_form.equipment or filter_form.status %}
     {% include "components/filter_toolbar.html" with filter_label="Filter physical units" search_placeholder="Search units..." %}
 {% elif not filter_form.category %}
     {% include "components/filter_toolbar.html" with filter_label="Search categories" search_placeholder="Search categories..." %}

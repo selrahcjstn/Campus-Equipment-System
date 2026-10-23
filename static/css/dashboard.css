@@ -2,6 +2,8 @@
 .dashboard-shortcuts a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); color: var(--text-secondary); text-decoration: none; font-size: var(--font-label); font-weight: var(--weight-medium); }
 .dashboard-shortcuts a:hover { color: var(--primary); text-decoration: underline; }
 .dashboard-shortcuts .icon { width: var(--space-4); height: var(--space-4); }
+.settings-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
+@media (max-width: 767px) { .settings-fields { grid-template-columns: 1fr; } }
 .dashboard-chart { margin: 0; min-width: 0; }
 .dashboard-chart svg { display: block; width: 100%; height: auto; }
 .chart-axis { stroke: var(--border-strong); stroke-width: 2; }
@@ -21,6 +23,14 @@
 .dashboard-unit-list { margin: var(--space-2) 0 0; padding: 0; list-style: none; overflow-wrap: anywhere; }
 .dashboard-unit-list li + li { margin-top: var(--space-2); }
 .dashboard-audit-description { max-width: 400px; overflow-wrap: anywhere; }
+.audit-table { font-size: var(--font-body); line-height: 1.6; }
+.audit-table th, .audit-table td { padding: var(--space-3) var(--space-4); }
+.audit-table .table-cell--date { min-width: 10rem; width: 13%; }
+.audit-table .audit-table__actor { min-width: 8rem; width: 12%; }
+.audit-table .audit-table__action { min-width: 12rem; width: 18%; overflow-wrap: normal; word-break: normal; }
+.audit-table .audit-table__entity { min-width: 12rem; width: 16%; overflow-wrap: normal; white-space: nowrap; }
+.audit-table .table-cell--description { min-width: 20rem; max-width: none; }
+.audit-table__time { display: block; white-space: nowrap; }
 .dashboard-charts details summary { cursor: pointer; color: var(--text-secondary); font-size: var(--font-caption); }
 .dashboard-charts details[open] summary { margin-bottom: var(--space-4); }
 @media (max-width: 767px) { .dashboard-charts { grid-template-columns: 1fr; } }

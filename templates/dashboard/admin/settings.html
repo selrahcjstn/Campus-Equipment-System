@@ -4,11 +4,16 @@
 {% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/dashboard.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>System Settings</h1><p>Configure the borrowing rules for new requests.</p></div></header>
-<div class="section-stack form-page">{% include "components/messages.html" %}
+<div class="section-stack form-page form-page--full">{% include "components/messages.html" %}
     <div class="alert alert--info"><strong>Approved requests and issued loans retain their recorded terms.</strong><p>These limits apply to new submissions and pending requests reviewed for approval. Calendar-day limits use {{ timezone_name }}. Settings changes are recorded in Audit Logs.</p></div>
     {% if policy %}<p class="caption">Last saved {{ policy.updated_at|date:"M j, Y, g:i A T" }} by {{ policy.updated_by.username|default:"Legacy configuration" }}.</p>{% else %}<p class="caption">Using the current application defaults. Saving creates the database policy.</p>{% endif %}
     {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-    <form method="post" id="settings-form" class="form-panel card section-stack" data-confirm-dialog="settings-confirmation">{% csrf_token %}{% for field in form %}{% include "components/input.html" %}{% endfor %}<div><button class="button button--primary" type="submit">Save borrowing rules</button></div></form>
+    <form method="post" id="settings-form" class="form-panel form-panel--full card section-stack" data-confirm-dialog="settings-confirmation">
+        {% csrf_token %}
+        <div class="settings-fields">{% for field in form %}{% if field.name != 'confirm' %}<div class="detail-box">{% include "components/input.html" %}</div>{% endif %}{% endfor %}</div>
+        {% include "components/input.html" with field=form.confirm %}
+        <div class="page-actions"><button class="button button--primary" type="submit">Save borrowing rules</button></div>
+    </form>
 </div>
 {% endblock %}
 {% block modals %}{% include "components/modal.html" with id="settings-confirmation" title="Save borrowing rules" description="Apply these limits to new submissions and pending approvals. Existing approvals and issued loans retain their recorded terms." actions_template="dashboard/admin/_settings_confirmation.html" %}{% endblock %}

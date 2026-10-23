@@ -8,7 +8,7 @@
 <div class="section-stack">
     {% include "borrowing/_detail_body.html" %}
     {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-    {% if can_act %}<form method="post" class="form-panel card section-stack" id="borrowing-action" data-borrow-confirm="borrowing-confirmation">{% csrf_token %}{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}<div class="page-actions"><button type="submit" class="button button--primary">{{ action_title }}</button></div></form>
+    {% if can_act %}<form method="post" class="form-panel form-panel--full card section-stack" id="borrowing-action" data-borrow-confirm="borrowing-confirmation">{% csrf_token %}{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}<div class="page-actions"><button type="submit" class="button button--primary">{{ action_title }}</button></div></form>
     {% else %}<div class="alert alert--warning" role="status"><strong>This action is unavailable.</strong><p>The request has progressed beyond an eligible status. Issued equipment must be handled through Loans and Returns.</p></div>{% endif %}
 </div>
 {% endblock %}
