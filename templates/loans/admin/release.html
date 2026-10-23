@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Release Request #{{ borrowing.pk }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/loans.css' %}">{% endblock %}
 {% block page_scripts %}<script src="{% static 'js/loans.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Release request #{{ borrowing.pk }}</h1><p>Verify the reserved units before handing equipment to the borrower.</p></div><a class="button button--secondary" href="{% url 'loan_management' %}">Back to loan management</a></header>

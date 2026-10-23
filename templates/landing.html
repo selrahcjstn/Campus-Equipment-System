@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Campus Equipment Borrowing &amp; Inventory System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/landing.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/landing.css' %}">{% endblock %}
 {% block page_scripts %}<script src="{% static 'js/landing.js' %}" defer></script>{% endblock %}
 {% block body %}
 <div class="landing-page">

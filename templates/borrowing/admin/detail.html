@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Review Request #{{ borrowing.pk }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/borrowing.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/borrowing.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Request #{{ borrowing.pk }}</h1><p>Review the borrower, requested quantities and physical allocations.</p></div><div class="page-actions">
     {% if borrowing.status == 'PENDING' %}<a class="button button--primary" href="{% url 'approve_borrowing_request' borrowing.pk %}">Approve request</a><a class="button button--secondary" href="{% url 'reject_borrowing_request' borrowing.pk %}">Reject request</a>{% endif %}

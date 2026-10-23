@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Reports | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/dashboard.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Reports</h1><p>Review loan history and currently overdue equipment.</p></div>{% if valid_filters %}<a class="button button--primary" href="{% url 'export_reports' %}{% querystring page=None %}">Export filtered CSV</a>{% endif %}</header>
 <div class="section-stack">{% include "dashboard/_filters.html" with filter_label="Filter loan reports" %}

@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}System Settings | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/dashboard.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>System Settings</h1><p>Configure the borrowing rules for new requests.</p></div></header>
 <div class="section-stack form-page">{% include "components/messages.html" %}

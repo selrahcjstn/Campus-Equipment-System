@@ -1,7 +1,7 @@
 {% extends base_template %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}{{ action_title }} #{{ borrowing.pk }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/borrowing.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/borrowing.css' %}">{% endblock %}
 {% block page_scripts %}<script src="{% static 'js/borrowing.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>{{ action_title }} #{{ borrowing.pk }}</h1><p>{{ action_description }}</p></div><a class="button button--secondary" href="{% if admin_view %}{% url 'admin_request_detail' borrowing.pk %}{% else %}{% url 'request_detail' borrowing.pk %}{% endif %}">Back to request</a></header>

@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}{% if unit %}Edit{% else %}Add{% endif %} Physical Unit | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
 {% block page_scripts %}<script src="{% static 'js/inventory.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>{% if unit %}Edit physical unit{% else %}Add physical unit{% endif %}</h1><p>{{ equipment.name }}{% if unit %} · {{ unit.inventory_status_label }}{% endif %}</p></div><a class="button button--secondary" href="{% url 'admin_equipment_detail' equipment.pk %}">Back to equipment</a></header>

@@ -1,7 +1,7 @@
 {% extends "base_user.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Equipment Catalog | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Equipment Catalog</h1><p>Browse equipment by category and see what is currently available.</p></div><a class="button button--secondary" href="{% url 'my_requests' %}">My borrowing requests</a></header>
 <div class="section-stack">

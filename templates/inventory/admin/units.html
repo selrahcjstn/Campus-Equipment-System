@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Physical Equipment Units | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Physical Equipment Units</h1><p>Search unit identifiers and review their current status.</p></div><a class="button button--secondary" href="{% url 'equipment_inventory' %}">Equipment inventory</a></header>
 <div class="section-stack">{% include "components/messages.html" %}{% include "inventory/_filters.html" %}{% include "inventory/admin/_unit_table.html" %}</div>

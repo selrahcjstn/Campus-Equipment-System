@@ -1,4 +1,4 @@
-{% load static %}
+{% load static ui_assets %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/design-system.css' %}">
-    <link rel="stylesheet" href="{% static 'css/filters.css' %}">
+    <link rel="stylesheet" href="{% ui_asset 'css/design-system.css' %}">
+    <link rel="stylesheet" href="{% ui_asset 'css/filters.css' %}">
     {% block page_styles %}{% endblock %}
     <script src="{% static 'js/ui.js' %}" defer></script>
     <script src="{% static 'js/filters.js' %}" defer></script>

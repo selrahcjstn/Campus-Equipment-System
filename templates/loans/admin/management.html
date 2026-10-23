@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Loan Management | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/loans.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Loan Management</h1><p>Review approved requests and release their reserved physical units.</p></div><a class="button button--secondary" href="{% url 'returns_overdue' %}">Returns and overdue</a></header>
 <div class="section-stack">

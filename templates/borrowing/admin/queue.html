@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Borrowing Requests | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/borrowing.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/borrowing.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Borrowing Requests</h1><p>Review pending requests and track approvals, cancellations and returns.</p></div><a class="button button--secondary" href="{% url 'loan_management' %}">Loan management</a></header>
 <div class="section-stack">{% include "borrowing/_request_list.html" %}</div>

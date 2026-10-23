@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Maintenance | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/maintenance.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/maintenance.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Maintenance</h1><p>Track reported issues, repairs and retirement for each physical unit.</p></div><a class="button button--primary" href="{% url 'maintenance_create' %}">Report maintenance</a></header>
 <div class="section-stack">

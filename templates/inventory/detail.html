@@ -1,7 +1,7 @@
 {% extends "base_user.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}{{ equipment.name }} | Equipment Catalog{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><span class="eyebrow">{{ equipment.category.name|default:"Uncategorized" }}</span><h1>{{ equipment.name }}</h1></div><a class="button button--secondary" href="{% url 'equipment_catalog' %}">Back to catalog</a></header>
 <section class="card section-stack inventory-detail"><h2>Equipment details</h2><p class="inventory-description">{{ equipment.description|default:"No description provided."|linebreaksbr }}</p>

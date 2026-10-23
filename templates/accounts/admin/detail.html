@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}{{ target_user.username }} | Users | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/accounts.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/accounts.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>{{ target_user.username }}</h1><p>{{ target_user.get_full_name|default:"Campus account" }}</p></div><div class="page-actions">{% if target_user.pk != user.pk %}{% if target_user.is_active %}<a class="button button--secondary" href="{% url 'deactivate_user' target_user.pk %}">Review deactivation</a>{% else %}<a class="button button--primary" href="{% url 'activate_user' target_user.pk %}">Review activation</a>{% endif %}<a class="button button--secondary" href="{% url 'change_user_role' target_user.pk %}">Review role change</a>{% endif %}<a class="button button--secondary" href="{% url 'user_management' %}">Back to users</a></div></header>
 <div class="section-stack">{% include "components/messages.html" %}

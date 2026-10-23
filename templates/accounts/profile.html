@@ -1,7 +1,7 @@
 {% extends portal_base %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}My Profile | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/accounts.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/accounts.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>My Profile</h1><p>Keep your campus contact information up to date.</p></div><a class="button button--secondary" href="{% url password_route %}">Change password</a></header>
 <div class="section-stack form-page">{% include "components/messages.html" %}

@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Categories | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Categories</h1><p>Organize catalog items and manage category names.</p></div><a class="button button--primary" href="{% url 'create_category' %}">Create category</a></header>
 <div class="section-stack">{% include "components/messages.html" %}{% include "inventory/_filters.html" %}

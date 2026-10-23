@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}{{ page_title }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/maintenance.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/maintenance.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>{{ page_title }}</h1><p>{{ description }}</p></div><a class="button button--secondary" href="{% url 'maintenance_detail' record.pk %}">Back to record</a></header>
 <div class="section-stack form-page"><section class="card maintenance-notes"><h2>{{ record.unit.equipment.name }} · {{ record.unit.asset_tag }}</h2><p>{{ record.reason|linebreaksbr }}</p>{% include "components/badge.html" with label=record.get_status_display variant=record.status_variant %}</section>

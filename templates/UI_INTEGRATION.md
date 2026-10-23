@@ -31,6 +31,13 @@ Portal content caps at 1200px with 24px desktop padding and 16px mobile padding.
 Inter loads from Google
 Fonts with a sans-serif fallback if the font service is unavailable.
 
+Load `ui_assets` alongside `static` in templates that link stylesheets, then use
+`{% ui_asset 'css/dashboard.css' %}` for the stylesheet URL. The shared tag adds
+the source file's modification version so updated templates cannot retain stale
+browser-cached CSS. Unchanged files keep stable URLs and remain cacheable.
+The configured static storage remains responsible for the asset URL; collected
+assets without a local source keep their normal storage URL.
+
 ## Navigation integration
 
 The base layouts automatically select navigation using the authenticated user's

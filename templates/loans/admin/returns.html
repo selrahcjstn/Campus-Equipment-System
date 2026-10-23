@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Returns and Overdue | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/loans.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Returns and Overdue</h1><p>Receive individual equipment units and follow up on overdue loans.</p></div><a class="button button--secondary" href="{% url 'loan_management' %}">Loan management</a></header>
 <div class="section-stack">

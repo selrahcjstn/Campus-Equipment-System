@@ -1,7 +1,7 @@
 {% extends "base_user.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}My Loans | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/loans.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>My Loans</h1><p>Track the equipment you have borrowed and when each loan is due.</p></div><a class="button button--secondary" href="{% url 'borrowing_history' %}">Borrowing history</a></header>
 <div class="section-stack">

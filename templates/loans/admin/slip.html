@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Borrowing Slip #{{ loan.pk }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/loans.css' %}">{% endblock %}
 {% block page_scripts %}<script src="{% static 'js/loans.js' %}" defer></script>{% endblock %}
 {% block content %}
 <div class="page-actions loan-print-actions"><button type="button" class="button button--primary" data-print-slip>Print borrowing slip</button><a class="button button--secondary" href="{% url 'admin_loan_detail' loan.pk %}">Back to loan</a></div>

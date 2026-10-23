@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Equipment Inventory | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Equipment Inventory</h1><p>Manage catalog items and stock counted from their physical units.</p></div><div class="page-actions"><a class="button button--primary" href="{% url 'create_equipment' %}">Create catalog item</a><a class="button button--secondary" href="{% url 'equipment_units' %}">All physical units</a></div></header>
 <div class="section-stack">{% include "components/messages.html" %}{% include "inventory/_filters.html" with admin_catalog=True %}

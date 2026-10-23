@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}Return Loan #{{ loan.pk }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/loans.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/loans.css' %}">{% endblock %}
 {% block page_scripts %}<script src="{% static 'js/loans.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Return units · Loan #{{ loan.pk }}</h1><p>{{ loan.borrower.get_full_name|default:loan.borrower.username }} · Due {{ loan.due_at|date:"M j, Y, g:i A T" }}</p></div><a href="{% url 'admin_loan_detail' loan.pk %}?from=returns" class="button button--secondary">View loan record</a></header>

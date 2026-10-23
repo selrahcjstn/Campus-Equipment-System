@@ -1,6 +1,6 @@
 {% extends "base.html" %}
-{% load static %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/auth.css' %}">{% endblock %}
+{% load static ui_assets %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/auth.css' %}">{% endblock %}
 {% block body %}
 <div class="auth-shell {% block auth_shell_class %}{% endblock %}">
     <aside class="auth-showcase" aria-labelledby="showcase-title">

@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static l10n %}
+{% load static l10n ui_assets %}
 {% block title %}Dashboard | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/dashboard.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Dashboard</h1><p>Live inventory and borrowing activity across the campus.</p></div><div class="page-actions"><a class="button button--secondary" href="{% url 'reports' %}">View reports</a><a class="button button--primary" href="{% url 'borrowing_requests' %}">Review requests</a></div></header>
 <div class="section-stack">

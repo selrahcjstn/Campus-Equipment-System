@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
-{% load static %}
+{% load static ui_assets %}
 {% block title %}{{ page_title }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% static 'css/inventory.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
 {% block page_scripts %}<script src="{% static 'js/inventory.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><h1>{{ page_title }}</h1><a class="button button--secondary" href="{% url back_url %}">Back to list</a></header>
