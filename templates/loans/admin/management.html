@@ -7,14 +7,14 @@
 <div class="section-stack">
     {% include "components/messages.html" %}
     {% include "loans/_filters.html" with filter_label="approved requests" %}
-    <div class="table-container"><table class="data-table">
+    <div class="table-container" tabindex="0" role="region" aria-label="Approved requests awaiting release"><table class="data-table">
         <caption>Approved requests awaiting release</caption>
-        <thead><tr><th scope="col">Request / borrower</th><th scope="col">Equipment / reserved units</th><th scope="col">Quantity</th><th scope="col">Approved due date</th><th scope="col">Action</th></tr></thead>
+        <thead><tr><th scope="col" class="table-cell--text">Request / borrower</th><th scope="col" class="table-cell--text">Equipment / reserved units</th><th scope="col" class="table-cell--number">Quantity</th><th scope="col" class="table-cell--date">Approved due date</th><th scope="col" class="table-cell--actions">Action</th></tr></thead>
         <tbody>{% for borrowing in page_obj %}<tr>
-            <td><strong>#{{ borrowing.pk }}</strong><div>{{ borrowing.borrower.get_full_name|default:borrowing.borrower.username }}</div><span class="caption">{{ borrowing.borrower.username }}</span></td>
-            <td><ul class="loan-equipment-list">{% for item in borrowing.items.all %}<li>{{ item.equipment.name }} × {{ item.quantity }}<div class="caption">{% for allocation in item.allocations.all %}{% if allocation.active %}{{ allocation.unit.asset_tag }} ({{ allocation.unit.get_status_display }}) {% endif %}{% empty %}No units allocated{% endfor %}</div></li>{% endfor %}</ul></td>
-            <td>{{ borrowing.quantity }}</td><td>{{ borrowing.due_at|date:"M j, Y, g:i A T" }}</td>
-            <td>{% if borrowing.release_error %}{% include "components/badge.html" with label="Needs review" variant="warning" %}<p class="caption loan-readiness-error">{{ borrowing.release_error }}</p>{% else %}{% include "components/badge.html" with label="Ready to release" variant="success" %}{% endif %}<a class="button button--secondary" href="{% url 'release_equipment' borrowing.pk %}" aria-label="Review request {{ borrowing.pk }}">Review request</a></td>
+            <td class="table-cell--text"><strong>#{{ borrowing.pk }}</strong><div>{{ borrowing.borrower.get_full_name|default:borrowing.borrower.username }}</div><span class="caption">{{ borrowing.borrower.username }}</span></td>
+            <td class="table-cell--text"><ul class="loan-equipment-list">{% for item in borrowing.items.all %}<li>{{ item.equipment.name }} × {{ item.quantity }}<div class="caption">{% for allocation in item.allocations.all %}{% if allocation.active %}{{ allocation.unit.asset_tag }} ({{ allocation.unit.get_status_display }}) {% endif %}{% empty %}No units allocated{% endfor %}</div></li>{% endfor %}</ul></td>
+            <td class="table-cell--number">{{ borrowing.quantity }}</td><td class="table-cell--date">{{ borrowing.due_at|date:"M j, Y, g:i A T" }}</td>
+            <td class="table-cell--actions">{% if borrowing.release_error %}{% include "components/badge.html" with label="Needs review" variant="warning" %}<p class="caption loan-readiness-error">{{ borrowing.release_error }}</p>{% else %}{% include "components/badge.html" with label="Ready to release" variant="success" %}{% endif %}<a class="button button--secondary" href="{% url 'release_equipment' borrowing.pk %}" aria-label="Review request {{ borrowing.pk }}">Review request</a></td>
         </tr>{% empty %}<tr><td colspan="5"><div class="loan-empty"><h2>No approved requests in this view</h2><p class="text-secondary">Requests appear here after approval and allocation. Try clearing your search.</p></div></td></tr>{% endfor %}</tbody>
     </table></div>
     {% include "loans/_pagination.html" %}

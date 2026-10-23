@@ -1,15 +1,15 @@
 {% include "components/messages.html" %}
 {% include "components/filter_toolbar.html" with filter_label="Filter borrowing requests" search_placeholder="Search requests..." reset_query="status=" filter_actions="borrowing/_filter_shortcuts.html" %}
-<div class="table-container"><table class="data-table">
+<div class="table-container" tabindex="0" role="region" aria-label="{% if admin_view %}Borrowing request queue{% else %}Your borrowing requests{% endif %}"><table class="data-table">
     <caption>{% if admin_view %}Borrowing request queue{% else %}Your borrowing requests{% endif %}</caption>
-    <thead><tr><th scope="col">Request{% if admin_view %} / borrower{% endif %}</th><th scope="col">Equipment</th><th scope="col">Submitted</th><th scope="col">Due</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+    <thead><tr><th scope="col" class="table-cell--text">Request{% if admin_view %} / borrower{% endif %}</th><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--date">Submitted</th><th scope="col" class="table-cell--date">Due</th><th scope="col" class="table-cell--status">Status</th><th scope="col" class="table-cell--actions">Actions</th></tr></thead>
     <tbody>{% for borrowing in page_obj %}<tr>
-        <td><strong>#{{ borrowing.pk }}</strong>{% if admin_view %}<div>{{ borrowing.borrower.get_full_name|default:borrowing.borrower.username }}</div><p class="caption">{{ borrowing.borrower.username }}</p>{% endif %}</td>
-        <td><ul class="borrowing-items">{% for item in borrowing.items.all %}<li>{{ item.equipment.name }} × {{ item.quantity }}</li>{% endfor %}</ul></td>
-        <td>{{ borrowing.requested_at|date:"M j, Y" }}<p class="caption">{{ borrowing.requested_at|date:"g:i A T" }}</p></td>
-        <td>{{ borrowing.due_at|date:"M j, Y" }}<p class="caption">{{ borrowing.due_at|date:"g:i A T" }}</p>{% if borrowing.loan.is_overdue %}{% include "components/badge.html" with label="Overdue" variant="error" %}{% endif %}</td>
-        <td>{% include "components/badge.html" with label=borrowing.workflow_label variant=borrowing.status_variant %}</td>
-        <td><a class="button button--secondary" href="{% if admin_view %}{% url 'admin_request_detail' borrowing.pk %}{% else %}{% url 'request_detail' borrowing.pk %}{% endif %}" aria-label="View request {{ borrowing.pk }}">View details</a></td>
+        <td class="table-cell--text"><strong>#{{ borrowing.pk }}</strong>{% if admin_view %}<div>{{ borrowing.borrower.get_full_name|default:borrowing.borrower.username }}</div><p class="caption">{{ borrowing.borrower.username }}</p>{% endif %}</td>
+        <td class="table-cell--text"><ul class="borrowing-items">{% for item in borrowing.items.all %}<li>{{ item.equipment.name }} × {{ item.quantity }}</li>{% endfor %}</ul></td>
+        <td class="table-cell--date">{{ borrowing.requested_at|date:"M j, Y" }}<p class="caption">{{ borrowing.requested_at|date:"g:i A T" }}</p></td>
+        <td class="table-cell--date">{{ borrowing.due_at|date:"M j, Y" }}<p class="caption">{{ borrowing.due_at|date:"g:i A T" }}</p>{% if borrowing.loan.is_overdue %}{% include "components/badge.html" with label="Overdue" variant="error" %}{% endif %}</td>
+        <td class="table-cell--status">{% include "components/badge.html" with label=borrowing.workflow_label variant=borrowing.status_variant %}</td>
+        <td class="table-cell--actions"><a class="button button--secondary" href="{% if admin_view %}{% url 'admin_request_detail' borrowing.pk %}{% else %}{% url 'request_detail' borrowing.pk %}{% endif %}" aria-label="View request {{ borrowing.pk }}">View details</a></td>
     </tr>{% empty %}<tr><td colspan="6"><div class="borrowing-empty"><h2>No requests in this view</h2><p class="text-secondary">{% if admin_view %}New requests appear in the Pending queue. Clear filters to review other statuses.{% else %}Submit a borrowing request or clear your filters to see your records.{% endif %}</p></div></td></tr>{% endfor %}</tbody>
 </table></div>
 {% if page_obj.paginator.num_pages > 1 %}<nav class="borrowing-pagination" aria-label="Request pages">{% if page_obj.has_previous %}<a class="button button--secondary" href="{% querystring page=page_obj.previous_page_number %}">Previous</a>{% endif %}<span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a class="button button--secondary" href="{% querystring page=page_obj.next_page_number %}">Next</a>{% endif %}</nav>{% endif %}

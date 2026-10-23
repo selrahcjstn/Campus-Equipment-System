@@ -1,13 +1,13 @@
-<div class="table-container"><table class="data-table">
+<div class="table-container" tabindex="0" role="region" aria-label="Maintenance records"><table class="data-table">
     <caption>Maintenance records</caption>
-    <thead><tr><th scope="col">Record / physical unit</th><th scope="col">Equipment</th><th scope="col">Reported issue</th><th scope="col">Status</th><th scope="col">Reported / completed</th><th scope="col">Action</th></tr></thead>
+    <thead><tr><th scope="col" class="table-cell--identifier">Record / physical unit</th><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--description">Reported issue</th><th scope="col" class="table-cell--status">Status</th><th scope="col" class="table-cell--date">Reported / completed</th><th scope="col" class="table-cell--actions">Action</th></tr></thead>
     <tbody>{% for record in page_obj %}<tr>
-        <td><strong>#{{ record.pk }}</strong><p><a href="{% url 'maintenance_history' record.unit_id %}">{{ record.unit.asset_tag }}</a></p></td>
-        <td><a href="{% url 'admin_equipment_detail' record.unit.equipment_id %}">{{ record.unit.equipment.name }}</a>{% if not record.unit.equipment.is_active %}<p class="caption">Archived catalog item</p>{% endif %}</td>
-        <td class="maintenance-issue">{{ record.reason|truncatechars:120 }}</td>
-        <td>{% include "components/badge.html" with label=record.get_status_display variant=record.status_variant %}</td>
-        <td>{{ record.reported_at|date:"M j, Y, g:i A T" }}{% if record.completed_at %}<p class="caption">Completed {{ record.completed_at|date:"M j, Y, g:i A T" }}</p>{% endif %}</td>
-        <td><a class="button button--secondary" href="{% url 'maintenance_detail' record.pk %}" aria-label="Open maintenance record {{ record.pk }}">View record</a></td>
+        <td class="table-cell--identifier"><strong>#{{ record.pk }}</strong><p><a href="{% url 'maintenance_history' record.unit_id %}">{{ record.unit.asset_tag }}</a></p></td>
+        <td class="table-cell--text"><a href="{% url 'admin_equipment_detail' record.unit.equipment_id %}">{{ record.unit.equipment.name }}</a>{% if not record.unit.equipment.is_active %}<p class="caption">Archived catalog item</p>{% endif %}</td>
+        <td class="table-cell--description maintenance-issue">{{ record.reason|truncatechars:120 }}</td>
+        <td class="table-cell--status">{% include "components/badge.html" with label=record.get_status_display variant=record.status_variant %}</td>
+        <td class="table-cell--date">{{ record.reported_at|date:"M j, Y, g:i A T" }}{% if record.completed_at %}<p class="caption">Completed {{ record.completed_at|date:"M j, Y, g:i A T" }}</p>{% endif %}</td>
+        <td class="table-cell--actions"><a class="button button--secondary" href="{% url 'maintenance_detail' record.pk %}" aria-label="Open maintenance record {{ record.pk }}">View record</a></td>
     </tr>{% empty %}<tr><td colspan="6"><div class="maintenance-empty"><h2>No maintenance records in this view</h2><p class="text-secondary">Report an issue or clear the search and filters.</p></div></td></tr>{% endfor %}</tbody>
 </table></div>
 {% if page_obj.paginator.num_pages > 1 %}<nav class="maintenance-pagination" aria-label="Maintenance record pages">{% if page_obj.has_previous %}<a class="button button--secondary" href="{% querystring page=page_obj.previous_page_number %}">Previous</a>{% endif %}<span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>{% if page_obj.has_next %}<a class="button button--secondary" href="{% querystring page=page_obj.next_page_number %}">Next</a>{% endif %}</nav>{% endif %}

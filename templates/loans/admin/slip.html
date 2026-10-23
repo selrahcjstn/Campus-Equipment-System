@@ -14,7 +14,7 @@
         <div><dt>Due date</dt><dd>{{ loan.due_at|date:"M j, Y, g:i A T" }}</dd></div>
         <div><dt>Total physical units</dt><dd>{{ loan.quantity }}</dd></div>
     </dl><div class="loan-purpose"><strong>Purpose</strong><p>{{ loan.request.purpose|linebreaksbr }}</p></div></section>
-    <div class="table-container"><table class="data-table"><caption>Equipment issued</caption><thead><tr><th scope="col">Equipment</th><th scope="col">Asset tag</th><th scope="col">Quantity</th></tr></thead><tbody>{% for unit in loan.units.all %}<tr><td>{{ unit.equipment_name }}</td><td>{{ unit.asset_tag }}</td><td>1</td></tr>{% endfor %}</tbody></table></div>
+    <div class="table-container" tabindex="0" role="region" aria-label="Equipment issued"><table class="data-table"><caption>Equipment issued</caption><thead><tr><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--identifier">Asset tag</th><th scope="col" class="table-cell--number">Quantity</th></tr></thead><tbody>{% for unit in loan.units.all %}<tr><td class="table-cell--text">{{ unit.equipment_name }}</td><td class="table-cell--identifier">{{ unit.asset_tag }}</td><td class="table-cell--number">1</td></tr>{% endfor %}</tbody></table></div>
     <p>Please return all listed units by the due date. Any damage will be recorded when the equipment is received.</p>
     <div class="loan-signatures"><div><span>Borrower signature</span></div><div><span>Releasing Admin signature</span></div></div>
 </article>
