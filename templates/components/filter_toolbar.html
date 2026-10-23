@@ -4,7 +4,7 @@
     {% if filter_form.q %}
     <div class="filter-toolbar__search form-field{% if filter_form.q.errors %} has-errors{% endif %}">
         <label for="{{ filter_form.q.id_for_label }}">Search<span class="sr-only"> · {{ filter_form.q.label }}</span></label>
-        <div class="filter-toolbar__search-input">
+        <div class="search-input">
             {% include "components/icon.html" with name="search" %}
             <input type="search" name="{{ filter_form.q.html_name }}" id="{{ filter_form.q.id_for_label }}" value="{{ filter_form.q.value|default_if_none:'' }}" placeholder="{{ search_placeholder|default:'Search equipment...' }}" maxlength="{{ filter_form.q.field.max_length }}"{% if filter_form.q.errors %} aria-invalid="true" aria-describedby="{{ filter_form.q.auto_id }}_error"{% endif %}>
         </div>

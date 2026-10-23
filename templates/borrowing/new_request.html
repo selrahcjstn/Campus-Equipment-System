@@ -7,10 +7,11 @@
 <header class="page-heading"><div><h1>New borrowing request</h1><p>Select 1–{{ limits.max_items }} equipment items, up to {{ limits.max_quantity }} units each, for at most {{ limits.max_days }} calendar days.</p></div><a class="button button--secondary" href="{% url 'my_requests' %}">My requests</a></header>
 <div class="section-stack">
     {% include "components/messages.html" %}
+    <div class="borrowing-workspace">
     <section class="card section-stack" aria-labelledby="catalog-title">
         <div><h2 id="catalog-title">Browse equipment</h2><p class="text-secondary">Availability is checked again at submission and approval. A Pending request does not reserve units.</p></div>
-        <div class="form-field"><label for="catalog-search">Search the catalog</label><input type="search" id="catalog-search" data-catalog-search placeholder="Equipment name or description"></div>
-        <div class="content-grid">
+        <div class="form-field"><label for="catalog-search">Search the catalog</label><div class="search-input">{% include "components/icon.html" with name="search" %}<input type="search" id="catalog-search" data-catalog-search placeholder="Search equipment..."></div></div>
+        <div class="content-grid borrowing-catalog" tabindex="0" role="region" aria-label="Available equipment choices">
             {% for equipment in catalog %}<article class="card borrowing-catalog-item" data-catalog-entry data-search-text="{{ equipment.name }} {{ equipment.description }}"><h3>{{ equipment.name }}</h3><p class="caption">{{ equipment.description }}</p><p>{{ equipment.available_count }} available unit{{ equipment.available_count|pluralize }}</p><button type="button" class="button button--secondary" data-select-equipment="{{ equipment.pk }}"{% if not equipment.available_count %} disabled{% endif %}>Select {{ equipment.name }}</button></article>
             {% empty %}<p class="text-secondary">There is no catalog equipment yet. Inventory needs equipment types and physical units before requests can be submitted.</p>{% endfor %}
         </div>
@@ -23,5 +24,6 @@
         <section class="card section-stack"><h2>Requested equipment</h2><p class="caption">Leave unused equipment slots blank.</p>{% for item_form in formset %}<fieldset class="borrowing-item-row"><legend>Equipment {{ forloop.counter }}</legend>{% include "components/input.html" with field=item_form.equipment %}{% include "components/input.html" with field=item_form.quantity %}{% if item_form.non_field_errors %}<div class="field-errors" role="alert">{{ item_form.non_field_errors }}</div>{% endif %}</fieldset>{% endfor %}</section>
         <section class="card section-stack"><h2>Borrowing details</h2>{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}<div class="page-actions"><button type="submit" class="button button--primary">Submit request</button><a href="{% url 'my_requests' %}" class="button button--secondary">Cancel</a></div></section>
     </form>
+    </div>
 </div>
 {% endblock %}

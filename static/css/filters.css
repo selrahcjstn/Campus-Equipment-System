@@ -7,9 +7,6 @@
 .filter-toolbar .form-field input:focus, .filter-toolbar .form-field select:focus { --control-border: var(--accent); }
 .filter-toolbar .form-field.has-errors input:focus, .filter-toolbar .form-field.has-errors select:focus { --control-border: var(--error); outline-color: var(--error); }
 .filter-toolbar__search { flex: 1 1 240px; max-width: 320px; }
-.filter-toolbar__search-input { position: relative; }
-.filter-toolbar__search-input > .icon { position: absolute; z-index: 1; left: var(--space-3); top: 50%; transform: translateY(-50%); width: var(--space-4); height: var(--space-4); color: var(--text-secondary); pointer-events: none; }
-.filter-toolbar .form-field .filter-toolbar__search-input input[type='search'] { padding-left: calc(var(--space-3) + var(--space-4) + var(--space-2)); }
 .filter-toolbar__secondary { flex: 1 1 300px; min-width: 0; }
 .filter-toolbar__secondary--single { flex-basis: 160px; max-width: 200px; }
 .filter-toolbar__secondary > summary { display: none; }

@@ -5,8 +5,18 @@
 {% block content %}
 <header class="page-heading"><div><h1>My Dashboard</h1><p>Your requests, borrowed equipment and upcoming returns.</p></div><a class="button button--primary" href="{% url 'equipment_catalog' %}">Browse equipment</a></header>
 <div class="section-stack">
-    <div class="dashboard-kpis"><section class="card"><h2>Pending requests</h2><p class="dashboard-stat">{{ pending_count }}</p></section><section class="card"><h2>Awaiting release</h2><p class="dashboard-stat">{{ approved_count }}</p></section><section class="card"><h2>Borrowed units</h2><p class="dashboard-stat">{{ borrowed_count }}</p></section><section class="card"><h2>Overdue loans</h2><p class="dashboard-stat">{{ overdue_count }}</p></section></div>
-    <nav class="page-actions" aria-label="Borrowing shortcuts"><a class="button button--secondary" href="{% url 'my_requests' %}">My Borrowing Requests</a><a class="button button--secondary" href="{% url 'my_loans' %}">My Loans</a><a class="button button--secondary" href="{% url 'borrowing_history' %}">Borrowing History</a><a class="button button--secondary" href="{% url 'my_profile' %}">My Profile</a></nav>
+    <div class="metric-grid">
+        {% include "components/metric.html" with label="Pending requests" value=pending_count icon="requests" only %}
+        {% include "components/metric.html" with label="Awaiting release" value=approved_count icon="equipment" only %}
+        {% include "components/metric.html" with label="Borrowed units" value=borrowed_count icon="loans" only %}
+        {% include "components/metric.html" with label="Overdue loans" value=overdue_count icon="history" only %}
+    </div>
+    <nav class="dashboard-shortcuts" aria-label="Borrowing shortcuts">
+        <a href="{% url 'my_requests' %}">{% include "components/icon.html" with name="requests" %}My Borrowing Requests</a>
+        <a href="{% url 'my_loans' %}">{% include "components/icon.html" with name="loans" %}My Loans</a>
+        <a href="{% url 'borrowing_history' %}">{% include "components/icon.html" with name="history" %}Borrowing History</a>
+        <a href="{% url 'my_profile' %}">{% include "components/icon.html" with name="profile" %}My Profile</a>
+    </nav>
     {% if overdue_count %}{% include "dashboard/_personal_loans.html" with table_label="Your overdue loans" loan_rows=overdue empty_message="No overdue loans." %}{% endif %}
     {% include "dashboard/_personal_loans.html" with table_label="Upcoming due dates" loan_rows=upcoming empty_message="No upcoming equipment returns. Browse the catalog to start a request." %}
     <div class="table-container" tabindex="0" role="region" aria-label="Recent borrowing activity"><table class="data-table"><caption>Recent borrowing activity</caption><thead><tr><th scope="col" class="table-cell--identifier">Request</th><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--date">Submitted</th><th scope="col" class="table-cell--status">Status</th></tr></thead><tbody>{% for borrowing in recent_requests %}<tr><td class="table-cell--identifier"><a href="{% url 'request_detail' borrowing.pk %}">Request #{{ borrowing.pk }}</a></td><td class="table-cell--text"><ul class="dashboard-unit-list">{% for item in borrowing.items.all %}<li>{{ item.equipment.name }} × {{ item.quantity }}</li>{% endfor %}</ul></td><td class="table-cell--date">{{ borrowing.requested_at|date:"M j, Y, g:i A T" }}</td><td class="table-cell--status">{% include "components/badge.html" with label=borrowing.workflow_label variant=borrowing.status_variant %}</td></tr>{% empty %}<tr><td colspan="4"><div class="empty-state">No borrowing activity yet. Submit your first request from the equipment catalog.</div></td></tr>{% endfor %}</tbody></table></div>
