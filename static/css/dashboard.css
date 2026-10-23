@@ -6,8 +6,8 @@
 @media (max-width: 767px) { .settings-fields { grid-template-columns: 1fr; } }
 .dashboard-chart { margin: 0; min-width: 0; }
 .dashboard-chart svg { display: block; width: 100%; height: auto; }
-.chart-axis { stroke: var(--border-strong); stroke-width: 2; }
-.chart-bar { fill: var(--accent); }
+.chart-axis { stroke: var(--border-default); stroke-width: 1; }
+.chart-bar { fill: var(--primary); }
 .dashboard-chart-range { display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); font-size: var(--font-caption); color: var(--text-secondary); }
 .dashboard-charts { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); align-items: start; }
 .dashboard-charts h2 { font-size: var(--font-card); }
@@ -15,7 +15,7 @@
 .dashboard-status-chart dd { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-1) 0 0; }
 .dashboard-status-chart strong { min-width: 3ch; text-align: right; }
 .dashboard-status-track { flex: 1; height: 6px; border-radius: var(--radius-full); background: var(--surface-muted); overflow: hidden; }
-.dashboard-status-fill { display: block; height: 100%; background: var(--info); }
+.dashboard-status-fill { display: block; height: 100%; background: var(--primary); }
 .status-available { background: var(--success); }
 .status-reserved { background: var(--warning); }
 .status-maintenance { background: var(--error); }
