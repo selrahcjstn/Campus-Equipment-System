@@ -1,11 +1,11 @@
 <div class="table-container" tabindex="0" role="region" aria-label="{{ table_title }}">
     <table class="data-table">
         <caption>{{ table_title }}</caption>
-        <thead><tr><th scope="col" class="table-cell--text">Loan{% if admin %} / borrower{% endif %}</th><th scope="col" class="table-cell--text">Equipment / quantity</th><th scope="col" class="table-cell--date">Issued</th><th scope="col" class="table-cell--date">Due</th>{% if history %}<th scope="col" class="table-cell--date">Completed</th>{% else %}<th scope="col" class="table-cell--number">Still out</th>{% endif %}<th scope="col" class="table-cell--status">Status</th><th scope="col" class="table-cell--actions">Actions</th></tr></thead>
+        <thead><tr><th scope="col" class="{% if admin %}table-cell--text{% else %}table-cell--identifier{% endif %}">Loan{% if admin %} / borrower{% endif %}</th><th scope="col" class="table-cell--text">Equipment / quantity</th><th scope="col" class="table-cell--date">Issued</th><th scope="col" class="table-cell--date">Due</th>{% if history %}<th scope="col" class="table-cell--date">Completed</th>{% else %}<th scope="col" class="table-cell--number">Still out</th>{% endif %}<th scope="col" class="table-cell--status">Status</th><th scope="col" class="table-cell--actions">Actions</th></tr></thead>
         <tbody>
         {% for loan in page_obj %}
             <tr>
-                <td class="table-cell--text"><strong>#{{ loan.pk }}</strong>{% if admin %}<div>{{ loan.borrower.get_full_name|default:loan.borrower.username }}</div><span class="caption">{{ loan.borrower.username }}</span>{% endif %}</td>
+                <td class="{% if admin %}table-cell--text{% else %}table-cell--identifier{% endif %}"><strong>#{{ loan.pk }}</strong>{% if admin %}<div>{{ loan.borrower.get_full_name|default:loan.borrower.username }}</div><span class="caption">{{ loan.borrower.username }}</span>{% endif %}</td>
                 <td class="table-cell--text"><ul class="loan-equipment-list">{% for equipment in loan.equipment_summary %}<li>{{ equipment.name }} <span class="caption">× {{ equipment.quantity }}</span></li>{% endfor %}</ul>{% if admin %}<div class="caption">Outstanding units: {% for unit in loan.units.all %}{% if not unit.returned_at %}{{ unit.asset_tag }} {% endif %}{% endfor %}</div>{% endif %}</td>
                 <td class="table-cell--date">{{ loan.issued_at|date:"M j, Y" }}<div class="caption">{{ loan.issued_at|date:"g:i A T" }}</div></td>
                 <td class="table-cell--date">{{ loan.due_at|date:"M j, Y" }}<div class="caption">{{ loan.due_at|date:"g:i A T" }}</div></td>

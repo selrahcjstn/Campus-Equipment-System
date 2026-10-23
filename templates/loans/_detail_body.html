@@ -12,7 +12,7 @@
     <div class="loan-purpose"><strong>Purpose</strong><p>{{ loan.request.purpose|linebreaksbr }}</p></div>
 </section>
 {% if loan.is_overdue %}<div class="alert alert--warning" role="status"><strong>This loan is overdue.</strong><p>{{ loan.outstanding_count }} physical unit{{ loan.outstanding_count|pluralize }} still need to be returned.</p></div>{% endif %}
-<section class="table-container">
+<section class="table-container" tabindex="0" role="region" aria-label="Issued physical units and return history">
     <table class="data-table">
         <caption>Issued physical units and return history</caption>
         <thead><tr><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--identifier">Asset tag</th><th scope="col" class="table-cell--date">Return date</th><th scope="col" class="table-cell--status">Condition / destination</th><th scope="col" class="table-cell--description">Received by / notes</th></tr></thead>
