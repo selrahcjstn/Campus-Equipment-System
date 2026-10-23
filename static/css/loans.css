@@ -1,7 +1,5 @@
 .loan-equipment-list { margin: 0; padding: 0; list-style: none; }
 .loan-equipment-list li + li { margin-top: var(--space-2); }
-.loan-empty { padding: var(--space-8) 0; text-align: center; }
-.loan-empty p { margin-top: var(--space-2); }
 .loan-readiness-error { max-width: 280px; margin: var(--space-2) 0; }
 .loan-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--space-6); margin: var(--space-4) 0 0; }
 .loan-facts dt { color: var(--text-secondary); font-size: var(--font-label); }

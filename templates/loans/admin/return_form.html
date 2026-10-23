@@ -7,7 +7,7 @@
 <header class="page-heading"><div><h1>Return units · Loan #{{ loan.pk }}</h1><p>{{ loan.borrower.get_full_name|default:loan.borrower.username }} · Due {{ loan.due_at|date:"M j, Y, g:i A T" }}</p></div><a href="{% url 'admin_loan_detail' loan.pk %}?from=returns" class="button button--secondary">View loan record</a></header>
 {% if loan.completed_at %}<div class="alert alert--success" role="status"><strong>All units have been returned.</strong><p>This loan is completed. Additional returns cannot be recorded.</p></div>
 {% else %}
-<form method="post" id="return-form" class="section-stack" data-confirm-operation="operation-confirmation">
+<form method="post" id="return-form" class="form-panel form-panel--wide section-stack" data-confirm-operation="operation-confirmation">
     {% csrf_token %}{{ formset.management_form }}
     {% if operation_errors %}<div class="alert alert--error" role="alert"><ul>{% for error in operation_errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
     {% if formset.non_form_errors %}<div class="alert alert--error" role="alert">{{ formset.non_form_errors }}</div>{% endif %}

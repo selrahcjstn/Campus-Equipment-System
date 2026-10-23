@@ -17,7 +17,7 @@
     </tbody></table></div>
     {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
     {% if can_release %}
-    <form method="post" class="card section-stack" id="release-form" data-confirm-operation="operation-confirmation">
+    <form method="post" class="form-panel card section-stack" id="release-form" data-confirm-operation="operation-confirmation">
         {% csrf_token %}{% include "components/input.html" with field=form.confirm %}
         <p class="caption">The server checks approval, quantities, reservations, and due date again when you confirm. Equipment is issued once for this request.</p>
         <div class="page-actions"><button type="submit" class="button button--primary">Release equipment</button><a href="{% url 'loan_management' %}" class="button button--secondary">Cancel</a></div>

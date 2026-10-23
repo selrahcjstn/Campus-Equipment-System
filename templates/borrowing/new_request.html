@@ -16,7 +16,7 @@
         </div>
         <p class="caption" data-catalog-status role="status" aria-live="polite"></p>
     </section>
-    <form method="post" class="section-stack" id="borrowing-request-form" data-submit-loading>
+    <form method="post" class="form-panel form-panel--wide section-stack" id="borrowing-request-form" data-submit-loading>
         {% csrf_token %}{{ formset.management_form }}
         {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
         {% if formset.non_form_errors %}<div class="alert alert--error" role="alert">{{ formset.non_form_errors }}</div>{% endif %}

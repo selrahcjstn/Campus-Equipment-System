@@ -9,7 +9,7 @@
         <td class="table-cell--text"><strong>{{ equipment.name }}</strong><p class="caption">{{ equipment.category.name|default:"Uncategorized" }}</p></td><td class="table-cell--status">{% if equipment.is_active %}{% include "components/badge.html" with label="Active" variant="success" %}{% else %}{% include "components/badge.html" with label="Archived" variant="inactive" %}{% endif %}</td>
         <td class="table-cell--number">{{ equipment.total_count }}</td><td class="table-cell--number">{{ equipment.available_count }}</td><td class="table-cell--number">{{ equipment.reserved_count }}</td><td class="table-cell--number">{{ equipment.issued_count }}</td><td class="table-cell--number">{{ equipment.maintenance_count }}</td><td class="table-cell--number">{{ equipment.retired_count }}</td>
         <td class="table-cell--actions"><a class="button button--secondary" href="{% url 'admin_equipment_detail' equipment.pk %}">Manage</a></td>
-    </tr>{% empty %}<tr><td colspan="9"><div class="inventory-empty"><h2>No catalog items in this view</h2><p class="text-secondary">Create an item or clear the filters.</p></div></td></tr>{% endfor %}</tbody></table></div>
+    </tr>{% empty %}<tr><td colspan="9"><div class="empty-state"><h2>No catalog items in this view</h2><p class="text-secondary">Create an item or clear the filters.</p></div></td></tr>{% endfor %}</tbody></table></div>
     {% include "inventory/_pagination.html" %}
 </div>
 {% endblock %}

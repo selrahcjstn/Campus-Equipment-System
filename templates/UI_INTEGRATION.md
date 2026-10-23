@@ -165,6 +165,20 @@ Tables use shared `table-cell--text`, `--description`, `--identifier`, `--date`,
 roles by content rather than assigning equal column widths. Overflow regions are
 labelled and keyboard focusable; printable loan slips retain their print styles.
 
+## Form widths and empty states
+
+Use `form-panel` on portal POST forms for a 720px maximum width. Add
+`form-panel--narrow` for 560px password/simple confirmation forms, or
+`form-panel--wide` for 960px borrowing/return forms with multiple unit rows.
+`form-page` and `form-page--narrow` apply the matching limit to surrounding account
+information and help messages. These limits shrink naturally to the available
+mobile width; original Django widgets, errors, CSRF and confirmation handlers stay
+in place. Authentication forms retain their existing bounded layouts.
+
+Use `empty-state` for shared empty result messages. Table action buttons use the
+compact shared table style and keep 40px minimum targets on coarse-pointer devices.
+Form and filter error borders remain visible on hover and focus.
+
 ## Modals
 
 Native `<dialog>` provides keyboard containment and Escape dismissal. Include

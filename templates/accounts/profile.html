@@ -4,9 +4,9 @@
 {% block page_styles %}<link rel="stylesheet" href="{% static 'css/accounts.css' %}">{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>My Profile</h1><p>Keep your campus contact information up to date.</p></div><a class="button button--secondary" href="{% url password_route %}">Change password</a></header>
-<div class="section-stack">{% include "components/messages.html" %}
+<div class="section-stack form-page">{% include "components/messages.html" %}
     <section class="card"><h2>Account information</h2><dl class="account-facts"><div><dt>Username</dt><dd>{{ user.username }}</dd></div><div><dt>Campus role</dt><dd>{{ user.get_role_display }}</dd></div><div><dt>Registered</dt><dd>{{ user.date_joined|date:"M j, Y" }}</dd></div></dl><p class="caption">Your username and account permissions are managed separately from your profile.</p></section>
     {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-    <form method="post" class="card section-stack" data-submit-loading>{% csrf_token %}<h2>Edit profile</h2><div class="account-form-fields">{% for field in form %}{% include "components/input.html" %}{% endfor %}</div><div><button type="submit" class="button button--primary">Save profile</button></div></form>
+    <form method="post" class="form-panel card section-stack" data-submit-loading>{% csrf_token %}<h2>Edit profile</h2><div class="account-form-fields">{% for field in form %}{% include "components/input.html" %}{% endfor %}</div><div><button type="submit" class="button button--primary">Save profile</button></div></form>
 </div>
 {% endblock %}

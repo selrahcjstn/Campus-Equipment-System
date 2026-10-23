@@ -12,7 +12,7 @@
         <td class="table-cell--text"><ul class="dashboard-unit-list">{% for unit in row.units %}<li>{{ unit.equipment_name }} · {{ unit.asset_tag }}<p class="caption">{% if unit.returned_at %}Returned {{ unit.returned_at|date:"M j, Y, g:i A T" }} · {{ unit.get_return_condition_display }}{% else %}Outstanding{% endif %}</p></li>{% empty %}<li>No physical unit records</li>{% endfor %}</ul></td>
         <td class="table-cell--date">{{ row.loan.issued_at|date:"M j, Y, g:i A T" }}</td><td class="table-cell--date">{{ row.loan.due_at|date:"M j, Y, g:i A T" }}</td>
         <td class="table-cell--status">{% include "components/badge.html" with label=row.status variant=row.variant %}<p class="caption">{{ row.outstanding }} outstanding · {{ row.returned }} returned</p></td><td class="table-cell--identifier">{{ row.overdue_label }}</td>
-    </tr>{% empty %}<tr><td colspan="6"><div class="dashboard-empty"><h2>No loans match these filters</h2><p class="text-secondary">Choose a wider date range or another report type.</p></div></td></tr>{% endfor %}</tbody></table></div>
+    </tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><h2>No loans match these filters</h2><p class="text-secondary">Choose a wider date range or another report type.</p></div></td></tr>{% endfor %}</tbody></table></div>
     {% include "dashboard/_pagination.html" with pagination_label="Loan report pages" %}
 </div>
 {% endblock %}

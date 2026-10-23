@@ -5,5 +5,5 @@
 {% block content %}
 <header class="page-heading"><div><h1>{{ page_title }}</h1><p>{% if record %}{{ record.unit.equipment.name }} · {{ record.unit.asset_tag }}{% else %}Record an issue and make the selected physical unit unavailable for borrowing.{% endif %}</p></div><a class="button button--secondary" href="{% if record %}{% url 'maintenance_detail' record.pk %}{% else %}{% url 'maintenance' %}{% endif %}">Back</a></header>
 {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
-{% if not record or allowed %}<form method="post" class="card section-stack" data-submit-loading>{% csrf_token %}{% for field in form %}{% include "components/input.html" %}{% endfor %}<div><button type="submit" class="button button--primary">Save maintenance</button></div></form>{% else %}<div class="alert alert--warning">This completed record is preserved and cannot be edited.</div>{% endif %}
+{% if not record or allowed %}<form method="post" class="form-panel card section-stack" data-submit-loading>{% csrf_token %}{% for field in form %}{% include "components/input.html" %}{% endfor %}<div><button type="submit" class="button button--primary">Save maintenance</button></div></form>{% else %}<div class="alert alert--warning">This completed record is preserved and cannot be edited.</div>{% endif %}
 {% endblock %}

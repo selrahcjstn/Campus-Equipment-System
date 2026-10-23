@@ -15,8 +15,6 @@
 .status-reserved { background: var(--warning); }
 .status-maintenance { background: var(--error); }
 .status-retired { background: var(--inactive); }
-.dashboard-empty { padding: var(--space-8); text-align: center; }
-.dashboard-empty p { margin-top: var(--space-2); }
 .dashboard-unit-list { margin: var(--space-2) 0 0; padding: 0; list-style: none; overflow-wrap: anywhere; }
 .dashboard-unit-list li + li { margin-top: var(--space-2); }
 .dashboard-audit-description { max-width: 400px; overflow-wrap: anywhere; }

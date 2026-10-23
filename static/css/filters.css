@@ -3,8 +3,9 @@
 .filter-toolbar .form-field { gap: var(--space-1); }
 .filter-toolbar .form-field > label { font-size: var(--font-caption); color: var(--text-secondary); }
 .filter-toolbar .form-field input:not([type='hidden']):not([type='checkbox']):not([type='radio']), .filter-toolbar .form-field select { font-weight: var(--weight-regular); }
-.filter-toolbar .form-field input:hover, .filter-toolbar .form-field select:hover { --control-border: var(--border-strong); }
+.filter-toolbar .form-field:not(.has-errors) input:hover, .filter-toolbar .form-field:not(.has-errors) select:hover { --control-border: var(--border-strong); }
 .filter-toolbar .form-field input:focus, .filter-toolbar .form-field select:focus { --control-border: var(--accent); }
+.filter-toolbar .form-field.has-errors input:focus, .filter-toolbar .form-field.has-errors select:focus { --control-border: var(--error); outline-color: var(--error); }
 .filter-toolbar__search { flex: 1 1 220px; max-width: 360px; }
 .filter-toolbar__search-input { position: relative; }
 .filter-toolbar__search-input > .icon { position: absolute; z-index: 1; left: var(--space-3); top: 50%; transform: translateY(-50%); width: var(--space-4); height: var(--space-4); color: var(--text-secondary); pointer-events: none; }

@@ -2,8 +2,6 @@
 .inventory-catalog-card .page-actions { align-self: end; }
 .inventory-catalog-card h2 { margin-top: var(--space-2); }
 .inventory-description, .inventory-catalog-card p { overflow-wrap: anywhere; }
-.inventory-empty { padding: var(--space-8); text-align: center; }
-.inventory-empty p { margin-top: var(--space-2); }
 .inventory-counts { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: var(--space-4); margin: var(--space-4) 0 0; }
 .inventory-counts dt { font-size: var(--font-label); color: var(--text-secondary); }
 .inventory-counts dd { margin: var(--space-1) 0 0; font-size: var(--font-heading); font-weight: var(--weight-semibold); }

@@ -1,7 +1,5 @@
 .borrowing-items { list-style: none; margin: 0; padding: 0; }
 .borrowing-items li + li { margin-top: var(--space-2); }
-.borrowing-empty { padding: var(--space-8) 0; text-align: center; }
-.borrowing-empty p { margin-top: var(--space-2); }
 .borrowing-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: var(--space-6); margin: 0; }
 .borrowing-facts dt { font-size: var(--font-label); color: var(--text-secondary); }
 .borrowing-facts dd { margin: var(--space-1) 0 0; font-weight: var(--weight-medium); overflow-wrap: anywhere; }

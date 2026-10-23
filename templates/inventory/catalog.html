@@ -11,7 +11,7 @@
         <p class="text-secondary">{{ equipment.description|default:"No description provided."|truncatechars:240 }}</p>
         <div>{% if equipment.available_count %}{% include "components/badge.html" with label="Available" variant="success" %}{% else %}{% include "components/badge.html" with label="Unavailable" variant="inactive" %}{% endif %}<p>{{ equipment.available_count }} available physical unit{{ equipment.available_count|pluralize }}</p></div>
         <div class="page-actions"><a class="button button--secondary" href="{% url 'equipment_detail' equipment.pk %}">View details</a>{% if equipment.available_count %}<a class="button button--primary" href="{% url 'new_borrowing_request' %}?equipment={{ equipment.pk }}">Request equipment</a>{% endif %}</div>
-    </article>{% empty %}<section class="card inventory-empty"><h2>No equipment in this view</h2><p class="text-secondary">Try clearing your search and category filters. Active catalog items will appear here when added.</p></section>{% endfor %}</div>
+    </article>{% empty %}<section class="card empty-state"><h2>No equipment in this view</h2><p class="text-secondary">Try clearing your search and category filters. Active catalog items will appear here when added.</p></section>{% endfor %}</div>
     {% include "inventory/_pagination.html" %}
 </div>
 {% endblock %}
