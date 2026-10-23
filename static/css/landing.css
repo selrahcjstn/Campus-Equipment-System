@@ -1,7 +1,15 @@
 /* Public home: reuse the portal's tokens, typography, buttons, cards and icons. */
 .landing-page { min-height: 100vh; min-height: 100dvh; background: var(--surface); }
 .landing-container { width: min(100%, 1184px); margin-inline: auto; padding-inline: var(--space-8); }
-.landing-header { border-bottom: var(--border); }
+.landing-header { position: sticky; top: 0; z-index: var(--z-sidebar); border-bottom: var(--border); background: var(--surface); transition: transform 180ms ease; }
+.landing-header.is-scroll-hidden { transform: translateY(-100%); }
+.landing-header:focus-within { transform: translateY(0); }
+@supports ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) {
+    .landing-header { background: color-mix(in srgb, var(--surface) 78%, transparent); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .landing-header { transition: none; }
+}
 .landing-header__inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); padding-block: var(--space-5); }
 .landing-header .brand-mark { width: 36px; height: 36px; }
 .landing-nav { display: flex; align-items: center; gap: var(--space-6); }
