@@ -300,6 +300,7 @@ a.navbar-account:hover { background: var(--background); color: var(--primary); }
     :root { --page-padding: 16px; --card-padding: 16px; --section-gap: 16px; }
     .navbar { padding: 0 var(--space-4); }
     .account-name { max-width: 120px; }
+    .form-field input:not([type='checkbox']):not([type='radio']):not([type='hidden']), .form-field select, .form-field textarea { font-size: 16px; line-height: 1.25; }
     .page-content { padding: var(--space-4); }
     .page-heading, .card-heading { flex-direction: column; align-items: stretch; gap: var(--space-3); }
     .page-heading > .button, .card-heading > .badge { align-self: flex-start; }
