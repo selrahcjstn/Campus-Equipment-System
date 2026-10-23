@@ -27,7 +27,8 @@ pages. Both extend `base_app.html` and `base.html`. Authentication pages extend
 Place page styling in its own static CSS file; reuse the variables in
 `static/css/design-system.css`. Use `section-stack` for 20px section spacing and
 `content-grid` for a responsive grid with 16px gaps. Mobile section gaps are 16px.
-Portal content caps at 1200px with 24px desktop padding and 16px mobile padding.
+Portal content fills the available workspace with equal 24px desktop padding
+and 16px mobile padding. Keep long editors bounded with the form-width classes.
 Inter loads from Google
 Fonts with a sans-serif fallback if the font service is unavailable.
 
@@ -37,6 +38,16 @@ the source file's modification version so updated templates cannot retain stale
 browser-cached CSS. Unchanged files keep stable URLs and remain cacheable.
 The configured static storage remains responsible for the asset URL; collected
 assets without a local source keep their normal storage URL.
+
+## Monochrome tokens
+
+Use the shared variables rather than page-specific colors. Primary text and
+buttons use `#18181B` with `#27272A` hover; page backgrounds use `#FAFAFA`, cards
+use white, borders use `#E4E4E7`, secondary text uses `#71717A`, and table headers
+and hover surfaces use `#F4F4F5`. Focus rings are black, including invalid fields;
+validation borders and messages retain their error color. Colored status badges
+and status chart series always have readable labels. General information alerts,
+links, charts, navigation, and actions remain neutral.
 
 ## Navigation integration
 
@@ -184,6 +195,11 @@ information and help messages. These limits shrink naturally to the available
 mobile width; original Django widgets, errors, CSRF and confirmation handlers stay
 in place. Login caps at 420px and registration at 520px.
 
+Use `form-page--full` and `form-panel--full` for the deliberately full-width
+Profile, System Settings, and action-review layouts. Their numeric/contact
+fields use responsive grids; standalone long text fields remain capped at 640px.
+Do not apply full-width modifiers to ordinary editors or password forms.
+
 Use `empty-state` for shared empty result messages. Table action buttons use the
 compact shared table style and keep 40px minimum targets on coarse-pointer devices.
 Form and filter error borders remain visible on hover and focus.
@@ -193,13 +209,17 @@ Form and filter error borders remain visible on hover and focus.
 Use `metric-grid` for dashboard statistics and `metric-grid--three` for three
 metrics. Include `components/metric.html` with `label`, `value`, and optional
 `icon` and `description`; pass `only` so optional content cannot leak from a page.
-Use `facts-grid` on definition lists to share compact label/value styling.
+Use `facts-grid` on definition lists for bordered label/value tiles.
+`detail-box` supplies the same inset surface for free text or grouped fields.
+Inventory totals use `inventory-counts`: six columns on desktop, three on
+tablet, and two on small screens. Keep labels and values in semantic `dt`/`dd`
+elements and use existing context data.
 
 The `search-input` wrapper provides the shared inset icon and input padding.
 Keep the field's label, original input attributes, and its existing GET or
 client-side selection handler. Catalog cards use `inventory-grid` to avoid
-stretching a lone card across a desktop row. See `docs/UI_REDESIGN.md` for
-the full design and verification notes.
+stretching a lone card across a desktop row. See `docs/UI_MONOCHROME.md` for
+the current design, file list, verification limits, and local commit history.
 
 ## Modals
 

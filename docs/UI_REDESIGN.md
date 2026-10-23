@@ -1,5 +1,10 @@
 # System-wide UI redesign — October 24, 2026
 
+> Historical report for the earlier neutral/navy design. The
+> [monochrome UI report](UI_MONOCHROME.md) supersedes its palette and sizing
+> guidance. Browser results below describe that earlier implementation, not
+> the subsequent monochrome changes.
+
 The existing Django application now uses a cohesive, neutral dashboard design.
 All work is in templates, CSS, and documentation. Models, migrations, views,
 authentication, permissions, services, routes, and JavaScript workflows are unchanged.

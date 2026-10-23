@@ -133,7 +133,7 @@ Use the portal sidebar to navigate to the catalog, borrowing requests, loans, an
 
 The integrated project passed **365 automated tests** on October 24, 2026. Coverage includes stylesheet cache invalidation, landing-page links and role redirects, shared pagination, role permissions, account management, inventory availability, request approval, release, partial and damaged returns, maintenance, reports, audit logs, and borrowing settings. Tests use a separate test database.
 
-Portal lists show 10 records per page with numbered navigation and a record-range summary. Search and filters remain in the URL when changing pages. See the [system-wide UI redesign notes](docs/UI_REDESIGN.md) for the shared components, page coverage, responsive verification, and implementation commits. The [earlier UI review](docs/UI_REVIEW.md) records pagination implementation details.
+Portal lists show 10 records per page with numbered navigation and a record-range summary. Search and filters remain in the URL when changing pages. See the [monochrome UI report](docs/UI_MONOCHROME.md) for the current shared components, modified files, test results, local commits, and browser-verification limitation. The [earlier redesign notes](docs/UI_REDESIGN.md) retain the previous visual review. The [earlier UI review](docs/UI_REVIEW.md) records pagination implementation details.
 
 To test one module:
 
