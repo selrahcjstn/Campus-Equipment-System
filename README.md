@@ -131,7 +131,9 @@ Use the portal sidebar to navigate to the catalog, borrowing requests, loans, an
 .\.venv\Scripts\python.exe manage.py test
 ```
 
-The integrated project passed **358 automated tests** on October 23, 2026. Coverage includes landing-page links and role redirects, role permissions, account management, inventory availability, request approval, release, partial and damaged returns, maintenance, reports, audit logs, and borrowing settings. Tests use a separate test database.
+The integrated project passed **362 automated tests** on October 23, 2026. Coverage includes landing-page links and role redirects, shared pagination, role permissions, account management, inventory availability, request approval, release, partial and damaged returns, maintenance, reports, audit logs, and borrowing settings. Tests use a separate test database.
+
+Portal lists show 10 records per page with numbered navigation and a record-range summary. Search and filters remain in the URL when changing pages. See the [UI review and verification notes](docs/UI_REVIEW.md) for the updated components, pagination details, and responsive checks.
 
 To test one module:
 
