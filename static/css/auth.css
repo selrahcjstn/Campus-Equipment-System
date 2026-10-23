@@ -119,7 +119,7 @@ body {
 .auth-mobile-brand { display: none; }
 .auth-card { width: min(100%, 420px); margin: auto; padding: var(--space-10) 0; }
 .auth-shell--register { grid-template-columns: minmax(440px, 48%) minmax(0, 1fr); }
-.auth-shell--register .auth-card { width: min(100%, 680px); }
+.auth-shell--register .auth-card { width: min(100%, 560px); max-width: 560px; }
 .auth-heading { margin-bottom: var(--space-8); }
 .auth-heading .eyebrow { margin-bottom: var(--space-2); }
 .auth-heading p { margin-top: var(--space-3); color: var(--text-secondary); }
@@ -132,7 +132,7 @@ body {
 .auth-form--register > .form-field--last_name,
 .auth-form--register > .form-field--email,
 .auth-form--register > .form-field--contact_number { grid-column: span 1; }
-.auth-form--register .form-field--password1 .field-help ul { columns: 2; column-gap: var(--space-8); }
+.auth-form--register .form-field--password1 .field-help ul { columns: 1; }
 .auth-form--register .form-field--password1 .field-help li { break-inside: avoid; }
 .auth-card > .alert { margin-bottom: var(--space-4); }
 .auth-switch {
@@ -149,7 +149,6 @@ body {
 @media (max-width: 1280px) {
     .auth-shell--register .auth-form--register { grid-template-columns: minmax(0, 1fr); }
     .auth-shell--register .auth-form--register > * { grid-column: 1 / -1; }
-    .auth-form--register .form-field--password1 .field-help ul { columns: 1; }
 }
 
 @media (max-width: 1023px) {

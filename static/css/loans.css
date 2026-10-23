@@ -26,7 +26,7 @@
     .app-shell, body { min-height: auto; background: white; color: black; }
     .page-content { padding: 0; max-width: none; }
     .loan-slip { padding: 0; border: 0; }
-    .table-container { overflow: visible; border: 1px solid #888; }
+    .table-container { overflow: visible; border: 1px solid var(--table-border); }
     .data-table tr { break-inside: avoid; }
     .data-table th, .data-table td { padding: 8px 12px; }
     .loan-signatures { break-inside: avoid; }
