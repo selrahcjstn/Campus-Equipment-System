@@ -5,8 +5,9 @@
         {% endif %}{% endif %}
         <span class="navbar-title">{% if user.role == 'ADMIN' %}Admin Portal{% elif user.role == 'BASIC_USER' %}User Portal{% else %}Campus Equipment{% endif %}</span>
     </div>
-    <div class="navbar-account">
+    {% if user.role == 'ADMIN' %}{% url 'admin_profile' as account_url %}{% elif user.role == 'BASIC_USER' %}{% url 'my_profile' as account_url %}{% endif %}
+    {% if account_url %}<a class="navbar-account" href="{{ account_url }}" aria-label="My profile">{% else %}<div class="navbar-account">{% endif %}
         <span class="account-avatar">{% include "components/icon.html" with name="profile" %}</span>
         <span class="account-name">{% if user.is_authenticated %}{{ user.get_full_name|default:user.username }}{% else %}Campus member{% endif %}</span>
-    </div>
+    {% if account_url %}</a>{% else %}</div>{% endif %}
 </header>
