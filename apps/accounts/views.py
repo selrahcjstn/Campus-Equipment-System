@@ -54,6 +54,13 @@ def _error(form, error):
         form.add_error(None, "The account changed or the database is busy. Reload and try again.")
 
 
+@require_GET
+def landing_page(request):
+    if request.user.is_authenticated:
+        return redirect(_home(request.user))
+    return render(request, "landing.html")
+
+
 @require_http_methods(["GET", "POST"])
 def register_view(request):
     if request.user.is_authenticated:

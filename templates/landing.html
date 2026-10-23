@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Campus Equipment Borrowing &amp; Inventory System{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% static 'css/landing.css' %}">{% endblock %}
+{% block body %}
+<div class="landing-page">
+    <header class="landing-header">
+        <div class="landing-container landing-header__inner">
+            {% url 'home' as home_url %}
+            {% url 'login' as login_url %}
+            {% url 'register' as register_url %}
+            {% url 'equipment_catalog' as catalog_url %}
+            {% include "components/brand.html" with href=home_url %}
+            <nav class="landing-nav" aria-label="Main navigation">
+                <a class="landing-home" href="{{ home_url }}" aria-current="page">Home</a>
+                {% include "components/button.html" with label="Sign In" href=login_url variant="primary" %}
+            </nav>
+        </div>
+    </header>
+
+    <main id="main-content" class="landing-container" tabindex="-1">
+        <section class="landing-hero" aria-labelledby="landing-title">
+            <div class="landing-hero__copy">
+                {% include "components/badge.html" with label="Campus Equipment Management" variant="info" %}
+                <h1 id="landing-title">Borrow Campus Equipment, <span>Made Simple.</span></h1>
+                <p>A centralized platform for browsing available equipment, submitting borrowing requests, and tracking borrowed items.</p>
+                <div class="landing-hero__actions">
+                    {% include "components/button.html" with label="Get Started" href=register_url variant="primary" %}
+                    {% include "components/button.html" with label="Browse Equipment" href=catalog_url variant="secondary" %}
+                </div>
+            </div>
+
+            <figure class="landing-equipment">
+                <svg viewBox="0 0 440 300" role="img" aria-labelledby="equipment-title equipment-description" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <title id="equipment-title">Ready for your next campus project</title>
+                    <desc id="equipment-description">A simple illustration of a laptop, projector, and headphones.</desc>
+                    <path class="equipment-ground" d="M28 264h384"/>
+                    <g class="equipment-laptop">
+                        <rect x="66" y="45" width="252" height="162" rx="10"/>
+                        <rect class="equipment-screen" x="78" y="57" width="228" height="137" rx="4"/>
+                        <path d="M66 207 42 233v5a7 7 0 0 0 7 7h286a7 7 0 0 0 7-7v-5l-24-26M42 233h300M167 233h50"/>
+                        <g class="equipment-screen-icon"><path d="m192 95 32 18v36l-32 18-32-18v-36l32-18Z"/><path d="m160 113 32 18 32-18M192 131v36M176 104l32 18"/></g>
+                    </g>
+                    <g class="equipment-projector">
+                        <rect x="219" y="179" width="165" height="72" rx="12"/>
+                        <path d="M233 251v9h14v-9M355 251v9h14v-9M233 202h35M233 211h35M233 220h24"/>
+                        <circle cx="337" cy="215" r="24"/><circle cx="337" cy="215" r="16"/>
+                        <path d="M330 207a10 10 0 0 1 14 0"/><path d="M278 188h9M295 188h5"/>
+                    </g>
+                    <g class="equipment-headphones">
+                        <path d="M29 211v-30a47 47 0 0 1 94 0v30M39 195v-14a37 37 0 0 1 74 0v14"/>
+                        <rect x="24" y="196" width="22" height="47" rx="8"/>
+                        <rect x="106" y="196" width="22" height="47" rx="8"/>
+                    </g>
+                </svg>
+                <figcaption>Equipment for classrooms and campus projects.</figcaption>
+            </figure>
+        </section>
+
+        <section class="landing-how" aria-labelledby="how-title">
+            <div class="landing-section-heading">
+                <span class="eyebrow">A SIMPLE PROCESS</span>
+                <h2 id="how-title">How It Works</h2>
+            </div>
+            <ol class="landing-steps">
+                <li class="card landing-step">
+                    <div class="landing-step__heading"><span class="landing-step__icon">{% include "components/icon.html" with name="catalog" %}</span><span class="caption" aria-hidden="true">01</span></div>
+                    <h3>Browse Equipment</h3><p>Explore available campus equipment.</p>
+                </li>
+                <li class="card landing-step">
+                    <div class="landing-step__heading"><span class="landing-step__icon">{% include "components/icon.html" with name="requests" %}</span><span class="caption" aria-hidden="true">02</span></div>
+                    <h3>Submit Request</h3><p>Select equipment and request to borrow.</p>
+                </li>
+                <li class="card landing-step">
+                    <div class="landing-step__heading"><span class="landing-step__icon">{% include "components/icon.html" with name="returns" %}</span><span class="caption" aria-hidden="true">03</span></div>
+                    <h3>Track &amp; Return</h3><p>Monitor approval, borrowing status, and returns.</p>
+                </li>
+            </ol>
+        </section>
+    </main>
+
+    <footer class="landing-footer">
+        <div class="landing-container landing-footer__inner">
+            <p class="landing-footer__name">Campus Equipment Borrowing &amp; Inventory System</p>
+            <div><p>Developed for IT 401W – Web Programming and Frameworks</p><p>Bulacan State University</p></div>
+        </div>
+    </footer>
+</div>
+{% endblock %}

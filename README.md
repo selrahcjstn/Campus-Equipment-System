@@ -80,7 +80,7 @@ The database file, local backups, and account data are excluded from Git. A fres
 .\.venv\Scripts\python.exe manage.py runserver
 ```
 
-Open [http://127.0.0.1:8000/register/](http://127.0.0.1:8000/register/) to register an account, or [http://127.0.0.1:8000/login/](http://127.0.0.1:8000/login/) to sign in. Use `Ctrl+C` to stop the server.
+Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) for the public landing page. Get Started opens registration; Sign In opens login. Browse Equipment requires login through the existing catalog route. Signed-in visitors to the home page go directly to their role's portal. Use `Ctrl+C` to stop the server.
 
 ### 5. Set up the first Admin
 
@@ -108,6 +108,7 @@ Sign in with that account at `/login/` to access `/manage/`. Use the Admin Users
 
 | Page | URL | Access |
 | --- | --- | --- |
+| Landing page | `/` | Public; signed-in users redirect to their portal |
 | Registration | `/register/` | Public |
 | Login | `/login/` | Public |
 | Personal dashboard | `/portal/` | Basic User |
@@ -130,7 +131,7 @@ Use the portal sidebar to navigate to the catalog, borrowing requests, loans, an
 .\.venv\Scripts\python.exe manage.py test
 ```
 
-The integrated project passed **353 automated tests** on October 14, 2026. Coverage includes role permissions, account management, inventory availability, request approval, release, partial and damaged returns, maintenance, reports, audit logs, and borrowing settings. Tests use a separate test database.
+The integrated project passed **358 automated tests** on October 23, 2026. Coverage includes landing-page links and role redirects, role permissions, account management, inventory availability, request approval, release, partial and damaged returns, maintenance, reports, audit logs, and borrowing settings. Tests use a separate test database.
 
 To test one module:
 

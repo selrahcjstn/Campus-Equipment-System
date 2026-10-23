@@ -22,6 +22,43 @@ from .models import User
 from .services import change_password, set_user_active, set_user_role, update_profile
 
 
+class LandingPageTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.basic = User.objects.create_user("landing-student", role=User.Role.BASIC_USER)
+        cls.admin = User.objects.create_user("landing-admin", role=User.Role.ADMIN)
+
+    def test_public_landing_renders_without_inventory_or_account_queries(self):
+        with self.assertNumQueries(0):
+            response = self.client.get(reverse("home"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "landing.html")
+        for text in ["Campus Equipment Management", "Borrow Campus Equipment,", "Made Simple.", "How It Works", "Bulacan State University", "Developed for IT 401W"]:
+            self.assertContains(response, text)
+        for name in ["home", "register", "login", "equipment_catalog"]:
+            self.assertContains(response, f'href="{reverse(name)}"')
+
+    def test_authenticated_visitors_go_to_their_existing_role_home(self):
+        for user, destination in [(self.basic, "user_dashboard"), (self.admin, "admin_dashboard")]:
+            with self.subTest(role=user.role):
+                self.client.force_login(user)
+                response = self.client.get(reverse("home"), {"next": "https://untrusted.example/"})
+                self.assertRedirects(response, reverse(destination), fetch_redirect_response=False)
+
+    def test_anonymous_browse_uses_existing_catalog_login_protection(self):
+        response = self.client.get(reverse("equipment_catalog"))
+        self.assertRedirects(response, f'{reverse("login")}?next={reverse("equipment_catalog")}', fetch_redirect_response=False)
+
+    def test_authenticated_basic_user_can_follow_the_catalog_link(self):
+        self.client.force_login(self.basic)
+        response = self.client.get(reverse("equipment_catalog"))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "inventory/catalog.html")
+
+    def test_landing_does_not_accept_mutations(self):
+        self.assertEqual(self.client.post(reverse("home")).status_code, 405)
+
+
 class AccountFixtures:
     password = "Campus-Start-5927!"
     new_password = "Another-Safe-8264!"

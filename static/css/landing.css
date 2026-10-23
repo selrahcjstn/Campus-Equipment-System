@@ -1,0 +1,59 @@
+/* Public home: reuse the portal's tokens, typography, buttons, cards and icons. */
+.landing-page { min-height: 100vh; min-height: 100dvh; background: var(--surface); }
+.landing-container { width: min(100%, 1184px); margin-inline: auto; padding-inline: var(--space-8); }
+.landing-header { border-bottom: var(--border); }
+.landing-header__inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4); padding-block: var(--space-5); }
+.landing-header .brand-mark { width: 36px; height: 36px; }
+.landing-nav { display: flex; align-items: center; gap: var(--space-6); }
+.landing-home { display: inline-flex; align-items: center; min-height: var(--control-height); color: var(--text-secondary); text-decoration: none; font-size: var(--font-label); font-weight: var(--weight-medium); }
+.landing-home:hover { color: var(--primary); }
+.landing-hero { display: grid; grid-template-columns: 1.1fr 1fr; align-items: center; gap: var(--space-12); padding-block: clamp(var(--space-12), 7vw, 100px); }
+.landing-hero__copy { min-width: 0; }
+.landing-hero h1 { margin-top: var(--space-5); max-width: 560px; font-size: clamp(36px, 4.2vw, var(--font-navigation-heading)); line-height: 1.15; letter-spacing: -0.035em; }
+.landing-hero h1 span { display: block; color: var(--primary); }
+.landing-hero__copy > p { max-width: 480px; margin-top: var(--space-6); font-size: var(--font-card); line-height: 1.75; color: var(--text-secondary); }
+.landing-hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-8); }
+.landing-hero__actions .button { min-height: 44px; padding-inline: var(--space-5); }
+.landing-equipment { min-width: 0; margin: 0; padding: var(--space-8) var(--space-6); border: var(--border); border-radius: var(--radius-xl); background: var(--background); color: var(--primary); }
+.landing-equipment > svg { display: block; width: 100%; height: auto; }
+.landing-equipment figcaption { margin-top: var(--space-5); text-align: center; font-size: var(--font-caption); color: var(--text-secondary); }
+.equipment-ground { stroke: var(--border-strong); }
+.equipment-laptop, .equipment-projector, .equipment-headphones { fill: var(--surface); }
+.equipment-screen { fill: var(--surface-muted); stroke: var(--border-strong); }
+.equipment-screen-icon { fill: none; stroke: var(--accent); }
+.landing-how { padding-bottom: clamp(var(--space-12), 6vw, 80px); }
+.landing-section-heading { margin-bottom: var(--space-6); }
+.landing-section-heading h2 { margin-top: var(--space-2); font-size: var(--font-title); letter-spacing: -0.025em; }
+.landing-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); padding: 0; margin: 0; list-style: none; }
+.landing-step__heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.landing-step__icon { display: inline-grid; place-items: center; width: var(--space-10); height: var(--space-10); border-radius: var(--radius-md); background: var(--surface-muted); color: var(--primary); }
+.landing-step h3 { margin-top: var(--space-5); }
+.landing-step > p { margin-top: var(--space-2); color: var(--text-secondary); }
+.landing-footer { border-top: var(--border); }
+.landing-footer__inner { display: flex; justify-content: space-between; align-items: center; gap: var(--space-6); padding-block: var(--space-6); font-size: var(--font-caption); color: var(--text-secondary); }
+.landing-footer__name { max-width: 300px; color: var(--text-primary); font-weight: var(--weight-medium); }
+.landing-footer__inner > div { text-align: right; }
+.landing-footer__inner > div p + p { margin-top: var(--space-1); }
+@media (max-width: 900px) {
+    .landing-hero { gap: var(--space-8); }
+    .landing-steps { gap: var(--space-3); }
+    .landing-step { padding: var(--space-5); }
+}
+@media (max-width: 700px) {
+    .landing-hero { grid-template-columns: 1fr; gap: var(--space-10); }
+    .landing-hero h1 { max-width: 560px; }
+    .landing-equipment { width: 100%; max-width: 480px; margin-inline: auto; }
+    .landing-steps { grid-template-columns: 1fr; }
+    .landing-footer__inner { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+    .landing-footer__inner > div { text-align: left; }
+}
+@media (max-width: 479px) {
+    .landing-container { padding-inline: var(--space-4); }
+    .landing-header__inner { gap: var(--space-2); padding-block: var(--space-4); }
+    .landing-header .brand { gap: var(--space-2); }
+    .landing-header .brand-copy > span { font-size: var(--font-label); }
+    .landing-nav { gap: var(--space-3); margin-left: auto; }
+    .landing-nav .button { padding-inline: var(--space-3); }
+    .landing-hero__actions { display: grid; grid-template-columns: 1fr; }
+    .landing-equipment { padding: var(--space-6) var(--space-4); }
+}
