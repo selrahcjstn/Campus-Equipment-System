@@ -1,6 +1,6 @@
-.dashboard-shortcuts { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); padding-bottom: var(--space-4); border-bottom: var(--border); }
-.dashboard-shortcuts a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); color: var(--text-secondary); text-decoration: none; font-size: var(--font-label); font-weight: var(--weight-medium); }
-.dashboard-shortcuts a:hover { color: var(--primary); text-decoration: underline; }
+.dashboard-shortcuts { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.dashboard-shortcuts a { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--control-height); padding: var(--button-padding); border: var(--border); border-radius: var(--control-radius); background: var(--surface); color: var(--text-primary); text-decoration: none; font-size: var(--font-label); font-weight: var(--weight-medium); }
+.dashboard-shortcuts a:hover { background: var(--surface-muted); border-color: var(--border-strong); }
 .dashboard-shortcuts .icon { width: var(--space-4); height: var(--space-4); }
 .settings-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4); }
 @media (max-width: 767px) { .settings-fields { grid-template-columns: 1fr; } }

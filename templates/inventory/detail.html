@@ -5,7 +5,7 @@
 {% block content %}
 <header class="page-heading"><div><span class="eyebrow">{{ equipment.category.name|default:"Uncategorized" }}</span><h1>{{ equipment.name }}</h1></div><a class="button button--secondary" href="{% url 'equipment_catalog' %}">Back to catalog</a></header>
 <section class="card section-stack inventory-detail"><h2>Equipment details</h2><p class="inventory-description">{{ equipment.description|default:"No description provided."|linebreaksbr }}</p>
-    <div>{% if equipment.available_count %}{% include "components/badge.html" with label="Available" variant="success" %}{% else %}{% include "components/badge.html" with label="Unavailable" variant="inactive" %}{% endif %}<p>{{ equipment.available_count }} available physical unit{{ equipment.available_count|pluralize }}</p></div>
+    <div class="inventory-stock">{% if equipment.available_count %}{% include "components/badge.html" with label="Available" variant="success" %}{% else %}{% include "components/badge.html" with label="Unavailable" variant="inactive" %}{% endif %}<p>{{ equipment.available_count }} available physical unit{{ equipment.available_count|pluralize }}</p></div>
     {% if equipment.available_count %}<div><a class="button button--primary" href="{% url 'new_borrowing_request' %}?equipment={{ equipment.pk }}">Request this equipment</a></div><p class="caption">Availability is checked again when your request is submitted and approved.</p>{% else %}<p class="text-secondary">This equipment is currently unavailable for borrowing. Please check the catalog again later.</p>{% endif %}
 </section>
 {% endblock %}
