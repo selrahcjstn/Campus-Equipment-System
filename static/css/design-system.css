@@ -229,7 +229,7 @@ a.pagination__link:hover { background: var(--surface-muted); color: var(--primar
 .pagination__link.is-disabled { color: var(--text-secondary); background: var(--background); }
 .pagination__ellipsis { border-color: transparent; background: transparent; color: var(--text-secondary); }
 @media (max-width: 639px) { .pagination__summary { flex-basis: 100%; } .pagination__link { min-height: var(--control-height); } }
-@media (pointer: coarse) { .data-table .table-cell--actions .button { min-height: var(--control-height); } }
+@media (pointer: coarse) { .data-table .table-cell--actions .button { min-height: var(--touch-control-height); } }
 .modal { width: min(100% - var(--space-8), var(--form-width-narrow)); max-height: calc(100dvh - var(--space-8)); margin: auto; padding: var(--card-padding); color: var(--text-primary); background: var(--surface); border: var(--border); border-radius: var(--radius-xl); box-shadow: 0 16px 48px rgb(24 24 27 / 14%); overflow-wrap: anywhere; }
 .modal::backdrop { background: var(--overlay); }
 .modal-heading { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--space-4); }
@@ -291,12 +291,24 @@ a.navbar-account:hover { background: var(--background); color: var(--primary); }
     .navbar { padding: 0 var(--space-6); }
 }
 @media (max-width: 639px) {
+    :root { --page-padding: 16px; --card-padding: 16px; --section-gap: 16px; }
     .navbar { padding: 0 var(--space-4); }
     .account-name { max-width: 120px; }
     .page-content { padding: var(--space-4); }
-    .page-heading, .card-heading { flex-direction: column; gap: var(--space-4); }
+    .page-heading, .card-heading { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+    .page-heading > .button, .card-heading > .badge { align-self: flex-start; }
     .page-heading > div:first-child { flex: 0 1 auto; }
     .page-actions { width: 100%; }
     .modal { padding: var(--space-6); }
-    .data-table th, .data-table td { padding-left: var(--space-4); padding-right: var(--space-4); }
+    .data-table th, .data-table td { padding-left: var(--space-3); padding-right: var(--space-3); }
+    .data-table .table-cell--actions .button { min-height: var(--touch-control-height); }
+}
+@media (max-width: 639px), (pointer: coarse) {
+    :root { --control-height: var(--touch-control-height); }
+    .pagination__link { min-height: var(--touch-control-height); }
+    .form-checkbox { min-height: var(--touch-control-height); }
+}
+@media (max-width: 479px) {
+    .page-heading .page-actions:has(> :nth-child(3)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+    .page-heading .page-actions:has(> :nth-child(3)) > .button { min-width: 0; padding-inline: var(--space-2); }
 }

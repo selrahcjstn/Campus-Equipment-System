@@ -108,7 +108,7 @@ body {
     background: var(--surface);
 }
 .auth-mobile-brand { display: none; }
-.auth-card { width: min(100%, 420px); margin: auto; padding: var(--space-8) 0; }
+.auth-card { width: min(100%, 420px); max-width: 420px; margin: auto; padding: var(--space-8) 0; }
 .auth-shell--register { grid-template-columns: minmax(320px, 40%) minmax(0, 1fr); }
 .auth-shell--register .auth-card { width: min(100%, var(--form-width-narrow)); max-width: var(--form-width-narrow); }
 .auth-heading { margin-bottom: var(--space-6); }
@@ -203,7 +203,7 @@ body {
     .auth-shell--register .auth-card {
         width: 100%;
         margin: var(--space-4) auto auto;
-        padding: var(--space-6);
+        padding: var(--space-5);
         border: var(--border);
         border-radius: var(--radius-lg);
         background: var(--surface);
