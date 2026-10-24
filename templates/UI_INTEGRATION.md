@@ -198,7 +198,9 @@ in place. Login caps at 420px and registration at 520px.
 Use `form-page--full` and `form-panel--full` for the deliberately full-width
 Profile, System Settings, and action-review layouts. Their numeric/contact
 fields use responsive grids; standalone long text fields remain capped at 640px.
-Do not apply full-width modifiers to ordinary editors or password forms.
+Category create/edit forms also use `form-panel--full`, with
+`inventory-category-form` allowing their name and description fields to stretch.
+Keep catalog-item editors and password forms bounded.
 
 Use `empty-state` for shared empty result messages. Table action buttons use the
 compact shared table style and keep 40px minimum targets on coarse-pointer devices.

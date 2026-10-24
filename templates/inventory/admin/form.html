@@ -5,5 +5,5 @@
 {% block page_scripts %}<script src="{% static 'js/inventory.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><h1>{{ page_title }}</h1><a class="button button--secondary" href="{% url back_url %}">Back to list</a></header>
-<form method="post" class="form-panel card section-stack" data-inventory-loading>{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}<div class="page-actions"><button type="submit" class="button button--primary">Save changes</button><a class="button button--secondary" href="{% url back_url %}">Cancel</a></div></form>
+<form method="post" class="form-panel{% if active_nav == 'categories' %} form-panel--full inventory-category-form{% endif %} card section-stack" data-inventory-loading>{% csrf_token %}{% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}<div class="page-actions"><button type="submit" class="button button--primary">Save changes</button><a class="button button--secondary" href="{% url back_url %}">Cancel</a></div></form>
 {% endblock %}
