@@ -420,6 +420,38 @@ class InventoryPageTests(InventoryFixtures, TestCase):
         self.assertContains(unavailable, "Unavailable")
         self.assertEqual([item.pk for item in unavailable.context["page_obj"]], [self.equipment.pk])
 
+    def test_catalog_cards_show_flat_stock_counts_and_only_available_request_actions(self):
+        self.client.force_login(self.borrower)
+        EquipmentUnit.objects.filter(pk=self.speaker.pk).update(status="RESERVED")
+        response = self.client.get(reverse("equipment_catalog"))
+        self.assertContains(response, "inventory-catalog-card__heading")
+        self.assertContains(response, "inventory-catalog-card__counts")
+        self.assertNotContains(response, 'class="inventory-stock"')
+        self.assertContains(response, f'href="{reverse("new_borrowing_request")}?equipment={self.equipment.pk}"')
+        self.assertNotContains(response, f'href="{reverse("new_borrowing_request")}?equipment={self.other_equipment.pk}"')
+        self.assertContains(response, f'href="{reverse("equipment_detail", args=[self.other_equipment.pk])}">View details</a>')
+        self.assertContains(response, "<dt>Available</dt><dd>0</dd>", html=True)
+        self.assertContains(response, "<dt>Total Serviceable</dt><dd>1</dd>", html=True)
+
+        EquipmentUnit.objects.filter(pk=self.speaker.pk).update(status="RETIRED")
+        zero_stock = self.client.get(reverse("equipment_catalog"))
+        self.assertContains(zero_stock, "<dt>Available</dt><dd>0</dd>", html=True)
+        self.assertContains(zero_stock, "<dt>Total Serviceable</dt><dd>0</dd>", html=True)
+        self.assertNotContains(zero_stock, f'href="{reverse("new_borrowing_request")}?equipment={self.other_equipment.pk}"')
+
+    def test_catalog_cards_handle_long_names_and_descriptions(self):
+        self.client.force_login(self.borrower)
+        long_name = "Presentation " + "equipment " * 12
+        long_description = "A detailed public description for catalog users. " * 8
+        item = Equipment.objects.create(name=long_name[:150], category=self.category, description=long_description)
+        EquipmentUnit.objects.create(equipment=item, asset_tag="LONG-CATALOG-1")
+
+        response = self.client.get(reverse("equipment_catalog"), {"q": item.name[:24]})
+        self.assertContains(response, item.name[:150])
+        self.assertContains(response, "A detailed public description for catalog users.")
+        self.assertContains(response, "inventory-catalog-card__description")
+        self.assertContains(response, f'href="{reverse("new_borrowing_request")}?equipment={item.pk}"')
+
     def test_catalog_and_details_never_expose_identifiers_internal_counts_or_admin_controls(self):
         EquipmentUnit.objects.filter(pk=self.units[0].pk).update(status="MAINTENANCE")
         self.client.force_login(self.borrower)
