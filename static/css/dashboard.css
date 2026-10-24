@@ -42,3 +42,4 @@
 .report-table .table-cell--status { min-width: 11rem; }
 .report-table .table-cell--status .caption { white-space: nowrap; }
 .report-table .table-cell--identifier { min-width: 8rem; overflow-wrap: normal; }
+.report-table th { white-space: nowrap; }
