@@ -45,7 +45,8 @@ maintenance notes, other borrowers and Admin destinations are not included.
 The Borrowing Activity chart counts actual `BorrowingRequest.requested_at`
 records by local calendar date. It includes all submission statuses, fills missing
 dates with zero and supports an inclusive range of up to 366 dates. The default
-is the last 30 dates. Its responsive SVG has tooltips and an expandable data table.
+is the last 30 dates. Its responsive SVG has tooltips; the expandable data table
+shows only the latest seven dates of the selected period.
 
 The Equipment Status Distribution chart groups every physical unit's recorded
 status into Available, Reserved, Issued (`ON_LOAN`), Maintenance and Retired. It
