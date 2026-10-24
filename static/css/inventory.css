@@ -6,7 +6,7 @@
 .inventory-catalog-card > p { font-size: var(--font-label); }
 .inventory-stock { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: var(--border); border-radius: var(--radius-sm); background: var(--background); font-size: var(--font-caption); }
 .inventory-detail { max-width: var(--form-width-wide); }
-.inventory-category-form > .form-field { max-width: none; }
+.inventory-editor-form > .form-field { max-width: none; }
 .inventory-category-table .table-cell--text { width: 14rem; max-width: 14rem; overflow-wrap: anywhere; }
 .inventory-category-table .table-cell--description { overflow-wrap: anywhere; }
 .inventory-category-table th.table-cell--number { white-space: nowrap; }
