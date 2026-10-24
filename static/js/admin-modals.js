@@ -35,11 +35,16 @@
     const installForm = (html, resetValues = false) => {
         const documentFragment = new DOMParser().parseFromString(html, 'text/html');
         const fragment = documentFragment.querySelector('[data-admin-modal-content]');
-        if (!fragment?.querySelector('form[data-admin-modal-form]')) throw new Error('Missing form');
+        if (!fragment || !fragment.querySelector('form[data-admin-modal-form], [data-admin-modal-unavailable]')) throw new Error('Missing form');
         content.replaceChildren(document.importNode(fragment, true));
         title.textContent = fragment.dataset.title;
         description.textContent = fragment.dataset.description;
         const form = content.querySelector('form');
+        if (!form) {
+            initialValues = null;
+            content.querySelector('[data-admin-modal-unavailable]').focus();
+            return;
+        }
         if (resetValues) initialValues = values(form);
         form.querySelectorAll('.form-field').forEach((wrapper) => {
             const ids = [...wrapper.querySelectorAll('.field-help[id], .field-errors[id]')].map((item) => item.id);

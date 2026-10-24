@@ -1,4 +1,9 @@
 <div data-admin-modal-content data-title="{{ page_title }}" data-description="{{ description }}">
+    {% if modal_unavailable %}
+    <div class="alert alert--warning" role="status" tabindex="-1" data-admin-modal-unavailable><strong>This operation is unavailable.</strong><p>{{ unavailable_message }}</p></div>
+    {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="modal-actions"><button type="button" class="button button--secondary" data-admin-form-close>Close</button></div>
+    {% else %}
     <form method="post" action="{{ request.path }}" class="section-stack" data-admin-modal-form>
         {% csrf_token %}
         {% if form.non_field_errors %}<div class="alert alert--error" role="alert" tabindex="-1">{{ form.non_field_errors }}</div>{% endif %}
@@ -8,4 +13,5 @@
             <button type="submit" class="button button--primary">{{ submit_label }}</button>
         </div>
     </form>
+    {% endif %}
 </div>

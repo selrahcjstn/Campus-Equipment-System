@@ -171,8 +171,10 @@ def units(request):
 
 @login_required(login_url="login")
 @require_http_methods(["GET", "POST"])
+@vary_on_headers("X-Admin-Modal")
 def unit_form(request, equipment_pk=None, pk=None):
     _role(request, "ADMIN")
+    modal_request = request.headers.get("X-Admin-Modal") == "1"
     unit = get_object_or_404(unit_queryset(), pk=pk) if pk else None
     equipment = unit.equipment if unit else get_object_or_404(Equipment, pk=equipment_pk)
     form = UnitForm(request.POST if request.method == "POST" else None, instance=unit)
@@ -188,9 +190,22 @@ def unit_form(request, equipment_pk=None, pk=None):
             status = 409
         else:
             messages.success(request, "Physical unit saved.")
+            if modal_request:
+                return JsonResponse({"saved": True})
             return redirect("admin_equipment_detail", pk=equipment.pk)
     allowed = unit.can_edit if unit else equipment.is_active
-    return render(request, "inventory/admin/unit_form.html", {"form": form, "unit": unit, "equipment": equipment, "allowed": allowed, "active_nav": "inventory"}, status=status)
+    if modal_request and request.method == "POST" and status == 200:
+        status = 422
+    context = {
+        "form": form, "unit": unit, "equipment": equipment, "allowed": allowed, "active_nav": "inventory",
+        "page_title": "Edit physical unit" if unit else "Add physical unit",
+        "description": f"{equipment.name} · {unit.inventory_status_label}" if unit else f"{equipment.name} · New physical units start as Available.",
+        "submit_label": "Save changes" if unit else "Add physical unit",
+        "modal_request": modal_request, "modal_unavailable": not allowed,
+        "unavailable_message": "Archived equipment cannot receive new units. Units with reservations, loans or maintenance must finish the owning workflow before editing.",
+    }
+    template = "components/admin_modal_form.html" if modal_request else "inventory/admin/unit_form.html"
+    return render(request, template, context, status=status)
 
 
 def _action(request, pk, action):

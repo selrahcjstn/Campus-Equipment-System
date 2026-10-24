@@ -1,11 +1,14 @@
 {% extends "base_admin.html" %}
 {% load static ui_assets %}
 {% block title %}Manage {{ equipment.name }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}"><link rel="stylesheet" href="{% ui_asset 'css/admin-modals.css' %}">{% endblock %}
+{% block page_scripts %}<script src="{% ui_asset 'js/admin-modals.js' %}" defer></script>{% endblock %}
 {% block content %}
-<header class="page-heading"><div><span class="eyebrow">{{ equipment.category.name|default:"Uncategorized" }}</span><h1>{{ equipment.name }}</h1></div><div class="page-actions"><a class="button button--secondary" href="{% url 'edit_equipment' equipment.pk %}">Edit catalog item</a>{% if equipment.is_active %}<a class="button button--primary" href="{% url 'add_equipment_unit' equipment.pk %}">Add physical unit</a><a class="button button--secondary" href="{% url 'archive_equipment' equipment.pk %}">Review archive</a>{% else %}<a class="button button--secondary" href="{% url 'restore_equipment' equipment.pk %}">Review restoration</a>{% endif %}<a class="button button--secondary" href="{% url 'equipment_inventory' %}">Back to inventory</a></div></header>
+<header class="page-heading"><div><span class="eyebrow">{{ equipment.category.name|default:"Uncategorized" }}</span><h1>{{ equipment.name }}</h1></div><div class="page-actions"><a class="button button--secondary" href="{% url 'edit_equipment' equipment.pk %}">Edit catalog item</a>{% if equipment.is_active %}<a class="button button--primary" href="{% url 'add_equipment_unit' equipment.pk %}" data-admin-form="Add physical unit">Add physical unit</a><a class="button button--secondary" href="{% url 'archive_equipment' equipment.pk %}">Review archive</a>{% else %}<a class="button button--secondary" href="{% url 'restore_equipment' equipment.pk %}">Review restoration</a>{% endif %}<a class="button button--secondary" href="{% url 'equipment_inventory' %}">Back to inventory</a></div></header>
 <div class="section-stack">{% include "components/messages.html" %}
     <section class="card section-stack"><div>{% if equipment.is_active %}{% include "components/badge.html" with label="Active" variant="success" %}{% else %}{% include "components/badge.html" with label="Archived" variant="inactive" %}{% endif %}</div><p class="inventory-description">{{ equipment.description|default:"No description provided."|linebreaksbr }}</p>{% include "inventory/admin/_counts.html" %}</section>
     {% include "inventory/_filters.html" %}{% include "inventory/admin/_unit_table.html" %}
 </div>
 {% endblock %}
+
+{% block modals %}{% include "components/admin_form_dialog.html" %}{% endblock %}

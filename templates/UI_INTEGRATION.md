@@ -260,7 +260,7 @@ does not submit forms, perform requests, or implement module behavior.
 
 ### Admin Create/Edit dialogs
 
-Categories use `components/admin_form_dialog.html`, `admin-modals.css`, and
+Categories and physical unit Create/Edit use `components/admin_form_dialog.html`, `admin-modals.css`, and
 `admin-modals.js`. Mark ordinary fallback links with `data-admin-form="Title"`.
 The script requests the existing form URL using `X-Admin-Modal: 1`; that view
 renders `components/admin_modal_form.html` with the existing Django form,
@@ -274,10 +274,12 @@ messages. Vary responses on the modal header. The script reloads the current
 list URL after saving, preserving search, filters, sorting, and pagination.
 It manages loading, duplicate submission prevention, unsaved-change warnings,
 Escape dismissal, and returning focus to the initiating link. An uncertain save
-response requires reloading the list before retrying.
+response requires reloading the list before retrying. An operation that has
+become unavailable renders a focused explanation and a Close action instead
+of a form; its service still rejects forged submissions.
 
 Audit: Categories (2 fields), physical unit identifiers (1 field), and catalog
-items (3 fields) suit this pattern. Only Categories are converted so far.
+items (3 fields) suit this pattern. Categories and physical units are converted.
 The Admin's own profile (4 fields) is a possible later candidate. Account role
 and activation actions retain their safeguard review pages. Maintenance records,
 approvals, allocation, release, returns, reports, and settings retain dedicated

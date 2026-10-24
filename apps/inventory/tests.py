@@ -802,6 +802,94 @@ class CategoryModalTests(InventoryFixtures, TestCase):
         self.assertFalse(Category.objects.filter(name__in=["Forged", "Forbidden"]).exists())
 
 
+class PhysicalUnitModalTests(InventoryFixtures, TestCase):
+    headers = {"HTTP_X_ADMIN_MODAL": "1"}
+
+    def setUp(self):
+        self.make_records()
+        self.client.force_login(self.admin)
+
+    def test_create_and_edit_load_existing_form_in_equipment_context(self):
+        create = self.client.get(reverse("add_equipment_unit", args=[self.equipment.pk]), **self.headers)
+        self.assertContains(create, 'data-admin-modal-form')
+        self.assertContains(create, "New physical units start as Available.")
+        self.assertContains(create, "Projector")
+        self.assertContains(create, 'name="csrfmiddlewaretoken"')
+        self.assertNotContains(create, "<html")
+        edit = self.client.get(reverse("edit_equipment_unit", args=[self.units[0].pk]), **self.headers)
+        self.assertContains(edit, 'value="PROJECTOR-1"')
+        self.assertIn("X-Admin-Modal", edit.headers["Vary"])
+        self.assertEqual(EquipmentUnit.objects.count(), 3)
+
+    def test_modal_create_and_edit_preserve_service_normalization_parent_and_status(self):
+        create_url = reverse("add_equipment_unit", args=[self.equipment.pk])
+        response = self.client.post(create_url, {"asset_tag": " modal-new ", "equipment": self.other_equipment.pk, "status": "ON_LOAN"}, **self.headers)
+        self.assertEqual(response.json(), {"saved": True})
+        unit = EquipmentUnit.objects.get(asset_tag="MODAL-NEW")
+        self.assertEqual((unit.equipment_id, unit.status), (self.equipment.pk, "AVAILABLE"))
+        edit_url = reverse("edit_equipment_unit", args=[unit.pk])
+        retire_unit(unit.pk, actor=self.admin)
+        response = self.client.post(edit_url, {"asset_tag": " edited-modal ", "status": "AVAILABLE"}, **self.headers)
+        self.assertEqual(response.json(), {"saved": True})
+        unit.refresh_from_db()
+        self.assertEqual((unit.asset_tag, unit.status), ("EDITED-MODAL", "RETIRED"))
+        self.assertContains(self.client.get(reverse("equipment_units")), "Physical unit saved.")
+
+    def test_modal_validation_retains_values_and_does_not_create_partial_units(self):
+        url = reverse("add_equipment_unit", args=[self.equipment.pk])
+        response = self.client.post(url, {"asset_tag": ""}, **self.headers)
+        self.assertContains(response, "This field is required", status_code=422)
+        response = self.client.post(url, {"asset_tag": "SPEAKER-PRIVATE-TAG"}, **self.headers)
+        self.assertContains(response, 'value="SPEAKER-PRIVATE-TAG"', status_code=422)
+        self.assertTrue(response.context["form"].errors["asset_tag"])
+        self.assertEqual(EquipmentUnit.objects.count(), 3)
+        response = self.client.post(reverse("edit_equipment_unit", args=[self.units[0].pk]), {"asset_tag": "SPEAKER-PRIVATE-TAG"}, **self.headers)
+        self.assertEqual(response.status_code, 422)
+        self.units[0].refresh_from_db()
+        self.assertEqual(self.units[0].asset_tag, "PROJECTOR-1")
+
+    def test_unavailable_operations_have_no_form_and_reject_forged_posts(self):
+        url = reverse("edit_equipment_unit", args=[self.units[0].pk])
+        for status in ["RESERVED", "ON_LOAN", "MAINTENANCE"]:
+            with self.subTest(status=status):
+                EquipmentUnit.objects.filter(pk=self.units[0].pk).update(status=status)
+                page = self.client.get(url, **self.headers)
+                self.assertContains(page, 'data-admin-modal-unavailable')
+                self.assertNotContains(page, '<form')
+                response = self.client.post(url, {"asset_tag": "FORGED"}, **self.headers)
+                self.assertEqual(response.status_code, 409)
+                self.units[0].refresh_from_db()
+                self.assertEqual((self.units[0].asset_tag, self.units[0].status), ("PROJECTOR-1", status))
+        Equipment.objects.filter(pk=self.equipment.pk).update(is_active=False)
+        url = reverse("add_equipment_unit", args=[self.equipment.pk])
+        self.assertNotContains(self.client.get(url, **self.headers), '<form')
+        self.assertEqual(self.client.post(url, {"asset_tag": "ARCHIVED"}, **self.headers).status_code, 409)
+        self.assertFalse(EquipmentUnit.objects.filter(asset_tag="ARCHIVED").exists())
+
+    def test_list_triggers_and_issued_badge_without_redundant_linked_message(self):
+        detail = self.client.get(reverse("admin_equipment_detail", args=[self.equipment.pk]), {"q": "PROJECTOR", "page": 1})
+        self.assertContains(detail, 'data-admin-form="Add physical unit"')
+        self.assertContains(detail, 'data-admin-form="Edit physical unit"')
+        self.assertContains(self.client.get(reverse("equipment_units")), 'data-admin-form="Edit physical unit"')
+        self.issue()
+        for url in [reverse("equipment_units"), reverse("admin_equipment_detail", args=[self.equipment.pk])]:
+            response = self.client.get(url)
+            self.assertContains(response, "Issued")
+            self.assertNotContains(response, "Linked to an active borrowing or loan record")
+
+    def test_modal_header_preserves_csrf_and_permissions(self):
+        protected = Client(enforce_csrf_checks=True)
+        protected.force_login(self.admin)
+        for url in [reverse("add_equipment_unit", args=[self.equipment.pk]), reverse("edit_equipment_unit", args=[self.units[0].pk])]:
+            self.assertEqual(protected.post(url, {"asset_tag": "FORGED"}, **self.headers).status_code, 403)
+            self.client.force_login(self.borrower)
+            self.assertEqual(self.client.get(url, **self.headers).status_code, 403)
+            self.assertEqual(self.client.post(url, {"asset_tag": "FORGED"}, **self.headers).status_code, 403)
+            self.client.logout()
+            self.assertEqual(self.client.get(url, **self.headers).status_code, 302)
+        self.assertFalse(EquipmentUnit.objects.filter(asset_tag="FORGED").exists())
+
+
 class ConcurrentInventoryTests(InventoryFixtures, TransactionTestCase):
     def setUp(self):
         self.make_records()
