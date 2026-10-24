@@ -60,6 +60,9 @@
     --section-gap: 20px;
     --card-padding: 20px;
     --page-padding: 24px;
+    --page-max-width: 1600px;
+    --public-panel-width: 640px;
+    --public-page-gutter: clamp(var(--space-8), 5vw, 72px);
     --form-width: 640px;
     --form-width-narrow: 520px;
     --form-width-wide: 880px;
@@ -166,8 +169,7 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .alert--info { color: var(--primary); }
 .badge { display: inline-flex; align-items: center; min-height: 22px; max-width: 100%; padding: 2px var(--space-2); border: 1px solid transparent; border-radius: var(--radius-sm); font-size: var(--font-caption); font-weight: var(--weight-medium); line-height: 1.4; white-space: nowrap; }
 .badge--success, .badge--approved { color: var(--success); background: var(--success-soft); }
-.badge--warning, .badge--pending { color: var(--text-primary); background: var(--warning-soft); }
-.badge--warning::before, .badge--pending::before { content: ''; width: 6px; height: 6px; margin-right: var(--space-1); background: var(--warning); border-radius: var(--radius-full); }
+.badge--warning, .badge--pending { color: var(--warning); background: var(--warning-soft); }
 .badge--error, .badge--rejected { color: var(--error); background: var(--error-soft); }
 .badge--info, .badge--active { color: var(--info); background: var(--info-soft); }
 .badge--inactive, .badge--retired { color: var(--inactive); background: var(--surface-muted); }
@@ -277,14 +279,14 @@ a.nav-item:hover, button.nav-item:not(:disabled):hover { background: var(--surfa
 .sidebar-toggle, .sidebar-close, .sidebar-backdrop { display: none; }
 .app-workspace { min-width: 0; }
 .has-sidebar .app-workspace { margin-left: var(--sidebar-width); }
-.navbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--header-height); padding: var(--space-2) var(--page-padding); background: var(--surface); border-bottom: var(--border); }
+.navbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: var(--header-height); padding: var(--space-2) max(var(--page-padding), calc((100% - var(--page-max-width)) / 2 + var(--page-padding))); background: var(--surface); border-bottom: var(--border); }
 .navbar-start, .navbar-account { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
 .navbar-title { font-size: var(--font-label); font-weight: var(--weight-medium); color: var(--text-secondary); }
 .navbar-account { color: var(--text-primary); text-decoration: none; padding: var(--space-1); border-radius: var(--radius-md); }
 a.navbar-account:hover { background: var(--background); color: var(--primary); }
 .account-avatar { display: grid; place-items: center; width: var(--space-8); height: var(--space-8); border: var(--border); border-radius: var(--radius-md); background: var(--background); color: var(--text-secondary); flex-shrink: 0; }
 .account-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; font-size: var(--font-label); font-weight: var(--weight-medium); }
-.page-content { width: 100%; max-width: none; margin: 0; padding: var(--page-padding); }
+.page-content { width: 100%; max-width: var(--page-max-width); margin-inline: auto; padding: var(--page-padding); }
 .page-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-4); margin-bottom: var(--section-gap); }
 .page-heading > div { min-width: 0; }
 .page-heading > div:first-child { flex: 1 1 260px; }
@@ -296,6 +298,7 @@ a.navbar-account:hover { background: var(--background); color: var(--primary); }
 .navigation-open, .modal-open { overflow: hidden; }
 
 @media (max-width: 1023px) {
+    :root { --public-page-gutter: var(--space-6); }
     .sidebar { position: static; width: 100%; border-right: none; border-bottom: var(--border); }
     .has-sidebar .app-workspace { margin-left: 0; }
     .sidebar-brand { justify-content: space-between; }
@@ -304,6 +307,9 @@ a.navbar-account:hover { background: var(--background); color: var(--primary); }
     .js .sidebar-toggle, .js .sidebar-close { display: inline-flex; }
     .js .sidebar-backdrop:not([hidden]) { display: block; position: fixed; inset: 0; padding: 0; border: none; background: var(--overlay); z-index: var(--z-backdrop); }
     .navbar { padding: 0 var(--space-6); }
+}
+@media (max-width: 700px) {
+    :root { --public-page-gutter: var(--space-4); }
 }
 @media (max-width: 639px) {
     :root { --page-padding: 16px; --card-padding: 16px; --section-gap: 16px; }

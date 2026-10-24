@@ -429,7 +429,9 @@ class InventoryPageTests(InventoryFixtures, TestCase):
         self.assertNotContains(response, 'class="inventory-stock"')
         self.assertContains(response, f'href="{reverse("new_borrowing_request")}?equipment={self.equipment.pk}"')
         self.assertNotContains(response, f'href="{reverse("new_borrowing_request")}?equipment={self.other_equipment.pk}"')
-        self.assertContains(response, f'href="{reverse("equipment_detail", args=[self.other_equipment.pk])}">View details</a>')
+        self.assertNotContains(response, "View details")
+        self.assertContains(response, '<button type="button" class="button button--secondary" disabled>Unavailable</button>', html=True)
+        self.assertContains(response, f'<a href="{reverse("equipment_detail", args=[self.other_equipment.pk])}">Speaker</a>', html=True)
         self.assertContains(response, "<dt>Available</dt><dd>0</dd>", html=True)
         self.assertContains(response, "<dt>Total Serviceable</dt><dd>1</dd>", html=True)
 

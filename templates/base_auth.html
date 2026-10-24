@@ -15,15 +15,14 @@
             <span class="auth-kicker">CAMPUS RESOURCES, CONNECTED</span>
             <h2 id="showcase-title">Borrow smarter.<br>Stay ready.</h2>
             <p>Find what you need, submit requests, and keep every loan on track from one simple portal.</p>
-            <div class="auth-journey" aria-hidden="true">
-                <div class="journey-item is-current"><span>{% include "components/icon.html" with name="catalog" %}</span><small>Discover</small></div>
-                <span class="journey-line"></span>
-                <div class="journey-item"><span>{% include "components/icon.html" with name="requests" %}</span><small>Request</small></div>
-                <span class="journey-line"></span>
-                <div class="journey-item"><span>{% include "components/icon.html" with name="loans" %}</span><small>Track</small></div>
-            </div>
+            <img class="auth-equipment-art" src="{% ui_asset 'img/auth-equipment.svg' %}" alt="" width="640" height="230">
+            <ol class="auth-journey" aria-label="Borrowing process">
+                <li><span class="journey-number" aria-hidden="true">01</span><div>{% include "components/icon.html" with name="catalog" %}<span>Browse</span></div></li>
+                <li><span class="journey-number" aria-hidden="true">02</span><div>{% include "components/icon.html" with name="requests" %}<span>Request</span></div></li>
+                <li><span class="journey-number" aria-hidden="true">03</span><div>{% include "components/icon.html" with name="returns" %}<span>Return</span></div></li>
+            </ol>
         </div>
-        <p class="auth-showcase-footer">Built for students, faculty, and campus teams.</p>
+        <div class="auth-showcase-footer"><span>Bulacan State University</span><span>Built for campus life.</span></div>
     </aside>
     <main id="main-content" class="auth-panel" tabindex="-1">
         <div class="auth-mobile-brand">
