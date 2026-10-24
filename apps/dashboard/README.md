@@ -70,8 +70,10 @@ existing timestamps are not rewritten. Calendar boundaries are converted to
 timezone-aware half-open timestamp ranges, and CSV dates include their local
 ISO 8601 offset. Overdue calculations require both a past due time and outstanding
 returns; a loan exactly at its due time is not overdue. Partial returns remain
-active until their last unit is returned. Duration shows days and additional hours,
-or "Less than 1 hour" for short delays.
+active until their last unit is returned. Overdue days use Asia/Manila calendar
+date differences, not elapsed 24-hour periods. Crossing local midnight counts
+as one day. HTML and CSV use the same calendar-day value; the former additional
+hours column is omitted to avoid mixing elapsed time with calendar days.
 
 The paginated report shows borrower name/username, equipment and unit issue
 snapshots, issue/due dates, return dates/conditions, loan status and outstanding

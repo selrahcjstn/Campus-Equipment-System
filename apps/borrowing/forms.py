@@ -39,6 +39,29 @@ class CatalogChoiceField(forms.ModelChoiceField):
         return f"{obj.name} ({obj.available_count} available)"
 
 
+class DueDateRevisionForm(forms.Form):
+    due_date = forms.DateField(label="New due date", widget=forms.DateInput(attrs={"type": "date"}))
+    reason = forms.CharField(max_length=300, widget=forms.Textarea(attrs={"rows": 3}), label="Reason for revision")
+    expected_due_at = forms.DateTimeField(widget=forms.HiddenInput)
+
+    def __init__(self, *args, borrowing, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.borrowing = borrowing
+        latest = timezone.localdate(borrowing.requested_at) + timedelta(days=borrowing_limits()["max_days"])
+        self.fields["due_date"].initial = timezone.localdate(borrowing.due_at)
+        self.fields["expected_due_at"].initial = borrowing.due_at.isoformat()
+        self.fields["due_date"].widget.attrs.update(min=timezone.localdate().isoformat(), max=latest.isoformat())
+        self.fields["due_date"].help_text = (
+            f"Return by 11:59 PM Asia/Manila. Current policy allows a due date through {latest:%b %d, %Y}, "
+            "measured from the original submission. The change and reason are recorded in Audit Logs."
+        )
+
+    def clean_due_date(self):
+        due_at = timezone.make_aware(datetime.combine(self.cleaned_data["due_date"], time(23, 59, 59)))
+        validate_due_date(due_at, requested_at=self.borrowing.requested_at)
+        return due_at
+
+
 class RequestItemForm(forms.Form):
     equipment = CatalogChoiceField(queryset=catalog_queryset().none(), required=False, empty_label="Choose equipment")
     quantity = forms.IntegerField(min_value=1, required=False, initial=1)

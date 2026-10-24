@@ -68,6 +68,16 @@ refuses to overwrite demo records. No fixtures are added automatically.
 - Due dates entered on the form mean the end of the selected calendar date in
   the application's configured timezone, currently Asia/Manila. Duration is measured
   by local calendar-date difference from submission, not by 24-hour intervals.
+- Admins can use **Revise due date** on an Approved request or release review.
+  The compact modal also has a full-page fallback. Revisions require a reason,
+  a future date within the current duration policy measured from the original
+  submission, and the unchanged previous due date. An expired agreement can be
+  revised within that policy window; revision does not restart its duration.
+  Audit Logs retain old/new timestamps, actor, event time and the complete reason.
+  Revision, issue and cancellation serialize on the request; issued agreements
+  cannot be revised. Issuance copies the final agreed date without recalculating it.
+  Deploy migration `dashboard.0004_record_due_date_revision` before using this
+  action; it expands the allowed audit actions without changing historical dates.
 - Limits, dates, roles and availability are enforced by the service as well as
   the form. Approval repeats policy and stock checks. Availability shown by the
   browser is informative; posted availability/status/borrower values are ignored.

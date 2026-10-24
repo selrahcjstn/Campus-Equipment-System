@@ -79,7 +79,7 @@ def loan_report(values, *, at=None):
 def report_row(loan, *, at):
     units = list(loan.units.all())
     outstanding = sum(unit.returned_at is None for unit in units)
-    overdue = not loan.completed_at and outstanding > 0 and loan.due_at < at
+    overdue = loan.is_overdue_at(at)
     if loan.completed_at or (units and outstanding == 0):
         status = "Completed"
     elif overdue:
@@ -88,11 +88,10 @@ def report_row(loan, *, at):
         status = "Partially returned"
     else:
         status = "Active" if units else "Needs review"
-    elapsed = at - loan.due_at if overdue else timedelta(0)
-    days, hours = elapsed.days, elapsed.seconds // 3600
+    days = loan.overdue_days(at=at)
     equipment_counts = Counter(unit.equipment_name for unit in units if unit.returned_at is None)
     outstanding_equipment = [{"name": name, "quantity": count} for name, count in sorted(equipment_counts.items())]
-    return {"loan": loan, "units": units, "outstanding": outstanding, "outstanding_equipment": outstanding_equipment, "returned": len(units) - outstanding, "status": status, "variant": "error" if overdue else "success" if status == "Completed" else "info", "overdue_days": days, "overdue_hours": hours, "overdue_label": (f"{days} day(s), {hours} hour(s)" if days or hours else "Less than 1 hour") if overdue else "—"}
+    return {"loan": loan, "units": units, "outstanding": outstanding, "outstanding_equipment": outstanding_equipment, "returned": len(units) - outstanding, "status": status, "variant": "error" if overdue else "success" if status == "Completed" else "info", "overdue_days": days, "overdue_label": f"{days} calendar day(s) overdue" if overdue else "—"}
 
 
 def dashboard_statistics(*, at):

@@ -4,12 +4,14 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError, OperationalError
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.vary import vary_on_headers
 
-from .forms import BorrowingRequestForm, RequestFilterForm, RequestItemFormSet, ReviewForm
+from .forms import BorrowingRequestForm, DueDateRevisionForm, RequestFilterForm, RequestItemFormSet, ReviewForm
 from .models import BorrowingRequest
-from .services import approve_request, borrowing_limits, cancel_request, catalog_queryset, reject_request, submit_request
+from .services import approve_request, borrowing_limits, cancel_request, catalog_queryset, reject_request, revise_due_date, submit_request
 
 
 def _require_role(request, role):
@@ -135,6 +137,51 @@ def admin_request_detail(request, pk):
     _require_role(request, "ADMIN")
     borrowing = get_object_or_404(_records(), pk=pk)
     return render(request, "borrowing/admin/detail.html", _detail_context(borrowing, admin=True))
+
+
+@login_required(login_url="login")
+@require_http_methods(["GET", "POST"])
+@vary_on_headers("X-Admin-Modal")
+def revise_request_due_date(request, pk):
+    _require_role(request, "ADMIN")
+    borrowing = get_object_or_404(_records(), pk=pk)
+    modal_request = request.headers.get("X-Admin-Modal") == "1"
+    form = DueDateRevisionForm(request.POST if request.method == "POST" else None, borrowing=borrowing)
+    allowed = borrowing.status == "APPROVED" and not hasattr(borrowing, "loan")
+    status = 200
+    if request.method == "POST":
+        if not allowed:
+            form.add_error(None, "Only Approved requests awaiting issuance can have their due date revised.")
+            status = 409
+        elif form.is_valid():
+            try:
+                revise_due_date(borrowing.pk, actor=request.user, due_at=form.cleaned_data["due_date"],
+                                reason=form.cleaned_data["reason"], expected_due_at=form.cleaned_data["expected_due_at"])
+            except ValidationError as error:
+                if hasattr(error, "message_dict"):
+                    for field, errors in error.message_dict.items():
+                        form.add_error(field if field in form.fields else None, errors)
+                else:
+                    form.add_error(None, error)
+                status = 409
+            except (IntegrityError, OperationalError):
+                form.add_error(None, "The request changed or the database is busy. Reload and try again.")
+                status = 409
+            else:
+                messages.success(request, "Approved due date revised. The previous date and reason are recorded in Audit Logs.")
+                if modal_request:
+                    return JsonResponse({"saved": True})
+                return redirect("admin_request_detail", pk=pk)
+        elif modal_request:
+            status = 422
+    context = {
+        "form": form, "borrowing": borrowing, "page_title": f"Revise due date · Request #{pk}",
+        "description": "Change the agreed return date before equipment is issued. Existing reservations remain in place.",
+        "submit_label": "Save due date", "modal_request": modal_request,
+        "modal_unavailable": not allowed, "unavailable_message": "Only Approved requests awaiting issuance can be revised.",
+        "active_nav": "requests",
+    }
+    return render(request, "components/admin_modal_form.html" if modal_request else "borrowing/admin/revise_due_date.html", context, status=status)
 
 
 def _action(request, pk, action, *, admin):

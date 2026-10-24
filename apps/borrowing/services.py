@@ -163,6 +163,37 @@ def approve_request(request_id, *, actor, allocations=None):
 
 
 @transaction.atomic
+def revise_due_date(request_id, *, actor, due_at, reason, expected_due_at):
+    """Revise an approved agreement without changing its submission or reservations."""
+    _require_role(actor, "ADMIN")
+    if not isinstance(reason, str) or not reason.strip() or len(reason.strip()) > 300:
+        raise ValidationError({"reason": "Provide a revision reason of at most 300 characters."})
+    # First write serializes against issue/cancellation on SQLite as well as
+    # row-locking databases. The original value prevents lost updates/replays.
+    claimed = BorrowingRequest.objects.filter(
+        pk=request_id, status=BorrowingRequest.Status.APPROVED, due_at=expected_due_at,
+    ).update(due_at=F("due_at"))
+    if claimed != 1:
+        raise ValidationError("This request changed. Reload it; only Approved requests awaiting issuance can be revised.")
+    request = BorrowingRequest.objects.select_for_update().get(pk=request_id)
+    if hasattr(request, "loan") or not request.approved_at or not request.approved_by_id:
+        raise ValidationError("A recorded approval without an issued loan is required to revise the due date.")
+    validate_due_date(due_at, requested_at=request.requested_at)
+    if due_at <= request.requested_at:
+        raise ValidationError({"due_date": "The due date must be after the original submission."})
+    if due_at == request.due_at:
+        raise ValidationError({"due_date": "Choose a different due date."})
+    previous = request.due_at
+    request.due_at = due_at
+    request.save(update_fields=["due_at"])
+    record_event(
+        actor=actor, action="REQUEST_DUE_DATE_REVISED", entity_type="borrowing_request", entity_id=request.pk,
+        description=f"Due date: {previous.isoformat()} → {due_at.isoformat()}. Reason: {reason.strip()}",
+    )
+    return request
+
+
+@transaction.atomic
 def reject_request(request_id, *, actor, reason):
     _require_role(actor, "ADMIN")
     if not isinstance(reason, str) or not reason.strip() or len(reason) > 1000:

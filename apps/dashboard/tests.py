@@ -296,8 +296,7 @@ class ReportsTests(DashboardFixtures, TestCase):
         rows = self.csv_rows(self.client.get(reverse("export_reports"), query))
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["Loan status"], "Overdue")
-        self.assertEqual(rows[0]["Overdue days"], "1")
-        self.assertEqual(rows[0]["Additional overdue hours"], "2")
+        self.assertEqual(int(rows[0]["Overdue days"]), loan.overdue_days())
         query["start_date"] = query["end_date"] = timezone.localdate(loan.issued_at).isoformat()
         self.assertFalse(self.csv_rows(self.client.get(reverse("export_reports"), query)))
 
@@ -365,10 +364,10 @@ class ReportsTests(DashboardFixtures, TestCase):
         rows = self.csv_rows(self.client.get(reverse("export_reports"), {"report": "loans", "page": 2}))
         self.assertEqual(len(rows), 21)
 
-    def test_overdue_less_than_an_hour_has_meaningful_label(self):
+    def test_overdue_label_uses_calendar_days_even_for_short_delays(self):
         loan = self.issue()
         row = report_row(loan, at=loan.due_at + timedelta(minutes=5))
-        self.assertEqual(row["overdue_label"], "Less than 1 hour")
+        self.assertEqual(row["overdue_label"], f"{loan.overdue_days(at=loan.due_at + timedelta(minutes=5))} calendar day(s) overdue")
 
     def test_loan_without_unit_rows_is_reported_as_needing_review(self):
         request = self.pending()

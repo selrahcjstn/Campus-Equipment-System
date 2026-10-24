@@ -8,6 +8,7 @@ urlpatterns = [
     path("portal/requests/<int:pk>/cancel/", views.user_cancel, name="cancel_borrowing_request"),
     path("manage/requests/", views.borrowing_requests, name="borrowing_requests"),
     path("manage/requests/<int:pk>/", views.admin_request_detail, name="admin_request_detail"),
+    path("manage/requests/<int:pk>/due-date/", views.revise_request_due_date, name="revise_request_due_date"),
     path("manage/requests/<int:pk>/approve/", views.approve, name="approve_borrowing_request"),
     path("manage/requests/<int:pk>/reject/", views.reject, name="reject_borrowing_request"),
     path("manage/requests/<int:pk>/cancel/", views.admin_cancel, name="admin_cancel_borrowing_request"),

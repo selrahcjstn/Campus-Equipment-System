@@ -1,12 +1,14 @@
 {% extends "base_admin.html" %}
 {% load static ui_assets %}
 {% block title %}Release Request #{{ borrowing.pk }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/loans.css' %}">{% endblock %}
-{% block page_scripts %}<script src="{% static 'js/loans.js' %}" defer></script>{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/loans.css' %}"><link rel="stylesheet" href="{% ui_asset 'css/admin-modals.css' %}">{% endblock %}
+{% block page_scripts %}<script src="{% static 'js/loans.js' %}" defer></script><script src="{% ui_asset 'js/admin-modals.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Release request #{{ borrowing.pk }}</h1><p>Verify the reserved units before handing equipment to the borrower.</p></div><a class="button button--secondary" href="{% url 'loan_management' %}">Back to loan management</a></header>
 <div class="section-stack">
+    {% include "components/messages.html" %}
     {% include "borrowing/_summary.html" with summary_title="Approved handover" %}
+    {% if borrowing.status == 'APPROVED' %}<div><a class="button button--secondary" href="{% url 'revise_request_due_date' borrowing.pk %}" data-admin-form="Revise due date">Revise due date</a></div>{% endif %}
     <div class="table-container" tabindex="0" role="region" aria-label="Requested equipment and physical units"><table class="data-table"><caption>Requested equipment and physical units</caption><thead><tr><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--number">Required quantity</th><th scope="col" class="table-cell--text">Allocated units</th></tr></thead><tbody>
         {% for item in borrowing.items.all %}<tr><td class="table-cell--text">{{ item.equipment.name }}<p class="caption">{{ item.equipment.description }}</p></td><td class="table-cell--number">{{ item.quantity }}</td><td class="table-cell--text"><ul class="loan-equipment-list">{% for allocation in item.allocations.all %}{% if allocation.active %}<li><span class="table-value">{{ allocation.unit.asset_tag }}</span> — {{ allocation.unit.get_status_display }}</li>{% endif %}{% empty %}<li>No physical units allocated</li>{% endfor %}</ul></td></tr>{% empty %}<tr><td colspan="3">This request has no equipment items.</td></tr>{% endfor %}
     </tbody></table></div>
@@ -20,4 +22,4 @@
     {% else %}<div class="alert alert--warning" role="status"><strong>This request cannot be released.</strong><p>{{ release_error }}</p></div>{% endif %}
 </div>
 {% endblock %}
-{% block modals %}{% include "loans/_confirmation.html" with operation_form_id="release-form" confirmation_title="Confirm equipment release" confirmation_message="This will create a loan and mark all reserved units as On loan." confirmation_action="Confirm release" %}{% endblock %}
+{% block modals %}{% include "components/admin_form_dialog.html" %}{% include "loans/_confirmation.html" with operation_form_id="release-form" confirmation_title="Confirm equipment release" confirmation_message="This will create a loan and mark all reserved units as On loan." confirmation_action="Confirm release" %}{% endblock %}

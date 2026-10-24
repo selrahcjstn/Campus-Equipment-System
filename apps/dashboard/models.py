@@ -44,6 +44,7 @@ class AuditLog(models.Model):
         REQUEST_APPROVED = "REQUEST_APPROVED", "Borrowing request approved"
         REQUEST_REJECTED = "REQUEST_REJECTED", "Borrowing request rejected"
         REQUEST_CANCELLED = "REQUEST_CANCELLED", "Borrowing request cancelled"
+        REQUEST_DUE_DATE_REVISED = "REQUEST_DUE_DATE_REVISED", "Approved due date revised"
         LOAN_RELEASED = "LOAN_RELEASED", "Equipment released"
         UNITS_RETURNED = "UNITS_RETURNED", "Equipment returned"
         MAINTENANCE_REPORTED = "MAINTENANCE_REPORTED", "Maintenance reported"
@@ -63,4 +64,4 @@ class AuditLog(models.Model):
     class Meta:
         ordering = ["-occurred_at", "-pk"]
         indexes = [models.Index(fields=["entity_type", "entity_id"], name="audit_entity_lookup")]
-        constraints = [models.CheckConstraint(condition=models.Q(action__in=["USER_ACTIVATED", "USER_DEACTIVATED", "USER_ROLE_CHANGED", "CATEGORY_CREATED", "CATEGORY_UPDATED", "CATEGORY_DELETED", "EQUIPMENT_CREATED", "EQUIPMENT_UPDATED", "EQUIPMENT_ARCHIVED", "EQUIPMENT_RESTORED", "UNIT_ADDED", "UNIT_UPDATED", "UNIT_RETIRED", "REQUEST_APPROVED", "REQUEST_REJECTED", "REQUEST_CANCELLED", "LOAN_RELEASED", "UNITS_RETURNED", "MAINTENANCE_REPORTED", "MAINTENANCE_UPDATED", "MAINTENANCE_REPAIRED", "MAINTENANCE_RETIRED", "SETTINGS_UPDATED"]), name="dashboard_valid_audit_action")]
+        constraints = [models.CheckConstraint(condition=models.Q(action__in=["USER_ACTIVATED", "USER_DEACTIVATED", "USER_ROLE_CHANGED", "CATEGORY_CREATED", "CATEGORY_UPDATED", "CATEGORY_DELETED", "EQUIPMENT_CREATED", "EQUIPMENT_UPDATED", "EQUIPMENT_ARCHIVED", "EQUIPMENT_RESTORED", "UNIT_ADDED", "UNIT_UPDATED", "UNIT_RETIRED", "REQUEST_APPROVED", "REQUEST_REJECTED", "REQUEST_CANCELLED", "REQUEST_DUE_DATE_REVISED", "LOAN_RELEASED", "UNITS_RETURNED", "MAINTENANCE_REPORTED", "MAINTENANCE_UPDATED", "MAINTENANCE_REPAIRED", "MAINTENANCE_RETIRED", "SETTINGS_UPDATED"]), name="dashboard_valid_audit_action")]

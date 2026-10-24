@@ -10,7 +10,7 @@
                 <td class="table-cell--date">{% include "components/table_datetime.html" with value=loan.issued_at only %}</td>
                 <td class="table-cell--date">{% include "components/table_datetime.html" with value=loan.due_at only %}</td>
                 {% if history %}<td class="table-cell--date">{% include "components/table_datetime.html" with value=loan.completed_at only %}</td>{% else %}<td class="table-cell--number">{{ loan.outstanding_count }} of {{ loan.quantity }}</td>{% endif %}
-                <td class="table-cell--status">{% include "components/badge.html" with label=loan.status variant=loan.status_variant %}</td>
+                <td class="table-cell--status">{% include "components/badge.html" with label=loan.status variant=loan.status_variant %}{% if loan.is_overdue %}<p class="caption">{{ loan.overdue_days }} calendar day(s) overdue</p>{% endif %}</td>
                 <td class="table-cell--actions"><div class="page-actions">
                     {% if admin %}
                         <a class="button button--secondary" href="{% url 'admin_loan_detail' loan.pk %}?from=returns" aria-label="View loan {{ loan.pk }}">View</a>

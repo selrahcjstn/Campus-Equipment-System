@@ -12,7 +12,8 @@ class LoanQuerySet(models.QuerySet):
         return self.filter(completed_at__isnull=False)
 
     def overdue(self, at=None):
-        return self.active().filter(due_at__lt=at or timezone.now())
+        outstanding = LoanUnit.objects.filter(loan_id=models.OuterRef("pk"), returned_at__isnull=True)
+        return self.active().filter(models.Exists(outstanding), due_at__lt=at or timezone.now())
 
 
 class Loan(models.Model):
@@ -35,7 +36,17 @@ class Loan(models.Model):
 
     @property
     def is_overdue(self):
-        return self.completed_at is None and self.due_at < timezone.now()
+        return self.is_overdue_at(timezone.now())
+
+    def is_overdue_at(self, at):
+        return self.completed_at is None and self.due_at < at and self.outstanding_count > 0
+
+    def overdue_days(self, at=None):
+        at = at or timezone.now()
+        if not self.is_overdue_at(at):
+            return 0
+        zone = timezone.get_default_timezone()  # Application calendar: Asia/Manila.
+        return max((timezone.localdate(at, zone) - timezone.localdate(self.due_at, zone)).days, 0)
 
     @property
     def outstanding_count(self):
@@ -52,7 +63,7 @@ class Loan(models.Model):
 
     @property
     def status(self):
-        if self.completed_at:
+        if self.completed_at or (self.quantity and not self.outstanding_count):
             return "Completed"
         if self.is_overdue:
             return "Overdue"
@@ -62,7 +73,7 @@ class Loan(models.Model):
 
     @property
     def status_variant(self):
-        if self.completed_at:
+        if self.status == "Completed":
             return "success"
         return "error" if self.is_overdue else "info"
 

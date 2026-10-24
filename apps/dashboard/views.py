@@ -92,12 +92,12 @@ def export_reports(request):
     response["Content-Disposition"] = f'attachment; filename="{form.cleaned_data["report"]}-report-{timezone.localdate(now).isoformat()}.csv"'
     response.write("\ufeff")
     writer = csv.writer(response)
-    writer.writerow(["Loan ID", "Request ID", "Borrower username", "Borrower name", "Equipment (issue snapshot)", "Physical unit identifier (issue snapshot)", "Issued at (local ISO 8601)", "Due at (local ISO 8601)", "Loan status", "Unit return status", "Returned at (local ISO 8601)", "Return condition", "Outstanding units on loan", "Overdue days", "Additional overdue hours", "Report generated at (local ISO 8601)"])
+    writer.writerow(["Loan ID", "Request ID", "Borrower username", "Borrower name", "Equipment (issue snapshot)", "Physical unit identifier (issue snapshot)", "Issued at (local ISO 8601)", "Due at (local ISO 8601)", "Loan status", "Unit return status", "Returned at (local ISO 8601)", "Return condition", "Outstanding units on loan", "Overdue days", "Report generated at (local ISO 8601)"])
     for loan in records.iterator(chunk_size=200):
         row = report_row(loan, at=now)
         # Keep historical/incomplete loans visible even when no unit rows exist.
         for unit in row["units"] or [None]:
-            values = [loan.pk, loan.request_id, loan.borrower.username, loan.borrower.get_full_name(), unit.equipment_name if unit else "", unit.asset_tag if unit else "", _date_text(loan.issued_at), _date_text(loan.due_at), row["status"], "Returned" if unit and unit.returned_at else "Outstanding" if unit else "No unit record", _date_text(unit.returned_at) if unit else "", unit.get_return_condition_display() if unit and unit.returned_at else "", row["outstanding"], row["overdue_days"], row["overdue_hours"], _date_text(now)]
+            values = [loan.pk, loan.request_id, loan.borrower.username, loan.borrower.get_full_name(), unit.equipment_name if unit else "", unit.asset_tag if unit else "", _date_text(loan.issued_at), _date_text(loan.due_at), row["status"], "Returned" if unit and unit.returned_at else "Outstanding" if unit else "No unit record", _date_text(unit.returned_at) if unit else "", unit.get_return_condition_display() if unit and unit.returned_at else "", row["outstanding"], row["overdue_days"], _date_text(now)]
             writer.writerow([csv_cell(value) for value in values])
     return response
 
