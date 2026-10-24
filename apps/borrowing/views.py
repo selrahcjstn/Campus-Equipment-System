@@ -70,7 +70,27 @@ def new_request(request):
             messages.info(request, "That equipment is unavailable. Please choose another catalog item.")
     formset = RequestItemFormSet(data, initial=initial, prefix="items")
     status = 200
-    if request.method == "POST":
+    row_action = request.POST.get("row_action", "")
+    if request.method == "POST" and row_action:
+        # Presentation-only fallback: adding/removing rows never submits a request.
+        count = formset.management_form.cleaned_data.get("TOTAL_FORMS", 0)
+        if formset.management_form.is_valid() and 1 <= count <= formset.max_num:
+            rows = [{name: request.POST.get(f"items-{index}-{name}", "")
+                     for name in ("equipment", "quantity")} for index in range(count)]
+            if row_action == "add" and count < formset.max_num:
+                rows.append({"equipment": "", "quantity": 1})
+            elif row_action in {f"remove:items-{index}" for index in range(1, count)}:
+                rows.pop(int(row_action[13:]))
+            else:
+                rows = None
+            if rows is not None:
+                form = BorrowingRequestForm(initial={name: request.POST.get(name, "") for name in form.fields})
+                formset = RequestItemFormSet(initial=rows, prefix="items")
+            else:
+                form.add_error(None, "Unable to change equipment rows. Keep between 1 and the allowed maximum.")
+        else:
+            form.add_error(None, "Unable to change equipment rows. Reload the form and try again.")
+    elif request.method == "POST":
         form_valid = form.is_valid()
         items_valid = formset.is_valid()
         if form_valid and items_valid:

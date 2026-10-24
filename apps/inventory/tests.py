@@ -495,7 +495,7 @@ class InventoryPageTests(InventoryFixtures, TestCase):
         self.assertContains(self.client.get(reverse("equipment_detail", args=[self.equipment.pk])), f"?equipment={self.equipment.pk}")
         selected = self.client.get(reverse("new_borrowing_request"), {"equipment": self.equipment.pk})
         self.assertEqual(selected.context["formset"][0]["equipment"].value(), self.equipment.pk)
-        self.assertEqual(len(selected.context["formset"]), 3)
+        self.assertEqual(len(selected.context["formset"]), 1)
         invalid = self.client.get(reverse("new_borrowing_request"), {"equipment": "invalid"})
         self.assertContains(invalid, "equipment is unavailable")
 

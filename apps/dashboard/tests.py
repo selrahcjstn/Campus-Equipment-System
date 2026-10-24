@@ -455,7 +455,7 @@ class SettingsTests(DashboardFixtures, TestCase):
         self.assertEqual(policy.as_limits(), {"max_items": 3, "max_quantity": 20, "max_days": 30})
         self.assertEqual(borrowing_limits(), policy.as_limits())
         formset = RequestItemFormSet(prefix="items")
-        self.assertEqual(len(formset.forms), 3)
+        self.assertEqual(len(formset.forms), 1)
         self.assertEqual(formset.forms[0].fields["quantity"].widget.attrs["max"], 20)
         form = BorrowingRequestForm()
         self.assertEqual(form.fields["due_date"].widget.attrs["max"], (timezone.localdate() + timedelta(days=30)).isoformat())
@@ -483,7 +483,8 @@ class SettingsTests(DashboardFixtures, TestCase):
 
     def test_forms_reflect_policy_without_restarting_server(self):
         update_settings(actor=self.admin, max_items=2, max_quantity=2, max_days=2)
-        self.assertEqual(len(RequestItemFormSet(prefix="items").forms), 2)
+        self.assertEqual(len(RequestItemFormSet(prefix="items").forms), 1)
+        self.assertEqual(RequestItemFormSet(prefix="items").max_num, 2)
         form = BorrowingRequestForm()
         self.assertEqual(form.fields["due_date"].widget.attrs["max"], (timezone.localdate() + timedelta(days=2)).isoformat())
         update_settings(actor=self.admin, max_items=1, max_quantity=1, max_days=1)

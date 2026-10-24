@@ -1,0 +1,6 @@
+<fieldset class="borrowing-item-row" data-equipment-row>
+    <legend><span>Equipment <span data-row-number>{{ row_number }}</span></span><button type="submit" name="row_action" value="remove:{{ item_form.prefix }}" class="borrowing-remove" data-remove-equipment formnovalidate{% if first_row %} hidden{% endif %}>Remove<span class="sr-only"> equipment {{ row_number }}</span></button></legend>
+    {% include "components/input.html" with field=item_form.equipment %}
+    {% include "components/input.html" with field=item_form.quantity %}
+    {% if item_form.non_field_errors %}<div class="field-errors" role="alert">{{ item_form.non_field_errors }}</div>{% endif %}
+</fieldset>

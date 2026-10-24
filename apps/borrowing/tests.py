@@ -348,7 +348,7 @@ class BorrowingHardItemLimitTests(BorrowingFixtures, TestCase):
         url = reverse("new_borrowing_request")
         page = self.client.get(url)
         self.assertContains(page, "Select 1–3 equipment items")
-        self.assertEqual(len(page.context["formset"].forms), 3)
+        self.assertEqual(len(page.context["formset"].forms), 1)
         self.assertEqual(page.context["formset"].management_form["MAX_NUM_FORMS"].value(), 3)
         for count in [1, 2, 3]:
             with self.subTest(count=count):
@@ -411,7 +411,7 @@ class BorrowingPageTests(BorrowingFixtures, TestCase):
         self.assertContains(response, "Browse equipment")
         self.assertContains(response, "3 available units")
         self.assertContains(response, "at most 7 calendar days")
-        self.assertEqual(len(response.context["formset"]), 3)
+        self.assertEqual(len(response.context["formset"]), 1)
 
     def test_http_quantity_item_duplicate_and_duration_limits(self):
         self.client.force_login(self.borrower)
@@ -698,3 +698,117 @@ class ConcurrentBorrowingTests(BorrowingFixtures, TransactionTestCase):
             self.assertEqual(Loan.objects.count(), 1)
             self.assertEqual(Allocation.objects.filter(active=True).count(), 2)
             self.assertEqual(EquipmentUnit.objects.filter(status="ON_LOAN").count(), 2)
+
+
+class DynamicEquipmentFormTests(BorrowingFixtures, TestCase):
+    def setUp(self):
+        self.make_records()
+        self.client.force_login(self.borrower)
+        self.url = reverse("new_borrowing_request")
+
+    def row_data(self, count):
+        data = self.post_data([(item.pk, index + 1) for index, item in enumerate(self.equipment[:count])])
+        data["items-TOTAL_FORMS"] = str(count)
+        return data
+
+    def test_initial_and_prefilled_form_show_one_row_with_three_item_capacity(self):
+        for params in ({}, {"equipment": self.equipment[0].pk}):
+            response = self.client.get(self.url, params)
+            formset = response.context["formset"]
+            self.assertEqual(formset.total_form_count(), 1)
+            self.assertEqual(formset.max_num, 3)
+            self.assertContains(response, "+ Add equipment")
+            self.assertNotContains(response, "Leave unused equipment slots blank")
+            if params:
+                self.assertEqual(formset.forms[0]["equipment"].value(), self.equipment[0].pk)
+
+    def test_no_javascript_add_preserves_values_and_does_not_submit(self):
+        for count in (1, 2):
+            data = self.row_data(count)
+            data.update(row_action="add", purpose="")
+            response = self.client.post(self.url, data)
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(response.context["form"].is_bound)
+            self.assertEqual(response.context["form"]["purpose"].value(), "")
+            self.assertEqual(response.context["form"]["due_date"].value(), data["due_date"])
+            formset = response.context["formset"]
+            self.assertEqual(formset.total_form_count(), count + 1)
+            for index in range(count):
+                self.assertEqual(formset.forms[index]["equipment"].value(), data[f"items-{index}-equipment"])
+                self.assertEqual(formset.forms[index]["quantity"].value(), data[f"items-{index}-quantity"])
+            self.assertFalse(BorrowingRequest.objects.exists())
+            self.assertFalse(Allocation.objects.exists())
+
+    def test_no_javascript_remove_middle_row_preserves_remaining_values(self):
+        data = self.row_data(3)
+        data["row_action"] = "remove:items-1"
+        response = self.client.post(self.url, data)
+        formset = response.context["formset"]
+        self.assertEqual(formset.total_form_count(), 2)
+        self.assertEqual(formset.forms[1]["equipment"].value(), str(self.equipment[2].pk))
+        self.assertEqual(formset.forms[1]["quantity"].value(), "3")
+        self.assertEqual(response.context["form"]["purpose"].value(), data["purpose"])
+        self.assertEqual(response.context["form"]["due_date"].value(), data["due_date"])
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+    def test_invalid_row_actions_or_management_data_never_submit(self):
+        for action, count in (("add", 3), ("remove:items-0", 1), ("remove:items-9", 2), ("remove:items-²", 2), ("invalid", 1), ("add", 4), ("add", "invalid")):
+            data = self.row_data(3)
+            data.update(row_action=action, **{"items-TOTAL_FORMS": str(count)})
+            with self.subTest(action=action, count=count):
+                response = self.client.post(self.url, data)
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "Unable to change equipment rows")
+                self.assertFalse(BorrowingRequest.objects.exists())
+                self.assertFalse(Allocation.objects.exists())
+
+    def test_validation_errors_keep_dynamic_rows_and_all_entered_values(self):
+        data = self.row_data(2)
+        data.update(due_date="invalid-date", **{"items-1-equipment": str(self.equipment[0].pk), "items-1-quantity": "4"})
+        response = self.client.post(self.url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["form"].errors["due_date"])
+        formset = response.context["formset"]
+        self.assertEqual(formset.total_form_count(), 2)
+        self.assertTrue(formset.forms[1].errors["quantity"])
+        self.assertEqual(formset.forms[1]["equipment"].value(), data["items-1-equipment"])
+        self.assertEqual(formset.forms[1]["quantity"].value(), "4")
+        self.assertEqual(response.context["form"]["purpose"].value(), data["purpose"])
+        self.assertEqual(response.context["form"]["due_date"].value(), "invalid-date")
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+    def test_duplicate_rows_remain_visible_with_validation_error(self):
+        data = self.row_data(2)
+        data["items-1-equipment"] = data["items-0-equipment"]
+        response = self.client.post(self.url, data)
+        self.assertContains(response, "Each equipment item can be selected only once.")
+        self.assertEqual(response.context["formset"].total_form_count(), 2)
+        self.assertEqual(response.context["formset"].forms[1]["equipment"].value(), data["items-0-equipment"])
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+    def test_dynamic_one_two_three_row_submissions_stay_pending_without_reservations(self):
+        for count in (1, 2, 3):
+            response = self.client.post(self.url, self.row_data(count))
+            self.assertEqual(response.status_code, 302)
+            borrowing = BorrowingRequest.objects.latest("pk")
+            self.assertEqual(borrowing.items.count(), count)
+            self.assertEqual(borrowing.status, "PENDING")
+        self.assertFalse(Allocation.objects.exists())
+        self.assertEqual(EquipmentUnit.objects.filter(status="AVAILABLE").count(), 12)
+
+    def test_forged_management_max_does_not_change_rendered_client_limit(self):
+        data = self.post_data([(item.pk, 1) for item in self.equipment])
+        data["items-MAX_NUM_FORMS"] = "1000"
+        response = self.client.post(self.url, data)
+        self.assertContains(response, 'data-max-equipment="3"')
+        self.assertContains(response, "Select no more than 3 distinct equipment items.")
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+    @override_settings(BORROWING_MAX_ITEMS=1)
+    def test_smaller_configured_limit_disables_add_and_rejects_extra_rows(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, 'aria-describedby="equipment-help" disabled')
+        self.assertEqual(response.context["formset"].max_num, 1)
+        response = self.client.post(self.url, self.row_data(2))
+        self.assertContains(response, "Select no more than 1 distinct equipment items.")
+        self.assertFalse(BorrowingRequest.objects.exists())

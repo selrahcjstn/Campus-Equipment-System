@@ -2,7 +2,7 @@
 {% load static ui_assets %}
 {% block title %}New Borrowing Request | Campus Equipment System{% endblock %}
 {% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/borrowing.css' %}">{% endblock %}
-{% block page_scripts %}<script src="{% static 'js/borrowing.js' %}" defer></script>{% endblock %}
+{% block page_scripts %}<script src="{% ui_asset 'js/borrowing.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>New borrowing request</h1><p>Select 1–{{ limits.max_items }} equipment items, up to {{ limits.max_quantity }} units each, for at most {{ limits.max_days }} calendar days.</p></div><a class="button button--secondary" href="{% url 'my_requests' %}">My requests</a></header>
 <div class="section-stack">
@@ -17,11 +17,20 @@
         </div>
         <p class="caption" data-catalog-status role="status" aria-live="polite"></p>
     </section>
-    <form method="post" class="form-panel form-panel--wide section-stack" id="borrowing-request-form" data-submit-loading>
+    <form method="post" class="form-panel form-panel--wide section-stack" id="borrowing-request-form" data-max-equipment="{{ limits.max_items }}" data-submit-loading>
         {% csrf_token %}{{ formset.management_form }}
+        {# Keep Enter submitting the request rather than activating a row-edit button. #}
+        <button type="submit" hidden tabindex="-1" aria-hidden="true">Submit request</button>
         {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
         {% if formset.non_form_errors %}<div class="alert alert--error" role="alert">{{ formset.non_form_errors }}</div>{% endif %}
-        <section class="card section-stack"><h2>Requested equipment</h2><p class="caption">Leave unused equipment slots blank.</p>{% for item_form in formset %}<fieldset class="borrowing-item-row"><legend>Equipment {{ forloop.counter }}</legend>{% include "components/input.html" with field=item_form.equipment %}{% include "components/input.html" with field=item_form.quantity %}{% if item_form.non_field_errors %}<div class="field-errors" role="alert">{{ item_form.non_field_errors }}</div>{% endif %}</fieldset>{% endfor %}</section>
+        <section class="card section-stack" aria-labelledby="requested-equipment-title">
+            <div><h2 id="requested-equipment-title">Requested equipment</h2><p class="caption" id="equipment-help">Start with one item. Add up to {{ limits.max_items }} distinct equipment items.</p></div>
+            <div class="section-stack" data-equipment-rows>{% for item_form in formset %}{% include "borrowing/_request_item.html" with row_number=forloop.counter first_row=forloop.first %}{% endfor %}</div>
+            <div><button type="submit" name="row_action" value="add" class="button button--secondary" data-add-equipment formnovalidate aria-describedby="equipment-help"{% if formset.total_form_count >= limits.max_items %} disabled{% endif %}>+ Add equipment</button></div>
+            <p class="caption" data-equipment-status role="status" aria-live="polite"></p>
+            <noscript><p class="caption">Add and Remove reload this form and keep your entries. Use the equipment dropdowns to select items.</p></noscript>
+            <template data-equipment-template>{% include "borrowing/_request_item.html" with item_form=formset.empty_form row_number="" first_row=False %}</template>
+        </section>
         <section class="card section-stack"><h2>Borrowing details</h2>{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}<div class="page-actions"><button type="submit" class="button button--primary">Submit request</button><a href="{% url 'my_requests' %}" class="button button--secondary">Cancel</a></div></section>
     </form>
     </div>
