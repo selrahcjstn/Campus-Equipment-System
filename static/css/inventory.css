@@ -4,7 +4,10 @@
 .inventory-catalog-card h2 { margin-top: var(--space-1); font-size: var(--font-card); }
 .inventory-catalog-card .eyebrow { font-size: var(--font-caption); font-weight: var(--weight-medium); color: var(--text-secondary); letter-spacing: 0; }
 .inventory-catalog-card > p { font-size: var(--font-label); }
-.inventory-stock { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-2) var(--space-3); border: var(--border); border-radius: var(--radius-sm); background: var(--background); font-size: var(--font-caption); }
+.inventory-stock { display: grid; gap: var(--space-3); padding: var(--space-3); border: var(--border); border-radius: var(--radius-sm); background: var(--background); font-size: var(--font-caption); }
+.inventory-stock-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin: 0; }
+.inventory-stock-counts dt { color: var(--text-secondary); font-weight: var(--weight-medium); }
+.inventory-stock-counts dd { margin: var(--space-1) 0 0; color: var(--text-primary); font-size: var(--font-card); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
 .inventory-detail { max-width: var(--form-width-wide); }
 .inventory-editor-form > .form-field { max-width: none; }
 .inventory-category-table .table-cell--text { width: 14rem; max-width: 14rem; overflow-wrap: anywhere; }

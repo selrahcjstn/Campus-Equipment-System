@@ -14,6 +14,8 @@ from apps.borrowing.models import Allocation, BorrowingRequest
 from apps.borrowing.services import approve_request, cancel_request, submit_request
 from apps.loans.models import Loan
 from apps.loans.services import process_returns, release_request
+from apps.maintenance.models import MaintenanceRecord
+from apps.maintenance.services import create_record, resolve_record, update_record
 from .models import Category, Equipment, EquipmentUnit
 from .services import add_unit, archive_equipment, delete_category, edit_unit, eligible_units, inventory_queryset, restore_equipment, retire_unit, save_category, save_equipment, unit_queryset
 
@@ -213,6 +215,7 @@ class InventoryServiceTests(InventoryFixtures, TestCase):
             EquipmentUnit.objects.create(equipment=self.equipment, asset_tag=f"COUNT-{status}", status=status)
         counts = self.counts()
         self.assertEqual(counts.total_count, 6)
+        self.assertEqual(counts.serviceable_count, 4)
         self.assertEqual(counts.available_count, 2)
         self.assertEqual((counts.reserved_count, counts.issued_count, counts.maintenance_count, counts.retired_count), (1, 1, 1, 1))
         self.assertEqual(eligible_units().filter(equipment=self.equipment).count(), 2)
@@ -303,6 +306,102 @@ class InventoryServiceTests(InventoryFixtures, TestCase):
                     operation()
 
 
+class ServiceableInventoryTests(InventoryFixtures, TestCase):
+    def setUp(self):
+        self.make_records()
+        self.client.force_login(self.borrower)
+
+    def assert_public_stock(self, available, serviceable, equipment=None):
+        equipment = equipment or self.equipment
+        urls = [
+            reverse("equipment_catalog") + f"?q={equipment.name}",
+            reverse("equipment_detail", args=[equipment.pk]),
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                if "page_obj" in response.context:
+                    records = list(response.context["page_obj"])
+                    self.assertEqual([item.pk for item in records], [equipment.pk])
+                    item = records[0]
+                else:
+                    item = response.context["equipment"]
+                self.assertEqual((item.available_count, item.serviceable_count), (available, serviceable))
+                self.assertContains(response, f"<dt>Available</dt><dd>{available}</dd>", html=True)
+                self.assertContains(response, f"<dt>Total Serviceable</dt><dd>{serviceable}</dd>", html=True)
+                if available:
+                    self.assertContains(response, f"?equipment={equipment.pk}")
+                else:
+                    self.assertNotContains(response, f"?equipment={equipment.pk}")
+
+    def test_each_status_and_zero_inventory_are_aggregated_in_one_query(self):
+        expected = {}
+        for status, counts in [
+            (EquipmentUnit.Status.AVAILABLE, (1, 1)),
+            (EquipmentUnit.Status.RESERVED, (0, 1)),
+            (EquipmentUnit.Status.ON_LOAN, (0, 1)),
+            (EquipmentUnit.Status.MAINTENANCE, (0, 0)),
+            (EquipmentUnit.Status.RETIRED, (0, 0)),
+        ]:
+            equipment = Equipment.objects.create(name=f"Status {status}", category=self.category)
+            EquipmentUnit.objects.create(equipment=equipment, asset_tag=f"STATUS-{status}", status=status)
+            expected[equipment.pk] = counts
+        empty = Equipment.objects.create(name="Empty inventory", category=self.category)
+        expected[empty.pk] = (0, 0)
+        with self.assertNumQueries(1):
+            actual = {item.pk: (item.available_count, item.serviceable_count)
+                      for item in inventory_queryset().filter(pk__in=expected)}
+        self.assertEqual(actual, expected)
+
+    def test_public_pages_display_mixed_serviceable_totals(self):
+        for status in ["RESERVED", "ON_LOAN", "MAINTENANCE", "RETIRED"]:
+            EquipmentUnit.objects.create(equipment=self.equipment, asset_tag=f"MIXED-{status}", status=status)
+        self.assert_public_stock(2, 4)
+
+    def test_public_pages_display_zero_inventory(self):
+        empty = save_equipment(actor=self.admin, name="Camera", category_id=self.category.pk)
+        self.assert_public_stock(0, 0, equipment=empty)
+
+    def test_public_totals_follow_reservation_issue_return_and_maintenance_transitions(self):
+        self.assert_public_stock(2, 2)
+        request = self.pending()
+        with self.subTest(phase="pending"):
+            self.assert_public_stock(2, 2)
+        approve_request(request.pk, actor=self.admin)
+        with self.subTest(phase="reserved"):
+            self.assert_public_stock(0, 2)
+        cancel_request(request.pk, actor=self.borrower)
+        with self.subTest(phase="reservation cancelled"):
+            self.assert_public_stock(2, 2)
+        loan = self.issue()
+        with self.subTest(phase="issued"):
+            self.assert_public_stock(0, 2)
+        items = list(loan.units.all())
+        process_returns(loan.pk, actor=self.admin, returns=[(items[0].pk, "GOOD", "")])
+        with self.subTest(phase="good partial return"):
+            self.assert_public_stock(1, 2)
+        process_returns(loan.pk, actor=self.admin, returns=[(items[1].pk, "DAMAGED", "Broken lens")])
+        with self.subTest(phase="damaged return"):
+            self.assert_public_stock(1, 1)
+        repair = MaintenanceRecord.objects.get(source_return=items[1])
+        update_record(repair.pk, actor=self.admin, status="IN_PROGRESS", repair_notes="Replacing lens")
+        with self.subTest(phase="repair in progress"):
+            self.assert_public_stock(1, 1)
+        resolve_record(repair.pk, actor=self.admin, outcome="REPAIRED", repair_notes="Lens replaced and tested")
+        with self.subTest(phase="repaired"):
+            self.assert_public_stock(2, 2)
+        maintenance = create_record(items[0].unit_id, actor=self.admin, reason="Failed inspection")
+        with self.subTest(phase="maintenance intake"):
+            self.assert_public_stock(1, 1)
+        resolve_record(maintenance.pk, actor=self.admin, outcome="RETIRED", repair_notes="Beyond repair")
+        with self.subTest(phase="retired from maintenance"):
+            self.assert_public_stock(1, 1)
+        retire_unit(items[1].unit_id, actor=self.admin)
+        with self.subTest(phase="all units retired"):
+            self.assert_public_stock(0, 0)
+
+
 class InventoryPageTests(InventoryFixtures, TestCase):
     def setUp(self):
         self.make_records()
@@ -326,7 +425,8 @@ class InventoryPageTests(InventoryFixtures, TestCase):
             response = self.client.get(url)
             for private in ["PROJECTOR-1", "PROJECTOR-2", "SPEAKER-PRIVATE-TAG", "Maintenance", "Retired", "Add physical unit", "Review archive", "/manage/equipment/"]:
                 self.assertNotContains(response, private)
-            self.assertContains(response, "available physical unit")
+            self.assertContains(response, "<dt>Available</dt><dd>1</dd>", html=True)
+            self.assertContains(response, "<dt>Total Serviceable</dt><dd>1</dd>", html=True)
 
     def test_archived_items_hidden_and_detail_returns_404(self):
         archive_equipment(self.equipment.pk, actor=self.admin)

@@ -35,6 +35,11 @@ def inventory_queryset():
     return Equipment.objects.select_related("category").annotate(
         total_count=Count("units", distinct=True),
         available_count=Count("units", filter=available, distinct=True),
+        serviceable_count=Count("units", filter=Q(units__status__in=[
+            EquipmentUnit.Status.AVAILABLE,
+            EquipmentUnit.Status.RESERVED,
+            EquipmentUnit.Status.ON_LOAN,
+        ]), distinct=True),
         reserved_count=Count("units", filter=Q(units__status="RESERVED"), distinct=True),
         issued_count=Count("units", filter=Q(units__status="ON_LOAN"), distinct=True),
         maintenance_count=Count("units", filter=Q(units__status="MAINTENANCE"), distinct=True),
