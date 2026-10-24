@@ -1,7 +1,8 @@
 {% extends "base_admin.html" %}
 {% load static ui_assets %}
 {% block title %}Maintenance | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/maintenance.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/maintenance.css' %}"><link rel="stylesheet" href="{% ui_asset 'css/admin-modals.css' %}">{% endblock %}
+{% block page_scripts %}<script src="{% ui_asset 'js/admin-modals.js' %}" defer></script>{% endblock %}
 {% block content %}
 <header class="page-heading"><div><h1>Maintenance</h1><p>Track reported issues, repairs and retirement for each physical unit.</p></div><a class="button button--primary" href="{% url 'maintenance_create' %}">Report maintenance</a></header>
 <div class="section-stack">
@@ -18,3 +19,4 @@
     {% include "maintenance/_records.html" %}
 </div>
 {% endblock %}
+{% block modals %}{% include "components/admin_form_dialog.html" %}{% endblock %}

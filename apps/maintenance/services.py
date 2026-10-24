@@ -98,6 +98,22 @@ def _active_record(record_id):
 
 
 @transaction.atomic
+def start_repair(record_id, *, actor):
+    _require_admin(actor)
+    record, _ = _active_record(record_id)
+    if record.status != "REPORTED":
+        raise ValidationError("Only Reported maintenance can be started. Reload the record to see its current status.")
+    record.status = "IN_PROGRESS"
+    record.full_clean()
+    record.save(update_fields=["status"])
+    # Keep the original reporting Admin/date; the actor and start time belong
+    # to this audit event. Starting work must not overwrite existing notes.
+    record_event(actor=actor, action="MAINTENANCE_UPDATED", entity_type="maintenance", entity_id=record.pk,
+                 description=f"Started repair for physical unit #{record.unit_id}. Status: Reported → In progress.")
+    return record
+
+
+@transaction.atomic
 def update_record(record_id, *, actor, status, repair_notes):
     _require_admin(actor)
     repair_notes = _text(repair_notes, label="Repair notes", maximum=2000, required=False)

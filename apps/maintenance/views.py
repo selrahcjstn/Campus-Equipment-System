@@ -6,13 +6,15 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError, OperationalError
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.vary import vary_on_headers
 
 from apps.inventory.models import EquipmentUnit
-from .forms import MaintenanceFilterForm, MaintenanceForm, ProgressForm, ResolutionForm
+from .forms import CompletionForm, MaintenanceFilterForm, MaintenanceForm, ProgressForm, ResolutionForm, StartRepairForm
 from .models import ACTIVE_STATUSES, MaintenanceRecord
-from .services import create_record, resolve_record, update_record
+from .services import create_record, resolve_record, start_repair, update_record
 
 
 def _admin(request):
@@ -126,35 +128,69 @@ def update(request, pk):
     return render(request, "maintenance/form.html", {"form": form, "record": record, "allowed": record.is_active, "page_title": "Update maintenance", "active_nav": "maintenance"}, status=status)
 
 
-def _resolve(request, pk, outcome):
+def _resolve(request, pk, action):
     record = get_object_or_404(_records(), pk=pk)
-    repairing = outcome == "REPAIRED"
-    allowed = record.is_active and (not repairing or record.status == "IN_PROGRESS")
-    form = ResolutionForm(request.POST if request.method == "POST" else None, initial={"repair_notes": record.repair_notes})
+    starting = action == "start"
+    completing = action == "complete"
+    allowed = (record.status == "REPORTED" if starting else record.status == "IN_PROGRESS" if completing else record.is_active)
+    modal_request = request.headers.get("X-Admin-Modal") == "1"
+    form_class = StartRepairForm if starting else CompletionForm if completing else ResolutionForm
+    form = form_class(request.POST if request.method == "POST" else None,
+                      initial={"repair_notes": record.repair_notes, "outcome": "REPAIRED"})
+    titles = {"start": "Start repair", "complete": "Complete repair", "retire": "Retire equipment"}
+    description = (
+        f"Start repair on {record.unit.asset_tag}? The unit will remain in Maintenance."
+        if starting else "Record the work completed and choose whether the unit is serviceable or must be retired."
+        if completing else "Confirm that this physical unit cannot be repaired. It will remain unavailable as Retired."
+    )
+    unavailable = "This action is unavailable. Start repair only for Reported records, and complete repair only for In progress records. Closed records cannot be changed."
     status = 200
     if request.method == "POST":
         if not allowed:
-            form.add_error(None, "This action is unavailable. Start maintenance before confirming repair; resolved records cannot be changed.")
+            form.add_error(None, unavailable)
             status = 409
         elif form.is_valid():
+            outcome = form.cleaned_data.get("outcome", "RETIRED")
             try:
-                resolve_record(pk, actor=request.user, outcome=outcome, repair_notes=form.cleaned_data["repair_notes"])
+                if starting:
+                    start_repair(pk, actor=request.user)
+                else:
+                    resolve_record(pk, actor=request.user, outcome=outcome, repair_notes=form.cleaned_data["repair_notes"])
             except (ValidationError, IntegrityError, OperationalError) as error:
                 _error(form, error)
                 status = 409
             else:
-                messages.success(request, "Equipment repaired. The unit is Available; archived catalog items remain hidden." if repairing else "Equipment retired. The unit cannot be borrowed.")
+                messages.success(request, "Repair started. The unit remains in Maintenance." if starting else
+                                 "Equipment repaired. The unit is Available; archived catalog items remain hidden." if outcome == "REPAIRED" else
+                                 "Equipment retired. The unit cannot be borrowed.")
+                if modal_request:
+                    return JsonResponse({"saved": True})
                 return redirect("maintenance_detail", pk=pk)
-    return render(request, "maintenance/resolve.html", {"record": record, "form": form, "allowed": allowed, "repairing": repairing, "page_title": "Confirm repair" if repairing else "Retire equipment", "description": "Confirm the repair and checks before restoring this physical unit to Available." if repairing else "Confirm that this physical unit cannot be repaired. It will be Retired and remain unavailable.", "active_nav": "maintenance"}, status=status)
+        elif modal_request:
+            status = 422
+    context = {"record": record, "form": form, "allowed": allowed, "repairing": action != "retire",
+               "page_title": titles[action], "description": description, "submit_label": titles[action],
+               "active_nav": "maintenance", "modal_request": modal_request,
+               "modal_unavailable": not allowed, "unavailable_message": unavailable}
+    return render(request, "components/admin_modal_form.html" if modal_request else "maintenance/resolve.html", context, status=status)
 
 
 @admin_required
 @require_http_methods(["GET", "POST"])
+@vary_on_headers("X-Admin-Modal")
+def start(request, pk):
+    return _resolve(request, pk, "start")
+
+
+@admin_required
+@require_http_methods(["GET", "POST"])
+@vary_on_headers("X-Admin-Modal")
 def complete(request, pk):
-    return _resolve(request, pk, "REPAIRED")
+    return _resolve(request, pk, "complete")
 
 
 @admin_required
 @require_http_methods(["GET", "POST"])
+@vary_on_headers("X-Admin-Modal")
 def retire(request, pk):
-    return _resolve(request, pk, "RETIRED")
+    return _resolve(request, pk, "retire")

@@ -23,7 +23,7 @@ from apps.inventory.services import eligible_units as borrowable_units, inventor
 from apps.loans.models import LoanUnit
 from apps.loans.services import process_returns, release_request
 from .models import MaintenanceRecord
-from .services import create_record, eligible_units, record_damaged_return, resolve_record, update_record
+from .services import create_record, eligible_units, record_damaged_return, resolve_record, start_repair, update_record
 
 
 class MaintenanceFixtures:
@@ -401,7 +401,7 @@ class MaintenanceViewTests(MaintenanceFixtures, TestCase):
         self.client.force_login(self.admin)
 
     def endpoints(self):
-        return [("maintenance", []), ("maintenance_create", []), ("maintenance_detail", [self.record.pk]), ("maintenance_history", [self.unit.pk]), ("maintenance_update", [self.record.pk]), ("maintenance_complete", [self.record.pk]), ("maintenance_retire", [self.record.pk])]
+        return [("maintenance", []), ("maintenance_create", []), ("maintenance_detail", [self.record.pk]), ("maintenance_history", [self.unit.pk]), ("maintenance_update", [self.record.pk]), ("maintenance_start", [self.record.pk]), ("maintenance_complete", [self.record.pk]), ("maintenance_retire", [self.record.pk])]
 
     def test_all_pages_render_and_reuse_admin_navigation(self):
         for name, args in self.endpoints():
@@ -433,7 +433,7 @@ class MaintenanceViewTests(MaintenanceFixtures, TestCase):
     def test_csrf_is_required_on_every_mutation(self):
         client = Client(enforce_csrf_checks=True)
         client.force_login(self.admin)
-        for name in ["maintenance_create", "maintenance_update", "maintenance_complete", "maintenance_retire"]:
+        for name in ["maintenance_create", "maintenance_update", "maintenance_start", "maintenance_complete", "maintenance_retire"]:
             args = [] if name == "maintenance_create" else [self.record.pk]
             self.assertEqual(client.post(reverse(name, args=args), {"confirm": "on"}).status_code, 403)
 
@@ -490,13 +490,13 @@ class MaintenanceViewTests(MaintenanceFixtures, TestCase):
 
     def test_completion_requires_notes_confirmation_and_progress(self):
         url = reverse("maintenance_complete", args=[self.record.pk])
-        self.assertEqual(self.client.post(url, {"repair_notes": "Repaired", "confirm": "on"}).status_code, 409)
+        self.assertEqual(self.client.post(url, {"repair_notes": "Repaired", "outcome": "REPAIRED", "confirm": "on"}).status_code, 409)
         self.progress(self.record)
-        for data in [{"repair_notes": "Repaired"}, {"repair_notes": "", "confirm": "on"}]:
+        for data in [{"repair_notes": "Repaired", "outcome": "REPAIRED"}, {"repair_notes": "", "outcome": "REPAIRED", "confirm": "on"}]:
             response = self.client.post(url, data)
             self.assertTrue(response.context["form"].errors)
             self.assertEqual(MaintenanceRecord.objects.get(pk=self.record.pk).status, "IN_PROGRESS")
-        response = self.client.post(url, {"repair_notes": "Repaired and checked", "confirm": "on"}, follow=True)
+        response = self.client.post(url, {"repair_notes": "Repaired and checked", "outcome": "REPAIRED", "confirm": "on"}, follow=True)
         self.assertContains(response, "Equipment repaired.")
         self.unit.refresh_from_db()
         self.assertEqual(self.unit.status, "AVAILABLE")
@@ -548,7 +548,7 @@ class MaintenanceViewTests(MaintenanceFixtures, TestCase):
         self.assertContains(response, f'?unit={other.pk}')
 
     def test_missing_records_are_404_and_delete_endpoints_do_not_exist(self):
-        for name in ["maintenance_detail", "maintenance_update", "maintenance_complete", "maintenance_retire", "maintenance_history"]:
+        for name in ["maintenance_detail", "maintenance_update", "maintenance_start", "maintenance_complete", "maintenance_retire", "maintenance_history"]:
             self.assertEqual(self.client.get(reverse(name, args=[99999])).status_code, 404)
         self.assertEqual(self.client.post(f"/manage/maintenance/{self.record.pk}/delete/").status_code, 404)
         self.assertTrue(MaintenanceRecord.objects.filter(pk=self.record.pk).exists())
@@ -647,6 +647,17 @@ class ConcurrentMaintenanceTests(MaintenanceFixtures, TransactionTestCase):
         self.assertEqual(MaintenanceRecord.objects.count(), 1)
         self.unit.refresh_from_db()
         self.assertEqual(self.unit.status, "MAINTENANCE")
+
+    def test_two_start_actions_create_only_one_start_event(self):
+        from apps.dashboard.models import AuditLog
+
+        record = self.create()
+        self.race([lambda: start_repair(record.pk, actor=self.admin), lambda: start_repair(record.pk, actor=self.admin)])
+        record.refresh_from_db()
+        self.unit.refresh_from_db()
+        self.assertEqual(record.status, "IN_PROGRESS")
+        self.assertEqual(self.unit.status, "MAINTENANCE")
+        self.assertEqual(AuditLog.objects.filter(action="MAINTENANCE_UPDATED", entity_id=record.pk).count(), 1)
 
     def test_repair_and_retirement_cannot_both_complete(self):
         record = self.progress(self.create())

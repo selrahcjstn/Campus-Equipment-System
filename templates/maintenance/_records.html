@@ -7,7 +7,7 @@
         <td class="table-cell--description maintenance-issue">{{ record.reason|truncatechars:120 }}</td>
         <td class="table-cell--status">{% include "components/badge.html" with label=record.get_status_display variant=record.status_variant %}</td>
         <td class="table-cell--date">{% include "components/table_datetime.html" with value=record.reported_at only %}{% if record.completed_at %}<p class="caption">Completed {% include "components/table_datetime.html" with value=record.completed_at only %}</p>{% endif %}</td>
-        <td class="table-cell--actions"><a class="table-action-link" href="{% url 'maintenance_detail' record.pk %}" aria-label="Open maintenance record {{ record.pk }}">View record</a></td>
+        <td class="table-cell--actions"><div class="page-actions">{% include "maintenance/_workflow_action.html" with action_class="table-action-link" %}<a class="table-action-link" href="{% url 'maintenance_detail' record.pk %}" aria-label="Open maintenance record {{ record.pk }}">View record</a></div></td>
     </tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><h2>No maintenance records in this view</h2><p class="text-secondary">Report an issue or clear the search and filters.</p></div></td></tr>{% endfor %}</tbody>
 </table></div>
 {% include "components/pagination.html" with page_obj=page_obj page_param="page" pagination_label="Maintenance record pages" %}

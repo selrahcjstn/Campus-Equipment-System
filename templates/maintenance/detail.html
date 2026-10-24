@@ -1,11 +1,13 @@
 {% extends "base_admin.html" %}
 {% load static ui_assets %}
 {% block title %}Maintenance #{{ record.pk }} | Campus Equipment System{% endblock %}
-{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/maintenance.css' %}">{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/maintenance.css' %}"><link rel="stylesheet" href="{% ui_asset 'css/admin-modals.css' %}">{% endblock %}
+{% block page_scripts %}<script src="{% ui_asset 'js/admin-modals.js' %}" defer></script>{% endblock %}
 {% block content %}
-<header class="page-heading"><div><h1>Maintenance #{{ record.pk }}</h1><p>{{ record.unit.equipment.name }} · {{ record.unit.asset_tag }}</p></div><div class="page-actions">{% if record.is_active %}<a class="button button--primary" href="{% url 'maintenance_update' record.pk %}">Update progress</a>{% if record.status == 'IN_PROGRESS' %}<a class="button button--secondary" href="{% url 'maintenance_complete' record.pk %}">Review repair completion</a>{% endif %}<a class="button button--secondary" href="{% url 'maintenance_retire' record.pk %}">Review retirement</a>{% endif %}<a class="button button--secondary" href="{% url 'maintenance' %}">Back to maintenance</a></div></header>
+<header class="page-heading"><div><h1>Maintenance #{{ record.pk }}</h1><p>{{ record.unit.equipment.name }} · {{ record.unit.asset_tag }}</p></div><div class="page-actions">{% include "maintenance/_workflow_action.html" with action_class="button button--primary" %}{% if record.is_active %}<a class="button button--secondary" href="{% url 'maintenance_update' record.pk %}">Edit maintenance</a><a class="button button--secondary" href="{% url 'maintenance_retire' record.pk %}">Review retirement</a>{% endif %}<a class="button button--secondary" href="{% url 'maintenance' %}">Back to maintenance</a></div></header>
 <div class="section-stack">{% include "components/messages.html" %}
     {% include "maintenance/_summary.html" with show_repair_notes=True %}
     {% if record.is_active %}<div class="alert alert--info"><strong>This unit remains unavailable.</strong><p>Assess the issue, update progress and record a repair or retirement outcome. Starting work does not restore availability.</p></div>{% else %}<div class="alert alert--info">This completed record is retained as history. The current unit status may reflect a later borrowing or maintenance cycle.</div>{% endif %}
 </div>
 {% endblock %}
+{% block modals %}{% include "components/admin_form_dialog.html" %}{% endblock %}

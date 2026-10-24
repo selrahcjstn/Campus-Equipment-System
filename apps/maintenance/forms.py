@@ -25,6 +25,18 @@ class ResolutionForm(forms.Form):
     confirm = forms.BooleanField(label="I confirm this maintenance outcome.", error_messages={"required": "Confirm the outcome before continuing."})
 
 
+class StartRepairForm(forms.Form):
+    confirm = forms.BooleanField(widget=forms.HiddenInput, initial=True,
+                                 error_messages={"required": "Confirm that repair work is starting."})
+
+
+class CompletionForm(ResolutionForm):
+    outcome = forms.ChoiceField(choices=[("REPAIRED", "Repaired / serviceable"), ("RETIRED", "Retired / unserviceable")])
+    repair_notes = forms.CharField(max_length=2000, label="Repair action taken", widget=forms.Textarea(attrs={"rows": 3}),
+                                  help_text="Describe the work and checks completed, or why the unit must be retired.")
+    field_order = ["outcome", "repair_notes", "confirm"]
+
+
 class MaintenanceFilterForm(forms.Form):
     q = forms.CharField(label="Search unit, equipment or issue", max_length=150, required=False)
     status = forms.ChoiceField(required=False, choices=[("", "All statuses"), ("active", "Active maintenance"), *MaintenanceRecord.Status.choices])

@@ -13,10 +13,19 @@ in the sidebar at `/manage/maintenance/`.
 - Report an issue on an Available unit, or adopt an existing Maintenance unit
   without an active record. Active reservations, outstanding loans, Retired units
   and duplicate active maintenance are rejected.
-- Update Reported work to In progress and record internal repair notes. Work
-  cannot move backwards; updating progress leaves the unit in Maintenance.
-- Confirm a completed repair only after work is In progress. Required notes and
-  confirmation close the record and restore the physical unit to Available.
+- New reports always start as Reported. The records list, detail and history
+  pages offer **Start repair** for Reported work and **Complete repair** for
+  In progress work; closed records offer **View record**.
+- Start repair uses a lightweight confirmation dialog and automatically moves
+  Reported to In progress, preserving notes and keeping the unit in Maintenance.
+  Audit Logs record the starting Admin and timestamp without replacing the
+  original reporting Admin/date. Repeated or invalid starts are rejected.
+- Complete repair opens the shared compact Admin modal. Required repair action
+  notes, an outcome (Repaired/serviceable or Retired/unserviceable), and
+  confirmation close the record. The closing Admin and completion date are
+  recorded; repaired units become Available and retired units remain unavailable.
+- **Edit maintenance** remains available on active records for permitted progress
+  and notes corrections. Work cannot move backwards or reopen a closed record.
 - Retire an irreparable unit from Reported or In progress, with required notes
   and confirmation. The record closes and the unit becomes Retired.
 - Completed records are read-only and remain in each unit's history. No deletion
@@ -70,14 +79,18 @@ reported issues, repair notes or administrative actions.
 | `/manage/maintenance/new/` | `maintenance_create` | Report an issue |
 | `/manage/maintenance/<id>/` | `maintenance_detail` | Record details |
 | `/manage/maintenance/<id>/update/` | `maintenance_update` | Progress and internal notes |
-| `/manage/maintenance/<id>/complete/` | `maintenance_complete` | Confirm successful repair |
+| `/manage/maintenance/<id>/start/` | `maintenance_start` | Confirm starting repair |
+| `/manage/maintenance/<id>/complete/` | `maintenance_complete` | Record repair action and serviceable/retired outcome |
 | `/manage/maintenance/<id>/retire/` | `maintenance_retire` | Confirm retirement |
 | `/manage/maintenance/units/<unit_id>/history/` | `maintenance_history` | Unit history and active issue |
 
 Dashboard, details and history accept GET only. Forms/actions accept GET and
 CSRF-protected POST. GET never changes state. Resolution also requires a checked
-server-validated confirmation; native dialogs enhance the action when JavaScript
-is enabled. Form submissions work with JavaScript disabled.
+server-validated confirmation. Shared Admin dialogs preserve validation errors
+and current list filters/pagination, prevent duplicate submissions, and reuse
+the existing Escape/focus and unsaved-change behavior. Direct action URLs remain
+functional when JavaScript is disabled. No new states, model fields or migrations
+are required; existing records and return links are preserved.
 
 ## Shared UI
 

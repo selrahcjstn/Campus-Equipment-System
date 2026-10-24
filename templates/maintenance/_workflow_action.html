@@ -1,0 +1,5 @@
+{% if record.status == 'REPORTED' %}
+<a class="{{ action_class }}" href="{% url 'maintenance_start' record.pk %}" data-admin-form="Start repair" aria-label="Start repair for maintenance {{ record.pk }}">Start repair</a>
+{% elif record.status == 'IN_PROGRESS' %}
+<a class="{{ action_class }}" href="{% url 'maintenance_complete' record.pk %}" data-admin-form="Complete repair" aria-label="Complete repair for maintenance {{ record.pk }}">Complete repair</a>
+{% endif %}
