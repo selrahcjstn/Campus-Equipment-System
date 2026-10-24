@@ -225,6 +225,11 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .data-table .table-cell--actions .button + .button { margin-left: var(--space-1); }
 .data-table .table-cell--actions .page-actions { gap: var(--space-1); min-width: 7rem; max-width: 18rem; }
 .data-table .table-cell--actions .caption { white-space: normal; max-width: 18rem; }
+.table-action-link { display: inline-flex; align-items: center; min-height: 24px; font-size: var(--font-label); font-weight: var(--weight-medium); color: var(--text-primary); text-decoration-color: var(--border-strong); }
+.table-action-link:hover { color: var(--primary-hover); text-decoration-color: currentColor; }
+@media (max-width: 639px), (pointer: coarse) { .table-action-link { min-height: var(--touch-control-height); } }
+.table-datetime { display: block; white-space: nowrap; }
+.table-datetime__time { display: block; }
 .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .pagination__summary { color: var(--text-secondary); font-size: var(--font-caption); font-variant-numeric: tabular-nums; }
 .pagination__pages { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }

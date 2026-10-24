@@ -1,4 +1,4 @@
-<div class="table-container" tabindex="0" role="region" aria-label="Maintenance records"><table class="data-table">
+<div class="table-container" tabindex="0" role="region" aria-label="Maintenance records"><table class="data-table maintenance-table maintenance-records-table">
     <caption>Maintenance records</caption>
     <thead><tr><th scope="col" class="table-cell--identifier">Record / physical unit</th><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--description">Reported issue</th><th scope="col" class="table-cell--status">Status</th><th scope="col" class="table-cell--date">Reported / completed</th><th scope="col" class="table-cell--actions">Action</th></tr></thead>
     <tbody>{% for record in page_obj %}<tr>
@@ -6,8 +6,8 @@
         <td class="table-cell--text"><a href="{% url 'admin_equipment_detail' record.unit.equipment_id %}">{{ record.unit.equipment.name }}</a>{% if not record.unit.equipment.is_active %}<p class="caption">Archived catalog item</p>{% endif %}</td>
         <td class="table-cell--description maintenance-issue">{{ record.reason|truncatechars:120 }}</td>
         <td class="table-cell--status">{% include "components/badge.html" with label=record.get_status_display variant=record.status_variant %}</td>
-        <td class="table-cell--date">{{ record.reported_at|date:"M j, Y, g:i A T" }}{% if record.completed_at %}<p class="caption">Completed {{ record.completed_at|date:"M j, Y, g:i A T" }}</p>{% endif %}</td>
-        <td class="table-cell--actions"><a class="button button--secondary" href="{% url 'maintenance_detail' record.pk %}" aria-label="Open maintenance record {{ record.pk }}">View record</a></td>
+        <td class="table-cell--date">{% include "components/table_datetime.html" with value=record.reported_at only %}{% if record.completed_at %}<p class="caption">Completed {% include "components/table_datetime.html" with value=record.completed_at only %}</p>{% endif %}</td>
+        <td class="table-cell--actions"><a class="table-action-link" href="{% url 'maintenance_detail' record.pk %}" aria-label="Open maintenance record {{ record.pk }}">View record</a></td>
     </tr>{% empty %}<tr><td colspan="6"><div class="empty-state"><h2>No maintenance records in this view</h2><p class="text-secondary">Report an issue or clear the search and filters.</p></div></td></tr>{% endfor %}</tbody>
 </table></div>
 {% include "components/pagination.html" with page_obj=page_obj page_param="page" pagination_label="Maintenance record pages" %}

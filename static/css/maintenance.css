@@ -2,3 +2,8 @@
 .maintenance-notes { overflow-wrap: anywhere; }
 .maintenance-notes h2 { font-size: var(--font-label); font-weight: var(--weight-medium); }
 .maintenance-notes p { max-width: 75ch; margin-top: var(--space-2); font-size: var(--font-body); line-height: 1.6; }
+.maintenance-table .table-cell--identifier { min-width: 11rem; white-space: nowrap; overflow-wrap: normal; }
+.maintenance-records-table .table-cell--text { width: 16rem; max-width: 20rem; overflow-wrap: anywhere; }
+.maintenance-records-table .maintenance-issue { max-width: none; }
+.maintenance-records-table .table-cell--status { min-width: 8rem; }
+.maintenance-records-table .table-cell--date { min-width: 12rem; }
