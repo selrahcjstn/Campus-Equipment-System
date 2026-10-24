@@ -12,6 +12,13 @@
 .inventory-category-table th.table-cell--number { white-space: nowrap; }
 .inventory-category-table .table-cell--actions .page-actions { width: max-content; min-width: max-content; max-width: none; flex-wrap: nowrap; }
 .inventory-category-table .table-cell--actions .caption { white-space: nowrap; }
+.inventory-unit-table .table-cell--identifier { min-width: 10rem; white-space: nowrap; overflow-wrap: normal; }
+.inventory-unit-table .table-cell--status { min-width: 8rem; }
+.inventory-unit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); width: max-content; max-width: 28rem; }
+.inventory-unit-actions > .caption { flex-basis: 100%; }
+.inventory-action-link { display: inline-flex; align-items: center; min-height: 24px; font-size: var(--font-label); font-weight: var(--weight-medium); color: var(--text-primary); text-decoration-color: var(--border-strong); }
+.inventory-action-link:hover { color: var(--primary-hover); text-decoration-color: currentColor; }
+@media (max-width: 639px), (pointer: coarse) { .inventory-action-link { min-height: var(--touch-control-height); } }
 .inventory-description, .inventory-catalog-card p { overflow-wrap: anywhere; }
 .inventory-counts { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-3); margin: 0; }
 .inventory-counts dt { font-size: var(--font-label); font-weight: var(--weight-medium); color: var(--text-secondary); }
