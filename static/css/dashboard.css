@@ -36,3 +36,9 @@
 .dashboard-charts details summary { cursor: pointer; color: var(--text-secondary); font-size: var(--font-caption); }
 .dashboard-charts details[open] summary { margin-bottom: var(--space-4); }
 @media (max-width: 767px) { .dashboard-charts { grid-template-columns: 1fr; } }
+.report-table .report-table__borrower { width: 13rem; min-width: 11rem; overflow-wrap: anywhere; }
+.report-table .report-table__equipment { min-width: 14rem; overflow-wrap: anywhere; }
+.report-table .table-cell--date { min-width: 9rem; }
+.report-table .table-cell--status { min-width: 11rem; }
+.report-table .table-cell--status .caption { white-space: nowrap; }
+.report-table .table-cell--identifier { min-width: 8rem; overflow-wrap: normal; }

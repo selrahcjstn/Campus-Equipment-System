@@ -182,7 +182,11 @@ records regardless of the visible report page.
 
 Tables use shared `table-cell--text`, `--description`, `--identifier`, `--date`,
 `--number`, `--role`, `--status` and `--actions` classes on headers and their cells. Choose
-roles by content rather than assigning equal column widths. Overflow regions are
+roles by content rather than assigning equal column widths. For compact row
+actions, use `table-action-link` on normal anchors; focus rings and touch sizing
+remain shared. Use `{% include "components/table_datetime.html" with value=timestamp only %}`
+for a semantic date with the time/timezone on a separate, unbroken line.
+Overflow regions are
 labelled and keyboard focusable; printable loan slips retain their print styles.
 
 ## Form widths and empty states
