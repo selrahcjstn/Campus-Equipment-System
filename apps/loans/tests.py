@@ -617,6 +617,71 @@ class LoanPageTests(LoanFixtures, TestCase):
         self.assertEqual(loan.outstanding_count, 2)
 
 
+class LoanSummaryPresentationTests(LoanFixtures, TestCase):
+    def setUp(self):
+        self.make_records()
+
+    def assert_summary(self, loan, *, status, outstanding, completed=False):
+        for actor, route in [(self.borrower, "user_loan_detail"), (self.admin, "admin_loan_detail")]:
+            with self.subTest(role=actor.role, status=status):
+                self.client.force_login(actor)
+                response = self.client.get(reverse(route, args=[loan.pk]))
+                self.assertEqual(response.status_code, 200)
+                for heading in ["Loan information", "Timeline", "Status", "Purpose"]:
+                    self.assertContains(response, heading)
+                self.assertContains(response, f"<dt>Borrowing request</dt><dd>#{loan.request_id}</dd>", html=True)
+                self.assertContains(response, f"<dt>Current loan status</dt><dd>{status}</dd>", html=True)
+                self.assertContains(response, f"<dt>Outstanding units</dt><dd>{outstanding} of 2</dd>", html=True)
+                self.assertContains(response, "<dt>Issued date</dt>", html=True)
+                self.assertContains(response, "<dt>Due date</dt>", html=True)
+                self.assertContains(response, 'aria-label="Issued physical units and return history"')
+                self.assertContains(response, "Class presentation")
+                if completed:
+                    self.assertContains(response, "Completed / returned")
+                else:
+                    self.assertNotContains(response, "Completed / returned")
+                return_url = reverse("return_equipment", args=[loan.pk])
+                if actor == self.admin:
+                    self.assertContains(response, reverse("borrowing_slip", args=[loan.pk]))
+                    if completed:
+                        self.assertNotContains(response, return_url)
+                    else:
+                        self.assertContains(response, return_url)
+                else:
+                    self.assertNotContains(response, "/manage/")
+                    self.assertContains(response, reverse("borrowing_history" if completed else "my_loans"))
+
+    def test_summary_and_return_history_follow_active_partial_and_completed_states(self):
+        loan = self.issue()
+        self.assert_summary(loan, status="Active", outstanding=2)
+        units = list(loan.units.all())
+        process_returns(loan.pk, actor=self.admin, returns=[(units[0].pk, "GOOD", "Case checked on receipt")])
+        self.assert_summary(loan, status="Partially returned", outstanding=1)
+        process_returns(loan.pk, actor=self.admin, returns=[(units[1].pk, "DAMAGED", "Cracked case; needs inspection")])
+        self.assert_summary(loan, status="Completed", outstanding=0, completed=True)
+        response = self.client.get(reverse("admin_loan_detail", args=[loan.pk]))
+        for text in ["Good / undamaged", "Made Available", "Damaged", "Sent to Maintenance", "Case checked on receipt", "Cracked case; needs inspection"]:
+            self.assertContains(response, text)
+
+    def test_overdue_summary_keeps_warning_and_return_permissions(self):
+        loan = self.issue()
+        with patch("apps.loans.models.timezone.now", return_value=loan.due_at + timedelta(seconds=1)):
+            self.assert_summary(loan, status="Overdue", outstanding=2)
+            self.assertContains(self.client.get(reverse("admin_loan_detail", args=[loan.pk])), "This loan is overdue.")
+
+    def test_purpose_and_return_notes_remain_escaped_with_line_breaks(self):
+        BorrowingRequest.objects.filter(pk=self.request.pk).update(purpose="Class presentation\n<script>purpose</script>")
+        loan = self.issue()
+        process_returns(loan.pk, actor=self.admin, returns=[(loan.units.first().pk, "GOOD", "Received\n<script>notes</script>")])
+        for actor, route in [(self.borrower, "user_loan_detail"), (self.admin, "admin_loan_detail")]:
+            self.client.force_login(actor)
+            response = self.client.get(reverse(route, args=[loan.pk]))
+            self.assertContains(response, "Class presentation<br>&lt;script&gt;purpose&lt;/script&gt;")
+            self.assertContains(response, "Received<br>&lt;script&gt;notes&lt;/script&gt;")
+            self.assertNotContains(response, "<script>purpose</script>")
+            self.assertNotContains(response, "<script>notes</script>")
+
+
 class DemoFixtureTests(LoanFixtures, TestCase):
     def setUp(self):
         self.make_records()
