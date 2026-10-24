@@ -4,8 +4,10 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError, OperationalError
 from django.db.models import Count, Q
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
+from django.views.decorators.vary import vary_on_headers
 
 from .forms import CatalogFilterForm, CategoryFilterForm, CategoryForm, ConfirmationForm, EquipmentFilterForm, EquipmentForm, UnitFilterForm, UnitForm
 from .models import Category, Equipment, EquipmentUnit
@@ -99,8 +101,10 @@ def categories(request):
 
 @login_required(login_url="login")
 @require_http_methods(["GET", "POST"])
+@vary_on_headers("X-Admin-Modal")
 def category_form(request, pk=None):
     _role(request, "ADMIN")
+    modal_request = request.headers.get("X-Admin-Modal") == "1"
     category = get_object_or_404(Category, pk=pk) if pk else None
     form = CategoryForm(request.POST if request.method == "POST" else None, instance=category)
     status = 200
@@ -112,8 +116,19 @@ def category_form(request, pk=None):
             status = 409
         else:
             messages.success(request, "Category saved.")
+            if modal_request:
+                return JsonResponse({"saved": True})
             return redirect("equipment_categories")
-    return render(request, "inventory/admin/form.html", {"form": form, "page_title": "Edit category" if pk else "Create category", "back_url": "equipment_categories", "active_nav": "categories"}, status=status)
+    if modal_request and request.method == "POST" and status == 200:
+        status = 422
+    context = {
+        "form": form, "page_title": "Edit category" if pk else "Create category",
+        "description": "Update the category name and description." if pk else "Organize equipment with a category name and optional description.",
+        "submit_label": "Save changes" if pk else "Create category",
+        "back_url": "equipment_categories", "active_nav": "categories", "modal_request": modal_request,
+    }
+    template = "components/admin_modal_form.html" if modal_request else "inventory/admin/category_form.html"
+    return render(request, template, context, status=status)
 
 
 @login_required(login_url="login")

@@ -725,6 +725,83 @@ class InventoryPageTests(InventoryFixtures, TestCase):
         self.assertEqual(self.client.get(reverse("equipment_catalog"), {"page": "invalid"}).status_code, 200)
 
 
+class CategoryModalTests(InventoryFixtures, TestCase):
+    headers = {"HTTP_X_ADMIN_MODAL": "1"}
+
+    def setUp(self):
+        self.make_records()
+        self.client.force_login(self.admin)
+
+    def test_modal_loads_prefilled_form_without_changing_category(self):
+        response = self.client.get(reverse("edit_category", args=[self.category.pk]), **self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-admin-modal-form')
+        self.assertContains(response, 'value="Presentation"')
+        self.assertContains(response, "Teaching equipment")
+        self.assertContains(response, 'name="csrfmiddlewaretoken"')
+        self.assertNotContains(response, "<html")
+        self.assertIn("X-Admin-Modal", response.headers["Vary"])
+        self.category.refresh_from_db()
+        self.assertEqual(self.category.name, "Presentation")
+
+    def test_modal_create_and_edit_use_existing_validation_and_success_feedback(self):
+        response = self.client.post(reverse("create_category"), {"name": "Cameras", "description": "Photo equipment"}, **self.headers)
+        self.assertEqual(response.json(), {"saved": True})
+        category = Category.objects.get(name="Cameras")
+        response = self.client.post(reverse("edit_category", args=[category.pk]), {"name": "Photography", "description": "Updated"}, **self.headers)
+        self.assertEqual(response.json(), {"saved": True})
+        category.refresh_from_db()
+        self.assertEqual((category.name, category.description), ("Photography", "Updated"))
+        listing = self.client.get(reverse("equipment_categories"), {"q": "Photo", "page": 1})
+        self.assertContains(listing, "Category saved.")
+        self.assertContains(listing, "Photography")
+        self.assertContains(listing, 'data-admin-form="Create category"')
+        self.assertContains(listing, 'data-admin-form="Edit category"')
+
+    def test_invalid_modal_values_are_preserved_and_do_not_write_partial_records(self):
+        original_count = Category.objects.count()
+        response = self.client.post(reverse("create_category"), {"name": "", "description": "Keep this draft"}, **self.headers)
+        self.assertEqual(response.status_code, 422)
+        self.assertContains(response, "This field is required", status_code=422)
+        self.assertContains(response, "Keep this draft", status_code=422)
+        self.assertEqual(Category.objects.count(), original_count)
+        response = self.client.post(reverse("edit_category", args=[self.category.pk]), {"name": "audio", "description": "Keep this too"}, **self.headers)
+        self.assertEqual(response.status_code, 422)
+        self.assertContains(response, "Keep this too", status_code=422)
+        self.category.refresh_from_db()
+        self.assertEqual((self.category.name, self.category.description), ("Presentation", "Teaching equipment"))
+
+        from unittest.mock import patch
+        with patch("apps.inventory.views.save_category", side_effect=ValidationError("Category changed concurrently.")):
+            response = self.client.post(reverse("edit_category", args=[self.category.pk]), {"name": "Valid draft", "description": "Uncommitted description"}, **self.headers)
+        self.assertEqual(response.status_code, 409)
+        self.assertContains(response, "Category changed concurrently.", status_code=409)
+        self.assertContains(response, "Uncommitted description", status_code=409)
+        self.category.refresh_from_db()
+        self.assertEqual(self.category.name, "Presentation")
+
+    def test_direct_urls_remain_functional_without_modal_header(self):
+        self.assertContains(self.client.get(reverse("create_category")), "<h1>Create category</h1>", html=True)
+        response = self.client.post(reverse("create_category"), {"name": "", "description": "Draft"})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Draft")
+        self.assertRedirects(self.client.post(reverse("create_category"), {"name": "Direct form", "description": ""}), reverse("equipment_categories"))
+        self.assertRedirects(self.client.post(reverse("edit_category", args=[self.category.pk]), {"name": "Updated directly", "description": ""}), reverse("equipment_categories"))
+
+    def test_modal_header_does_not_bypass_permissions_or_csrf(self):
+        protected = Client(enforce_csrf_checks=True)
+        protected.force_login(self.admin)
+        for route, args in [("create_category", []), ("edit_category", [self.category.pk])]:
+            url = reverse(route, args=args)
+            self.assertEqual(protected.post(url, {"name": "Forged"}, **self.headers).status_code, 403)
+            self.client.force_login(self.borrower)
+            self.assertEqual(self.client.get(url, **self.headers).status_code, 403)
+            self.assertEqual(self.client.post(url, {"name": "Forbidden"}, **self.headers).status_code, 403)
+            self.client.logout()
+            self.assertEqual(self.client.get(url, **self.headers).status_code, 302)
+        self.assertFalse(Category.objects.filter(name__in=["Forged", "Forbidden"]).exists())
+
+
 class ConcurrentInventoryTests(InventoryFixtures, TransactionTestCase):
     def setUp(self):
         self.make_records()

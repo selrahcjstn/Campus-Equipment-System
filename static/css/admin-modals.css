@@ -1,0 +1,11 @@
+.admin-form-dialog { width: min(100% - var(--space-8), 540px); }
+.admin-form-dialog .modal-heading { margin-bottom: var(--space-2); }
+.admin-form-dialog__content { margin-top: var(--space-5); }
+.admin-form-dialog .form-field { max-width: none; }
+.admin-form-dialog .modal-actions { margin-top: 0; }
+.admin-form-dialog__notice { display: grid; gap: var(--space-3); }
+.admin-form-dialog[aria-busy='true'] { cursor: progress; }
+@media (max-width: 479px) {
+    .admin-form-dialog { width: calc(100% - var(--space-4)); }
+    .admin-form-dialog .modal-actions > .button { flex: 1; }
+}
