@@ -8,9 +8,9 @@
 <div class="section-stack form-page form-page--full">
     <section class="card section-stack">
         {% if category %}<h2>{{ category.name }}</h2><p>{{ category.description }}</p>
-        {% elif unit %}<h2>{{ unit.asset_tag }}</h2><dl class="facts-grid"><div><dt>Equipment</dt><dd>{{ equipment.name }}</dd></div><div><dt>Current status</dt><dd>{% include "components/badge.html" with label=unit.inventory_status_label variant=unit.status_variant %}</dd></div></dl>
+        {% elif unit %}<h2>{{ unit.asset_tag }}</h2><dl class="facts-grid facts-grid--two"><div><dt>Equipment</dt><dd>{{ equipment.name }}</dd></div><div><dt>Current status</dt><dd>{% include "components/badge.html" with label=unit.inventory_status_label variant=unit.status_variant %}</dd></div></dl>
         {% else %}<h2>{{ equipment.name }}</h2>
-            <dl class="facts-grid"><div><dt>Category</dt><dd>{{ equipment.category.name|default:"Uncategorized" }}</dd></div><div><dt>Catalog state</dt><dd>{% if equipment.is_active %}{% include "components/badge.html" with label="Active" variant="success" %}{% else %}{% include "components/badge.html" with label="Archived" variant="inactive" %}{% endif %}</dd></div></dl>
+            <dl class="facts-grid facts-grid--two"><div><dt>Category</dt><dd>{{ equipment.category.name|default:"Uncategorized" }}</dd></div><div><dt>Catalog state</dt><dd>{% if equipment.is_active %}{% include "components/badge.html" with label="Active" variant="success" %}{% else %}{% include "components/badge.html" with label="Archived" variant="inactive" %}{% endif %}</dd></div></dl>
             <p class="inventory-description">{{ equipment.description|default:"No description provided."|linebreaksbr }}</p>
             {% include "inventory/admin/_counts.html" %}
         {% endif %}

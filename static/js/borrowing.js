@@ -1,27 +1,34 @@
-const catalogStatus = document.querySelector('[data-catalog-status]');
-document.querySelector('[data-catalog-search]')?.addEventListener('input', (event) => {
-    const query = event.target.value.toLocaleLowerCase().trim();
-    let matches = 0;
-    document.querySelectorAll('[data-catalog-entry]').forEach((entry) => {
-        entry.hidden = !entry.dataset.searchText.toLocaleLowerCase().includes(query);
-        if (!entry.hidden) matches += 1;
-    });
-    catalogStatus.textContent = `${matches} equipment items match your search.`;
-});
 const requestForm = document.getElementById('borrowing-request-form');
 if (requestForm) {
     const rows = requestForm.querySelector('[data-equipment-rows]');
     const template = requestForm.querySelector('[data-equipment-template]');
-    const addButton = requestForm.querySelector('[data-add-equipment]');
-    const rowStatus = requestForm.querySelector('[data-equipment-status]');
-    const total = requestForm.querySelector('[name="items-TOTAL_FORMS"]');
-    const initial = requestForm.querySelector('[name="items-INITIAL_FORMS"]');
+    const selectionStep = requestForm.querySelector('[data-selection-step]');
+    const detailsStep = requestForm.querySelector('[data-details-step]');
+    const continueButton = requestForm.querySelector('[data-continue]');
+    const backButton = requestForm.querySelector('[data-back]');
+    const summary = requestForm.querySelector('[data-selection-summary]');
+    const selectionError = requestForm.querySelector('[data-selection-error]');
+    const catalogStatus = requestForm.querySelector('[data-catalog-status]');
+    const catalogSearch = requestForm.querySelector('[data-catalog-search]');
     const maximum = +requestForm.dataset.maxEquipment;
     const equipmentRows = () => [...rows.querySelectorAll('[data-equipment-row]')];
-    const choices = () => equipmentRows().map((row) => row.querySelector('select'));
+    const selectedRows = () => equipmentRows().filter((row) => row.querySelector('select').value);
+    const equipment = new Map([...requestForm.querySelectorAll('[data-select-equipment]')].map((button) => {
+        const entry = button.closest('[data-catalog-entry]');
+        return [button.dataset.selectEquipment, {button, entry, name: entry.dataset.equipmentName,
+            category: entry.dataset.equipmentCategory, available: +entry.dataset.available}];
+    }));
+
+    function validSelection() {
+        const ids = selectedRows().map((row) => row.querySelector('select').value);
+        return ids.length >= 1 && ids.length <= maximum && new Set(ids).size === ids.length
+            && ids.every((id) => equipment.get(id)?.available > 0)
+            && equipmentRows().every((row) => row.querySelector('select').value || ['', '1'].includes(row.querySelector('input').value));
+    }
 
     function updateRows() {
         const currentRows = equipmentRows();
+        summary.replaceChildren();
         currentRows.forEach((row, index) => {
             row.querySelector('[data-row-number]').textContent = index + 1;
             row.querySelectorAll('[name], [id], [for], [aria-describedby]').forEach((element) => {
@@ -30,71 +37,131 @@ if (requestForm) {
                     if (value) element.setAttribute(attribute, value.replace(/items-(?:\d+|__prefix__)-/g, `items-${index}-`));
                 });
             });
-            const remove = row.querySelector('[data-remove-equipment]');
-            remove.hidden = index === 0;
-            remove.value = `remove:items-${index}`;
-            remove.setAttribute('aria-label', `Remove equipment ${index + 1}`);
+            const choice = row.querySelector('select');
+            const item = equipment.get(choice.value);
+            const quantity = row.querySelector('input');
+            row.querySelector('[data-equipment-picker]').hidden = true;
+            row.querySelector('[data-remove-equipment]').hidden = true;
+            row.querySelector('[data-equipment-display]').hidden = false;
+            row.hidden = !choice.value;
+            quantity.required = !!choice.value;
+            quantity.disabled = !choice.value;
+            quantity.dataset.policyMax ||= quantity.max;
+            quantity.max = item ? Math.min(+quantity.dataset.policyMax, item.available) : quantity.dataset.policyMax;
+            row.querySelector('[data-selected-name]').textContent = item?.name || 'Unavailable equipment';
+            row.querySelector('[data-selected-availability]').textContent = item ? `${item.category} · ${item.available} available` : 'Return to equipment selection to choose an available item.';
+            if (!choice.value) return;
+            const selected = document.createElement('li');
+            const name = document.createElement('span');
+            name.textContent = item?.name || 'Unavailable equipment';
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'borrowing-remove';
+            remove.dataset.removeSelection = index;
+            remove.textContent = 'Remove';
+            remove.setAttribute('aria-label', `Remove ${name.textContent}`);
+            selected.append(name, remove);
+            summary.append(selected);
         });
-        total.value = currentRows.length;
+        requestForm.querySelector('[name="items-TOTAL_FORMS"]').value = currentRows.length;
+        const initial = requestForm.querySelector('[name="items-INITIAL_FORMS"]');
         initial.value = Math.min(+initial.value, currentRows.length);
-        addButton.disabled = currentRows.length >= maximum;
-        const selects = choices();
-        selects.forEach((select) => {
-            const others = selects.filter((other) => other !== select).map((other) => other.value).filter(Boolean);
-            [...select.options].forEach((option) => {
-                option.disabled = !!option.value && option.value !== select.value && others.includes(option.value);
-            });
-            select.setCustomValidity(select.value && others.includes(select.value) ? 'Each equipment item can be selected only once.' : '');
+        const ids = selectedRows().map((row) => row.querySelector('select').value);
+        equipment.forEach((item, id) => {
+            const added = ids.includes(id);
+            item.button.disabled = added || item.available === 0 || ids.length >= maximum;
+            item.button.textContent = added ? 'Added' : 'Add';
+            item.button.setAttribute('aria-label', added ? `${item.name} added` : `Add ${item.name}`);
         });
+        requestForm.querySelector('[data-selection-count]').textContent = `${ids.length} of ${maximum} selected`;
+        requestForm.querySelector('[data-selection-empty]').hidden = ids.length > 0;
+        continueButton.hidden = !validSelection();
+        selectionError.hidden = true;
     }
 
-    function addRow() {
-        if (equipmentRows().length >= maximum) return null;
-        const row = template.content.firstElementChild.cloneNode(true);
-        rows.append(row);
-        updateRows();
-        rowStatus.textContent = `Equipment row added. ${equipmentRows().length} of ${maximum} rows.`;
-        return row;
+    function showStep(step, focus = true) {
+        requestForm.dataset.step = step;
+        selectionStep.hidden = step !== 1;
+        detailsStep.hidden = step !== 2;
+        requestForm.querySelectorAll('[data-step-marker]').forEach((marker) => {
+            if (+marker.dataset.stepMarker === step) marker.setAttribute('aria-current', 'step');
+            else marker.removeAttribute('aria-current');
+        });
+        if (focus) (step === 1 ? selectionStep : detailsStep).querySelector('h2').focus();
     }
 
-    addButton.addEventListener('click', (event) => {
-        event.preventDefault();
-        addRow()?.querySelector('select').focus();
+    equipment.forEach((item, id) => {
+        item.button.addEventListener('click', () => {
+            if (!item.available || selectedRows().length >= maximum || selectedRows().some((row) => row.querySelector('select').value === id)) return;
+            let row = equipmentRows().find((candidate) => !candidate.querySelector('select').value);
+            if (!row) {
+                row = template.content.firstElementChild.cloneNode(true);
+                rows.append(row);
+            }
+            row.querySelector('select').value = id;
+            updateRows();
+        });
     });
-    rows.addEventListener('click', (event) => {
-        const remove = event.target.closest('[data-remove-equipment]');
-        if (!remove) return;
-        event.preventDefault();
-        const row = remove.closest('[data-equipment-row]');
-        const index = equipmentRows().indexOf(row);
-        if (index < 1) return;
-        row.remove();
+    summary.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-remove-selection]');
+        if (!button) return;
+        equipmentRows()[+button.dataset.removeSelection].remove();
         updateRows();
-        equipmentRows()[index - 1].querySelector('select').focus();
-        rowStatus.textContent = `Equipment row removed. ${equipmentRows().length} of ${maximum} rows.`;
+        catalogSearch.focus();
     });
-    rows.addEventListener('change', updateRows);
+    catalogSearch.addEventListener('input', () => {
+        const query = catalogSearch.value.toLocaleLowerCase().trim();
+        let matches = 0;
+        equipment.forEach((item) => {
+            item.entry.hidden = !item.entry.dataset.searchText.toLocaleLowerCase().includes(query);
+            if (!item.entry.hidden) matches += 1;
+        });
+        requestForm.querySelector('[data-search-empty]').hidden = matches > 0;
+        catalogStatus.textContent = `${matches} equipment ${matches === 1 ? 'item matches' : 'items match'} your search.`;
+    });
+    catalogSearch.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') event.preventDefault();
+    });
+    continueButton.addEventListener('click', () => {
+        if (validSelection()) showStep(2);
+    });
+    backButton.addEventListener('click', () => showStep(1));
+    requestForm.addEventListener('submit', (event) => {
+        if (requestForm.getAttribute('aria-busy') === 'true') {
+            event.preventDefault();
+            return;
+        }
+        if (event.submitter?.name === 'row_action') return;
+        if (!validSelection()) {
+            event.preventDefault();
+            showStep(1);
+            selectionError.textContent = `Select 1–${maximum} distinct, available equipment items before continuing.`;
+            selectionError.hidden = false;
+        } else if (requestForm.dataset.step !== '2') {
+            event.preventDefault();
+            showStep(2);
+        } else if (!requestForm.checkValidity()) {
+            event.preventDefault();
+            requestForm.reportValidity();
+        } else {
+            requestForm.setAttribute('aria-busy', 'true');
+            const submit = requestForm.querySelector('[data-final-submit]');
+            submit.disabled = true;
+            submit.textContent = 'Submitting…';
+        }
+    });
+    window.addEventListener('pageshow', () => {
+        requestForm.removeAttribute('aria-busy');
+        const submit = requestForm.querySelector('[data-final-submit]');
+        submit.disabled = false;
+        submit.textContent = 'Submit Borrowing Request';
+    });
     updateRows();
-
-    document.querySelectorAll('[data-select-equipment]').forEach((button) => {
-        button.addEventListener('click', () => {
-            const selected = choices().find((choice) => choice.value === button.dataset.selectEquipment);
-            if (selected) {
-                catalogStatus.textContent = 'This equipment is already selected. Adjust its quantity below.';
-                selected.focus();
-                return;
-            }
-            const empty = choices().find((choice) => !choice.value) || addRow()?.querySelector('select');
-            if (!empty) {
-                catalogStatus.textContent = `You can select up to ${maximum} distinct equipment items. Remove or replace a selection to choose another item.`;
-                return;
-            }
-            empty.value = button.dataset.selectEquipment;
-            empty.dispatchEvent(new Event('change', { bubbles: true }));
-            empty.closest('fieldset').querySelector('input').focus();
-            catalogStatus.textContent = 'Equipment selected. Set the quantity and due date below.';
-        });
-    });
+    requestForm.noValidate = true;
+    requestForm.querySelector('[data-fallback-controls]').hidden = true;
+    requestForm.querySelector('[data-step-indicator]').hidden = false;
+    backButton.hidden = false;
+    showStep(requestForm.dataset.bound === 'true' && validSelection() ? 2 : 1, false);
 }
 
 document.querySelectorAll('form[data-borrow-confirm], form[data-submit-loading]').forEach((form) => {

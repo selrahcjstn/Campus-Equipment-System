@@ -14,6 +14,7 @@ from django.db.models.deletion import ProtectedError
 from django.test import Client, TestCase, TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import strip_tags
 
 from apps.borrowing.models import Allocation, BorrowingRequest, BorrowingRequestItem
 from apps.borrowing.services import approve_request, submit_request
@@ -666,3 +667,35 @@ class ConcurrentMaintenanceTests(MaintenanceFixtures, TransactionTestCase):
         else:
             self.assertEqual(self.unit.status, "MAINTENANCE")
             self.assertFalse(Allocation.objects.exists())
+
+
+class MaintenanceSummaryPresentationTests(MaintenanceFixtures, TestCase):
+    def setUp(self):
+        self.make_records()
+        self.client.force_login(self.admin)
+
+    def test_active_and_completed_summaries_preserve_issue_notes_and_actors(self):
+        record = self.create()
+        for route in ("maintenance_detail", "maintenance_retire"):
+            response = self.client.get(reverse(route, args=[record.pk]))
+            for text in ("Maintenance summary", "Equipment information", "Timeline", "Status", self.unit.asset_tag, self.admin.username, record.reason):
+                self.assertContains(response, text)
+            self.assertNotContains(response, "<dt>Completed</dt>", html=True)
+        record = self.repair(record)
+        response = self.client.get(reverse("maintenance_detail", args=[record.pk]))
+        self.assertContains(response, "<dt>Completed</dt>", html=True)
+        self.assertContains(response, "Completed by")
+        self.assertContains(response, record.repair_notes)
+        self.assertContains(response, '<time class="table-datetime"')
+        self.assertNotIn("PST", strip_tags(response.content.decode()))
+        self.assertNotContains(response, reverse("maintenance_update", args=[record.pk]))
+
+    def test_damaged_return_summary_retains_source_link_and_basic_user_denial(self):
+        loan = self.issue()
+        self.damage(loan)
+        record = MaintenanceRecord.objects.get()
+        response = self.client.get(reverse("maintenance_detail", args=[record.pk]))
+        self.assertContains(response, f"Damaged return on loan #{loan.pk}")
+        self.assertContains(response, reverse("admin_loan_detail", args=[loan.pk]))
+        self.client.force_login(self.basic)
+        self.assertEqual(self.client.get(reverse("maintenance_detail", args=[record.pk])).status_code, 403)

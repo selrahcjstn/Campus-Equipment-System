@@ -1,0 +1,30 @@
+<section class="card record-summary" aria-labelledby="request-summary-title">
+    <div class="card-heading"><h2 id="request-summary-title">{{ summary_title|default:"Request summary" }}</h2>{% include "components/badge.html" with label=borrowing.workflow_label variant=borrowing.status_variant %}</div>
+    <div class="record-summary__grid">
+        <section class="record-summary__group" aria-labelledby="request-information-title">
+            <h3 id="request-information-title">Request information</h3><dl>
+                <div><dt>Borrowing request</dt><dd>#{{ borrowing.pk }}</dd></div>
+                <div><dt>Borrower</dt><dd>{{ borrowing.borrower.get_full_name|default:borrowing.borrower.username }} <span class="caption">({{ borrowing.borrower.username }})</span></dd></div>
+                {% if borrowing.approved_at %}<div><dt>Approved by</dt><dd>{{ borrowing.approved_by.get_full_name|default:borrowing.approved_by.username|default:"No recorded approval" }}</dd></div>{% endif %}
+                {% if borrowing.rejected_at %}<div><dt>Rejected by</dt><dd>{{ borrowing.rejected_by.get_full_name|default:borrowing.rejected_by.username }}</dd></div>{% endif %}
+                {% if borrowing.cancelled_at %}<div><dt>Cancelled by</dt><dd>{{ borrowing.cancelled_by.get_full_name|default:borrowing.cancelled_by.username }}</dd></div>{% endif %}
+            </dl>
+        </section>
+        <section class="record-summary__group" aria-labelledby="request-timeline-title">
+            <h3 id="request-timeline-title">Timeline</h3><dl>
+                <div><dt>Submitted</dt><dd>{% include "components/table_datetime.html" with value=borrowing.requested_at only %}</dd></div>
+                <div><dt>Due date</dt><dd>{% include "components/table_datetime.html" with value=borrowing.due_at only %}</dd></div>
+                {% if borrowing.approved_at %}<div><dt>Approved</dt><dd>{% include "components/table_datetime.html" with value=borrowing.approved_at only %}</dd></div>{% endif %}
+                {% if borrowing.rejected_at %}<div><dt>Rejected</dt><dd>{% include "components/table_datetime.html" with value=borrowing.rejected_at only %}</dd></div>{% endif %}
+                {% if borrowing.cancelled_at %}<div><dt>Cancelled</dt><dd>{% include "components/table_datetime.html" with value=borrowing.cancelled_at only %}</dd></div>{% endif %}
+            </dl>
+        </section>
+        <section class="record-summary__group record-summary__status" aria-labelledby="request-status-title">
+            <h3 id="request-status-title">Status</h3><dl>
+                <div><dt>Current request status</dt><dd>{{ borrowing.workflow_label }}</dd></div>
+                <div><dt>Total requested units</dt><dd>{{ borrowing.quantity }}</dd></div>
+            </dl>
+        </section>
+    </div>
+    <section class="record-summary__section" aria-labelledby="request-purpose-title"><h3 id="request-purpose-title">Purpose</h3><p>{{ borrowing.purpose|linebreaksbr }}</p></section>
+</section>

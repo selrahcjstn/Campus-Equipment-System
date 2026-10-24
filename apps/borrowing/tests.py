@@ -11,6 +11,7 @@ from django.db import IntegrityError, OperationalError, close_old_connections, c
 from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import strip_tags
 
 from apps.dashboard.models import SystemSetting
 from apps.inventory.models import Equipment, EquipmentUnit
@@ -408,7 +409,7 @@ class BorrowingPageTests(BorrowingFixtures, TestCase):
     def test_creation_page_renders_catalog_availability_and_limits(self):
         self.client.force_login(self.borrower)
         response = self.client.get(reverse("new_borrowing_request"))
-        self.assertContains(response, "Browse equipment")
+        self.assertContains(response, "Select equipment")
         self.assertContains(response, "3 available units")
         self.assertContains(response, "at most 7 calendar days")
         self.assertEqual(len(response.context["formset"]), 1)
@@ -812,3 +813,128 @@ class DynamicEquipmentFormTests(BorrowingFixtures, TestCase):
         response = self.client.post(self.url, self.row_data(2))
         self.assertContains(response, "Select no more than 1 distinct equipment items.")
         self.assertFalse(BorrowingRequest.objects.exists())
+
+
+class TwoStepBorrowingPageTests(BorrowingFixtures, TestCase):
+    def setUp(self):
+        self.make_records()
+        self.client.force_login(self.borrower)
+        self.url = reverse("new_borrowing_request")
+
+    def test_catalog_includes_category_description_and_available_stock(self):
+        from apps.inventory.models import Category
+        category = Category.objects.create(name="Presentation equipment")
+        self.equipment[0].category = category
+        self.equipment[0].save()
+        response = self.client.get(self.url)
+        self.assertContains(response, "Presentation equipment")
+        self.assertContains(response, "Classroom equipment")
+        self.assertContains(response, "3 available units")
+        self.assertContains(response, "Select Equipment")
+        self.assertContains(response, "Borrowing Details")
+        self.assertContains(response, "Back to Equipment Selection")
+        self.assertContains(response, "Submit Borrowing Request")
+
+    def test_unavailable_catalog_item_is_disabled_and_cannot_be_forged(self):
+        equipment = self.equipment[0]
+        equipment.units.update(status="MAINTENANCE")
+        response = self.client.get(self.url)
+        self.assertContains(response, f'data-select-equipment="{equipment.pk}" aria-label="Add {equipment.name}" disabled')
+        response = self.client.post(self.url, self.post_data([(equipment.pk, 1)]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["formset"].forms[0].errors["equipment"])
+        self.assertFalse(BorrowingRequest.objects.exists())
+        self.assertFalse(Allocation.objects.exists())
+
+    def test_archived_equipment_is_hidden_and_rejected_on_submission(self):
+        equipment = self.equipment[0]
+        equipment.is_active = False
+        equipment.save()
+        response = self.client.get(self.url)
+        self.assertNotContains(response, f'data-select-equipment="{equipment.pk}"')
+        response = self.client.post(self.url, self.post_data([(equipment.pk, 1)]))
+        self.assertTrue(response.context["formset"].forms[0].errors["equipment"])
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+    def test_details_validation_errors_keep_selections_and_submission_contract(self):
+        data = self.post_data([(self.equipment[0].pk, 2), (self.equipment[1].pk, 1)])
+        data.update(purpose="", due_date="invalid")
+        response = self.client.post(self.url, data)
+        self.assertContains(response, 'data-bound="true"')
+        self.assertTrue(response.context["form"].errors["purpose"])
+        self.assertTrue(response.context["form"].errors["due_date"])
+        self.assertEqual(response.context["formset"].forms[0]["quantity"].value(), "2")
+        self.assertEqual(response.context["formset"].forms[1]["equipment"].value(), str(self.equipment[1].pk))
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+    def test_forged_step_state_does_not_bypass_selection_validation(self):
+        for items in ([], [(self.equipment[0].pk, 1)] * 2, [(item.pk, 1) for item in self.equipment]):
+            data = self.post_data(items)
+            data.update(step="2", selection_valid="true", max_items="100")
+            response = self.client.post(self.url, data)
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(response.context["formset"].non_form_errors())
+        self.assertFalse(BorrowingRequest.objects.exists())
+        self.assertFalse(BorrowingRequestItem.objects.exists())
+        self.assertFalse(Allocation.objects.exists())
+
+
+class RequestSummaryPresentationTests(BorrowingFixtures, TestCase):
+    def setUp(self):
+        self.make_records()
+
+    def assert_summary(self, borrowing, label):
+        for actor, route in ((self.borrower, "request_detail"), (self.admin, "admin_request_detail")):
+            with self.subTest(role=actor.role, status=label):
+                self.client.force_login(actor)
+                response = self.client.get(reverse(route, args=[borrowing.pk]))
+                self.assertEqual(response.status_code, 200)
+                for heading in ("Request information", "Timeline", "Status", "Purpose"):
+                    self.assertContains(response, heading)
+                self.assertContains(response, f"<dt>Current request status</dt><dd>{label}</dd>", html=True)
+                self.assertContains(response, "<dt>Total requested units</dt><dd>2</dd>", html=True)
+                self.assertContains(response, '<time class="table-datetime"')
+                self.assertNotIn("PST", strip_tags(response.content.decode()))
+                if actor == self.borrower:
+                    self.assertNotContains(response, "/manage/")
+        return response
+
+    def test_pending_summary_preserves_purpose_and_borrower(self):
+        borrowing = self.submit(purpose="First line\n<script>purpose</script>")
+        response = self.assert_summary(borrowing, "Pending")
+        self.assertContains(response, self.borrower.username)
+        self.assertContains(response, "First line<br>&lt;script&gt;purpose&lt;/script&gt;")
+        self.assertNotContains(response, "<script>purpose</script>")
+
+    def test_approval_and_cancellation_keep_dates_and_recorded_actors(self):
+        borrowing = self.submit()
+        approve_request(borrowing.pk, actor=self.admin)
+        response = self.assert_summary(borrowing, "Approved")
+        self.assertContains(response, "Approved by")
+        self.assertContains(response, self.admin.username)
+        self.assertContains(response, reverse("release_equipment", args=[borrowing.pk]))
+        cancel_request(borrowing.pk, actor=self.borrower)
+        response = self.assert_summary(borrowing, "Cancelled")
+        self.assertContains(response, "Cancelled by")
+        self.assertContains(response, "<dt>Cancelled</dt>", html=True)
+
+    def test_rejected_summary_preserves_reason_actor_and_date(self):
+        borrowing = self.submit()
+        reject_request(borrowing.pk, actor=self.admin, reason="Not available\n<script>reason</script>")
+        response = self.assert_summary(borrowing, "Rejected")
+        self.assertContains(response, "Rejected by")
+        self.assertContains(response, "<dt>Rejected</dt>", html=True)
+        self.assertContains(response, "Not available<br>&lt;script&gt;reason&lt;/script&gt;")
+        self.assertNotContains(response, "<script>reason</script>")
+
+    def test_issued_partial_and_returned_summary_labels_follow_existing_workflow(self):
+        borrowing = self.submit()
+        approve_request(borrowing.pk, actor=self.admin)
+        loan = release_request(borrowing.pk, actor=self.admin)
+        self.assert_summary(borrowing, "Issued")
+        units = list(loan.units.all())
+        process_returns(loan.pk, actor=self.admin, returns=[(units[0].pk, "GOOD", "Checked")])
+        self.assert_summary(borrowing, "Partially Returned")
+        process_returns(loan.pk, actor=self.admin, returns=[(units[1].pk, "GOOD", "Checked")])
+        response = self.assert_summary(borrowing, "Returned")
+        self.assertContains(response, reverse("admin_loan_detail", args=[loan.pk]))

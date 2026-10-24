@@ -1,7 +1,7 @@
-<section class="card loan-summary" aria-labelledby="loan-summary-title">
-    <div class="card-heading"><h2 id="loan-summary-title">Loan summary</h2>{% include "components/badge.html" with label=loan.status variant=loan.status_variant %}</div>
-    <div class="loan-summary__grid">
-        <section class="loan-summary__group" aria-labelledby="loan-information-title">
+<section class="card record-summary" aria-labelledby="record-summary-title">
+    <div class="card-heading"><h2 id="record-summary-title">Loan summary</h2>{% include "components/badge.html" with label=loan.status variant=loan.status_variant %}</div>
+    <div class="record-summary__grid">
+        <section class="record-summary__group" aria-labelledby="loan-information-title">
             <h3 id="loan-information-title">Loan information</h3>
             <dl>
                 <div><dt>Borrowing request</dt><dd>#{{ loan.request_id }}</dd></div>
@@ -9,7 +9,7 @@
                 <div><dt>Issued by</dt><dd>{{ loan.issued_by.get_full_name|default:loan.issued_by.username }}</dd></div>
             </dl>
         </section>
-        <section class="loan-summary__group" aria-labelledby="loan-timeline-title">
+        <section class="record-summary__group" aria-labelledby="loan-timeline-title">
             <h3 id="loan-timeline-title">Timeline</h3>
             <dl>
                 <div><dt>Issued date</dt><dd>{% include "components/table_datetime.html" with value=loan.issued_at only %}</dd></div>
@@ -17,7 +17,7 @@
                 {% if loan.completed_at %}<div><dt>Completed / returned</dt><dd>{% include "components/table_datetime.html" with value=loan.completed_at only %}</dd></div>{% endif %}
             </dl>
         </section>
-        <section class="loan-summary__group loan-summary__status" aria-labelledby="loan-status-title">
+        <section class="record-summary__group record-summary__status" aria-labelledby="loan-status-title">
             <h3 id="loan-status-title">Status</h3>
             <dl>
                 <div><dt>Current loan status</dt><dd>{{ loan.status }}</dd></div>
@@ -25,7 +25,7 @@
             </dl>
         </section>
     </div>
-    <section class="loan-summary__purpose" aria-labelledby="loan-purpose-title"><h3 id="loan-purpose-title">Purpose</h3><p>{{ loan.request.purpose|linebreaksbr }}</p></section>
+    <section class="record-summary__section" aria-labelledby="loan-purpose-title"><h3 id="loan-purpose-title">Purpose</h3><p>{{ loan.request.purpose|linebreaksbr }}</p></section>
 </section>
 {% if loan.is_overdue %}<div class="alert alert--warning" role="status"><strong>This loan is overdue.</strong><p>{{ loan.outstanding_count }} physical unit{{ loan.outstanding_count|pluralize }} still need to be returned.</p></div>{% endif %}
 <section class="table-container" tabindex="0" role="region" aria-label="Issued physical units and return history">

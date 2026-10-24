@@ -1,5 +1,5 @@
 {% extends "base_user.html" %}
-{% load static ui_assets %}
+{% load ui_assets %}
 {% block title %}New Borrowing Request | Campus Equipment System{% endblock %}
 {% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/borrowing.css' %}">{% endblock %}
 {% block page_scripts %}<script src="{% ui_asset 'js/borrowing.js' %}" defer></script>{% endblock %}
@@ -7,32 +7,49 @@
 <header class="page-heading"><div><h1>New borrowing request</h1><p>Select 1–{{ limits.max_items }} equipment items, up to {{ limits.max_quantity }} units each, for at most {{ limits.max_days }} calendar days.</p></div><a class="button button--secondary" href="{% url 'my_requests' %}">My requests</a></header>
 <div class="section-stack">
     {% include "components/messages.html" %}
-    <div class="borrowing-workspace">
-    <section class="card section-stack" aria-labelledby="catalog-title">
-        <div><h2 id="catalog-title">Browse equipment</h2><p class="text-secondary">Availability is checked again at submission and approval. A Pending request does not reserve units.</p></div>
-        <div class="form-field"><label for="catalog-search">Search the catalog</label><div class="search-input">{% include "components/icon.html" with name="search" %}<input type="search" id="catalog-search" data-catalog-search placeholder="Search equipment..."></div></div>
-        <div class="content-grid borrowing-catalog" tabindex="0" role="region" aria-label="Available equipment choices">
-            {% for equipment in catalog %}<article class="card borrowing-catalog-item" data-catalog-entry data-search-text="{{ equipment.name }} {{ equipment.description }}"><h3>{{ equipment.name }}</h3><p class="caption">{{ equipment.description }}</p><p>{{ equipment.available_count }} available unit{{ equipment.available_count|pluralize }}</p><button type="button" class="button button--secondary" data-select-equipment="{{ equipment.pk }}"{% if not equipment.available_count %} disabled{% endif %}>Select {{ equipment.name }}</button></article>
-            {% empty %}<p class="text-secondary">There is no catalog equipment yet. Inventory needs equipment types and physical units before requests can be submitted.</p>{% endfor %}
-        </div>
-        <p class="caption" data-catalog-status role="status" aria-live="polite"></p>
-    </section>
-    <form method="post" class="form-panel form-panel--wide section-stack" id="borrowing-request-form" data-max-equipment="{{ limits.max_items }}" data-submit-loading>
+    <form method="post" class="form-panel form-panel--full section-stack borrowing-workflow" id="borrowing-request-form" data-max-equipment="{{ limits.max_items }}" data-bound="{{ form.is_bound|yesno:'true,false' }}">
         {% csrf_token %}{{ formset.management_form }}
-        {# Keep Enter submitting the request rather than activating a row-edit button. #}
-        <button type="submit" hidden tabindex="-1" aria-hidden="true">Submit request</button>
+        {# Enter submits the request rather than a fallback row-edit button. #}
+        <button type="submit" hidden tabindex="-1" aria-hidden="true">Submit borrowing request</button>
+        <ol class="borrowing-steps" aria-label="Borrowing request steps" hidden data-step-indicator>
+            <li data-step-marker="1" aria-current="step"><span>1</span> Select Equipment</li>
+            <li aria-hidden="true">→</li>
+            <li data-step-marker="2"><span>2</span> Borrowing Details</li>
+        </ol>
         {% if form.non_field_errors %}<div class="alert alert--error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
         {% if formset.non_form_errors %}<div class="alert alert--error" role="alert">{{ formset.non_form_errors }}</div>{% endif %}
-        <section class="card section-stack" aria-labelledby="requested-equipment-title">
-            <div><h2 id="requested-equipment-title">Requested equipment</h2><p class="caption" id="equipment-help">Start with one item. Add up to {{ limits.max_items }} distinct equipment items.</p></div>
-            <div class="section-stack" data-equipment-rows>{% for item_form in formset %}{% include "borrowing/_request_item.html" with row_number=forloop.counter first_row=forloop.first %}{% endfor %}</div>
-            <div><button type="submit" name="row_action" value="add" class="button button--secondary" data-add-equipment formnovalidate aria-describedby="equipment-help"{% if formset.total_form_count >= limits.max_items %} disabled{% endif %}>+ Add equipment</button></div>
-            <p class="caption" data-equipment-status role="status" aria-live="polite"></p>
-            <noscript><p class="caption">Add and Remove reload this form and keep your entries. Use the equipment dropdowns to select items.</p></noscript>
-            <template data-equipment-template>{% include "borrowing/_request_item.html" with item_form=formset.empty_form row_number="" first_row=False %}</template>
+        {% for item_form in formset %}{% if item_form.equipment.errors %}<div class="alert alert--error" role="alert">Equipment {{ forloop.counter }}: {{ item_form.equipment.errors }}</div>{% endif %}{% endfor %}
+        <section class="card section-stack" aria-labelledby="catalog-title" data-selection-step hidden>
+            <div><h2 id="catalog-title" tabindex="-1">Select equipment</h2><p class="caption">Choose the equipment you need. Pending requests do not reserve units.</p></div>
+            <div class="form-field borrowing-search"><label for="catalog-search">Search the catalog</label><div class="search-input">{% include "components/icon.html" with name="search" %}<input type="search" id="catalog-search" data-catalog-search placeholder="Search equipment..."></div></div>
+            <div class="borrowing-catalog" role="region" aria-label="Available equipment choices">
+                {% for equipment in catalog %}
+                <article class="borrowing-catalog-item" data-catalog-entry data-search-text="{{ equipment.name }} {{ equipment.category.name }} {{ equipment.description }}" data-equipment-name="{{ equipment.name }}" data-equipment-category="{{ equipment.category.name|default:'Uncategorized' }}" data-available="{{ equipment.available_count }}">
+                    <div><h3>{{ equipment.name }}</h3><p class="caption">{{ equipment.category.name|default:"Uncategorized" }}</p></div>
+                    <p class="caption borrowing-catalog-description">{{ equipment.description|default:"No description provided." }}</p>
+                    <div class="borrowing-catalog-footer"><span class="caption">{{ equipment.available_count }} available unit{{ equipment.available_count|pluralize }}</span><button type="button" class="button button--secondary" data-select-equipment="{{ equipment.pk }}" aria-label="Add {{ equipment.name }}"{% if not equipment.available_count %} disabled{% endif %}>Add</button></div>
+                </article>
+                {% empty %}<p class="caption">There is no catalog equipment yet. Please check back when equipment is available.</p>{% endfor %}
+            </div>
+            <p class="caption" data-search-empty hidden>No equipment matches your search. Try another name or category.</p>
+            <p class="caption" data-catalog-status role="status" aria-live="polite"></p>
+            <div class="borrowing-selection">
+                <div class="borrowing-selection-heading"><h3>Selected equipment</h3><span class="caption" data-selection-count role="status" aria-live="polite">0 of {{ limits.max_items }} selected</span></div>
+                <ul class="borrowing-selected-list" data-selection-summary></ul>
+                <p class="caption" data-selection-empty>Add at least one item to continue.</p>
+            </div>
+            <p class="field-errors" data-selection-error role="alert" hidden></p>
+            <div class="page-actions"><button type="button" class="button button--primary" data-continue hidden>Continue</button></div>
         </section>
-        <section class="card section-stack"><h2>Borrowing details</h2>{% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}<div class="page-actions"><button type="submit" class="button button--primary">Submit request</button><a href="{% url 'my_requests' %}" class="button button--secondary">Cancel</a></div></section>
+        <section class="card section-stack" aria-labelledby="details-title" data-details-step>
+            <div><h2 id="details-title" tabindex="-1">Borrowing details</h2><p class="caption">Set quantities, tell us the purpose, and choose a return date.</p></div>
+            <noscript><p class="caption">Choose 1–{{ limits.max_items }} distinct items below. Add and Remove reload the form while keeping your entries. Submit only when your borrowing details are complete.</p></noscript>
+            <div class="section-stack" data-equipment-rows>{% for item_form in formset %}{% include "borrowing/_request_item.html" with row_number=forloop.counter first_row=forloop.first %}{% endfor %}</div>
+            <div data-fallback-controls><button type="submit" name="row_action" value="add" class="button button--secondary" formnovalidate aria-describedby="equipment-help"{% if formset.total_form_count >= limits.max_items %} disabled{% endif %}>+ Add equipment</button><p class="caption" id="equipment-help">Select up to {{ limits.max_items }} distinct equipment items.</p></div>
+            {% for field in form %}{% include "components/input.html" with field=field %}{% endfor %}
+            <div class="page-actions borrowing-workflow-actions"><button type="button" class="button button--secondary" data-back hidden>Back to Equipment Selection</button><button type="submit" class="button button--primary" data-final-submit>Submit Borrowing Request</button></div>
+        </section>
+        <template data-equipment-template>{% include "borrowing/_request_item.html" with item_form=formset.empty_form row_number="" first_row=False %}</template>
     </form>
-    </div>
 </div>
 {% endblock %}

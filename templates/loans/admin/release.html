@@ -6,12 +6,7 @@
 {% block content %}
 <header class="page-heading"><div><h1>Release request #{{ borrowing.pk }}</h1><p>Verify the reserved units before handing equipment to the borrower.</p></div><a class="button button--secondary" href="{% url 'loan_management' %}">Back to loan management</a></header>
 <div class="section-stack">
-    <section class="card"><h2>Approved handover</h2><dl class="facts-grid">
-        <div><dt>Borrower</dt><dd>{{ borrowing.borrower.get_full_name|default:borrowing.borrower.username }} ({{ borrowing.borrower.username }})</dd></div>
-        <div><dt>Request status</dt><dd>{{ borrowing.get_status_display }}</dd></div>
-        <div><dt>Due</dt><dd>{{ borrowing.due_at|date:"M j, Y, g:i A T" }}</dd></div>
-        <div><dt>Approved by</dt><dd>{{ borrowing.approved_by.get_full_name|default:borrowing.approved_by.username|default:"No recorded approval" }}</dd></div>
-    </dl><div class="loan-purpose"><strong>Purpose</strong><p>{{ borrowing.purpose|linebreaksbr }}</p></div></section>
+    {% include "borrowing/_summary.html" with summary_title="Approved handover" %}
     <div class="table-container" tabindex="0" role="region" aria-label="Requested equipment and physical units"><table class="data-table"><caption>Requested equipment and physical units</caption><thead><tr><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--number">Required quantity</th><th scope="col" class="table-cell--text">Allocated units</th></tr></thead><tbody>
         {% for item in borrowing.items.all %}<tr><td class="table-cell--text">{{ item.equipment.name }}<p class="caption">{{ item.equipment.description }}</p></td><td class="table-cell--number">{{ item.quantity }}</td><td class="table-cell--text"><ul class="loan-equipment-list">{% for allocation in item.allocations.all %}{% if allocation.active %}<li><span class="table-value">{{ allocation.unit.asset_tag }}</span> — {{ allocation.unit.get_status_display }}</li>{% endif %}{% empty %}<li>No physical units allocated</li>{% endfor %}</ul></td></tr>{% empty %}<tr><td colspan="3">This request has no equipment items.</td></tr>{% endfor %}
     </tbody></table></div>

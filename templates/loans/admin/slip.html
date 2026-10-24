@@ -7,13 +7,23 @@
 <div class="page-actions loan-print-actions"><button type="button" class="button button--primary" data-print-slip>Print borrowing slip</button><a class="button button--secondary" href="{% url 'admin_loan_detail' loan.pk %}">Back to loan</a></div>
 <article class="loan-slip section-stack">
     <header><span class="eyebrow">Campus Equipment System</span><h1>Borrowing slip #{{ loan.pk }}</h1><p class="text-secondary">Borrowing request #{{ loan.request_id }}</p></header>
-    <section><dl class="facts-grid">
-        <div><dt>Borrower</dt><dd>{{ loan.borrower.get_full_name|default:loan.borrower.username }} ({{ loan.borrower.username }})</dd></div>
-        <div><dt>Issued by</dt><dd>{{ loan.issued_by.get_full_name|default:loan.issued_by.username }}</dd></div>
-        <div><dt>Issue date</dt><dd>{{ loan.issued_at|date:"M j, Y, g:i A T" }}</dd></div>
-        <div><dt>Due date</dt><dd>{{ loan.due_at|date:"M j, Y, g:i A T" }}</dd></div>
-        <div><dt>Total physical units</dt><dd>{{ loan.quantity }}</dd></div>
-    </dl><div class="loan-purpose"><strong>Purpose</strong><p>{{ loan.request.purpose|linebreaksbr }}</p></div></section>
+    <section class="record-summary" aria-label="Loan information">
+        <div class="record-summary__grid">
+            <section class="record-summary__group" aria-labelledby="slip-information-title"><h3 id="slip-information-title">Loan information</h3><dl>
+                <div><dt>Borrower</dt><dd>{{ loan.borrower.get_full_name|default:loan.borrower.username }} <span class="caption">({{ loan.borrower.username }})</span></dd></div>
+                <div><dt>Issued by</dt><dd>{{ loan.issued_by.get_full_name|default:loan.issued_by.username }}</dd></div>
+            </dl></section>
+            <section class="record-summary__group" aria-labelledby="slip-timeline-title"><h3 id="slip-timeline-title">Timeline</h3><dl>
+                <div><dt>Issue date</dt><dd>{% include "components/table_datetime.html" with value=loan.issued_at only %}</dd></div>
+                <div><dt>Due date</dt><dd>{% include "components/table_datetime.html" with value=loan.due_at only %}</dd></div>
+            </dl></section>
+            <section class="record-summary__group record-summary__status" aria-labelledby="slip-status-title"><h3 id="slip-status-title">Status</h3><dl>
+                <div><dt>Current loan status</dt><dd>{{ loan.status }}</dd></div>
+                <div><dt>Total physical units</dt><dd>{{ loan.quantity }}</dd></div>
+            </dl></section>
+        </div>
+        <section class="record-summary__section" aria-labelledby="slip-purpose-title"><h3 id="slip-purpose-title">Purpose</h3><p>{{ loan.request.purpose|linebreaksbr }}</p></section>
+    </section>
     <div class="table-container" tabindex="0" role="region" aria-label="Equipment issued"><table class="data-table"><caption>Equipment issued</caption><thead><tr><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--identifier">Asset tag</th><th scope="col" class="table-cell--number">Quantity</th></tr></thead><tbody>{% for unit in loan.units.all %}<tr><td class="table-cell--text">{{ unit.equipment_name }}</td><td class="table-cell--identifier"><span class="table-value">{{ unit.asset_tag }}</span></td><td class="table-cell--number">1</td></tr>{% endfor %}</tbody></table></div>
     <p>Please return all listed units by the due date. Any damage will be recorded when the equipment is received.</p>
     <div class="loan-signatures"><div><span>Borrower signature</span></div><div><span>Releasing Admin signature</span></div></div>

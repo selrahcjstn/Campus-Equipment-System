@@ -189,10 +189,12 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .metric__heading .icon { width: 18px; height: 18px; color: var(--text-muted); }
 .metric__value { font-size: 28px; font-weight: var(--weight-semibold); line-height: 1.2; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
 .metric__description { color: var(--text-muted); font-size: var(--font-caption); line-height: 1.5; }
-.facts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: var(--space-3); margin: 0; }
-.detail-box, .facts-grid > div, .inventory-counts > div { min-width: 0; padding: var(--space-3); border: var(--border); border-radius: var(--radius-md); background: var(--background); overflow-wrap: anywhere; }
+.facts-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4) var(--space-5); margin: 0; }
+.facts-grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.facts-grid > div { min-width: 0; overflow-wrap: anywhere; }
+.detail-box, .inventory-counts > div { min-width: 0; padding: var(--space-3); border: var(--border); border-radius: var(--radius-md); background: var(--background); overflow-wrap: anywhere; }
 .facts-grid dt { color: var(--text-secondary); font-size: var(--font-caption); }
-.facts-grid dd { margin: var(--space-1) 0 0; font-size: var(--font-label); font-weight: var(--weight-medium); overflow-wrap: anywhere; }
+.facts-grid dd { margin: var(--space-1) 0 0; font-size: var(--font-body); font-weight: var(--weight-medium); overflow-wrap: anywhere; }
 .card > h2 + .facts-grid { margin-top: var(--space-4); }
 .card > .facts-grid + .caption { margin-top: var(--space-4); }
 @media print { .facts-grid > div { padding: 0; border: 0; background: transparent; } }
@@ -326,3 +328,33 @@ a.navbar-account:hover { background: var(--background); color: var(--primary); }
     .page-heading .page-actions:has(> :nth-child(3)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
     .page-heading .page-actions:has(> :nth-child(3)) > .button { min-width: 0; padding-inline: var(--space-2); }
 }
+
+/* Shared label/value summaries for requests, loans, maintenance and accounts. */
+.record-summary > .card-heading { flex-direction: row; align-items: center; gap: var(--space-2); }
+.record-summary > .card-heading h2 { font-size: var(--font-card); }
+.record-summary > .card-heading > .badge { align-self: center; }
+.record-summary__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-5); }
+.record-summary__group { min-width: 0; }
+.record-summary__group + .record-summary__group { padding-left: var(--space-5); border-left: var(--border); }
+.record-summary h3 { font-size: var(--font-label); font-weight: var(--weight-medium); color: var(--text-primary); }
+.record-summary__group h3 { margin-bottom: var(--space-3); }
+.record-summary dl { display: grid; gap: var(--space-3); margin: 0; }
+.record-summary dl > div { min-width: 0; }
+.record-summary dt { color: var(--text-secondary); font-size: var(--font-caption); }
+.record-summary dd { margin: var(--space-1) 0 0; color: var(--text-primary); font-size: var(--font-body); font-weight: var(--weight-medium); overflow-wrap: anywhere; }
+.record-summary__status dd { font-variant-numeric: tabular-nums; }
+.record-summary__section { margin-top: var(--space-4); padding-top: var(--space-4); border-top: var(--border); }
+.record-summary__section p { margin-top: var(--space-2); overflow-wrap: anywhere; }
+@media (min-width: 640px) and (max-width: 1199px) {
+    .record-summary__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .record-summary__group.record-summary__status { grid-column: 1 / -1; padding: var(--space-4) 0 0; border-left: 0; border-top: var(--border); }
+    .record-summary__status dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 639px) {
+    .record-summary__grid { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+    .record-summary__group + .record-summary__group { padding: var(--space-4) 0 0; border-left: 0; border-top: var(--border); }
+}
+@media (max-width: 359px) { .record-summary .table-datetime { white-space: normal; } }
+
+@media (min-width: 640px) and (max-width: 1199px) { .facts-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 639px) { .facts-grid { grid-template-columns: minmax(0, 1fr); } }

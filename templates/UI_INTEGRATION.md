@@ -215,8 +215,19 @@ Form and filter error borders remain visible on hover and focus.
 Use `metric-grid` for dashboard statistics and `metric-grid--three` for three
 metrics. Include `components/metric.html` with `label`, `value`, and optional
 `icon` and `description`; pass `only` so optional content cannot leak from a page.
-Use `facts-grid` on definition lists for bordered label/value tiles.
-`detail-box` supplies the same inset surface for free text or grouped fields.
+Use `facts-grid` on definition lists for simple, borderless label/value pairs.
+Use `facts-grid--two` for short summaries with two or four fields. These lists
+collapse to one column on mobile.
+
+Detailed request, loan, maintenance and user summaries share `record-summary`:
+one white container, a `card-heading` with a readable status badge, and
+`record-summary__grid` with logical `record-summary__group` sections. The final
+`record-summary__status` group spans the tablet row; mobile groups stack with
+subtle dividers. Put purpose or longer notes in `record-summary__section` below
+the grid. Use `components/table_datetime.html` for compact local timestamps.
+Request and maintenance summaries have reusable module partials so review,
+confirmation and detail pages keep the same information and presentation.
+`detail-box` remains available for other inset content.
 Inventory totals use `inventory-counts`: six columns on desktop, three on
 tablet, and two on small screens. Keep labels and values in semantic `dt`/`dd`
 elements and use existing context data.
