@@ -10,6 +10,7 @@ from django.utils import timezone
 from apps.inventory.models import Equipment, EquipmentUnit
 from apps.inventory.services import eligible_units, inventory_queryset
 from apps.dashboard.audit import record_event
+from apps.dashboard.models import LIMIT_RANGES
 from apps.dashboard.policies import borrowing_limits
 from .models import Allocation, BorrowingRequest, BorrowingRequestItem
 
@@ -42,8 +43,9 @@ def validate_due_date(due_at, *, requested_at=None, limits=None):
 
 def _validate_items(items, *, limits=None):
     limits = limits if limits is not None else borrowing_limits()
-    if not 1 <= len(items) <= limits["max_items"]:
-        raise ValidationError(f"Select 1–{limits['max_items']} distinct equipment items.")
+    maximum = min(limits["max_items"], LIMIT_RANGES["max_items"][1])
+    if not 1 <= len(items) <= maximum:
+        raise ValidationError(f"Select 1–{maximum} distinct equipment items.")
     ids = [item[0] for item in items]
     if len(set(ids)) != len(ids):
         raise ValidationError("Each equipment item can be selected only once.")

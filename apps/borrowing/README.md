@@ -61,8 +61,10 @@ refuses to overwrite demo records. No fixtures are added automatically.
   and seven calendar days. Admins configure them at `/manage/settings/` through
   the database policy in `apps.dashboard.policies`. Before a policy is saved,
   `BORROWING_MAX_ITEMS`, `BORROWING_MAX_QUANTITY` and `BORROWING_MAX_DAYS` in
-  Django settings remain the fallback. New submissions and pending approvals
-  use current limits; existing approvals and issued loans retain their terms.
+  Django settings remain the fallback. The distinct-item limit can be lowered
+  but never exceed three, including when legacy configuration specifies more.
+  New submissions and pending approvals use current limits; existing approvals
+  and issued loans retain their terms.
 - Due dates entered on the form mean the end of the selected calendar date in
   the application's configured timezone, currently Asia/Manila. Duration is measured
   by local calendar-date difference from submission, not by 24-hour intervals.

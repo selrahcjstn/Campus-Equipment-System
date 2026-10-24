@@ -12,6 +12,7 @@ from django.test import Client, TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from apps.dashboard.models import SystemSetting
 from apps.inventory.models import Equipment, EquipmentUnit
 from apps.loans.models import Loan
 from apps.loans.services import process_returns, release_request
@@ -317,6 +318,73 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
         request.refresh_from_db()
         self.assertEqual(request.status, "ISSUED")
         self.assertEqual(request.workflow_label, "Issued")
+
+
+class BorrowingHardItemLimitTests(BorrowingFixtures, TestCase):
+    def setUp(self):
+        self.make_records()
+        self.client.force_login(self.borrower)
+
+    def assert_four_items_leave_records_unchanged(self, operation):
+        before = (BorrowingRequest.objects.count(), BorrowingRequestItem.objects.count())
+        operation()
+        self.assertEqual((BorrowingRequest.objects.count(), BorrowingRequestItem.objects.count()), before)
+        self.assertFalse(Allocation.objects.exists())
+        self.assertEqual(EquipmentUnit.objects.filter(status="AVAILABLE").count(), 12)
+
+    def assert_service_boundary(self):
+        for count in [1, 2, 3]:
+            with self.subTest(count=count):
+                request = self.submit(items=[(item.pk, 1) for item in self.equipment[:count]])
+                self.assertEqual(request.items.count(), count)
+                self.assertEqual(request.status, "PENDING")
+
+        def reject_four():
+            with self.assertRaisesMessage(ValidationError, "Select 1–3 distinct equipment items."):
+                self.submit(items=[(item.pk, 1) for item in self.equipment])
+        self.assert_four_items_leave_records_unchanged(reject_four)
+
+    def assert_http_boundary(self):
+        url = reverse("new_borrowing_request")
+        page = self.client.get(url)
+        self.assertContains(page, "Select 1–3 equipment items")
+        self.assertEqual(len(page.context["formset"].forms), 3)
+        self.assertEqual(page.context["formset"].management_form["MAX_NUM_FORMS"].value(), 3)
+        for count in [1, 2, 3]:
+            with self.subTest(count=count):
+                response = self.client.post(url, self.post_data([(item.pk, 1) for item in self.equipment[:count]]))
+                self.assertEqual(response.status_code, 302)
+
+        def reject_four():
+            data = self.post_data([(item.pk, 1) for item in self.equipment])
+            data["items-MAX_NUM_FORMS"] = "1000"
+            response = self.client.post(url, data)
+            self.assertContains(response, "Select no more than 3 distinct equipment items.")
+            self.assertTrue(response.context["formset"].non_form_errors())
+        self.assert_four_items_leave_records_unchanged(reject_four)
+
+    @override_settings(BORROWING_MAX_ITEMS=4)
+    def test_service_caps_manipulated_django_setting(self):
+        self.assert_service_boundary()
+
+    @override_settings(BORROWING_MAX_ITEMS=4)
+    def test_frontend_and_forged_post_cap_manipulated_django_setting(self):
+        self.assert_http_boundary()
+
+    def test_service_caps_legacy_database_policy(self):
+        for maximum in [4, 10]:
+            with self.subTest(max_items=maximum), patch("apps.dashboard.policies.SystemSetting.objects.filter") as policies:
+                policies.return_value.first.return_value = SystemSetting(max_items=maximum)
+                self.assert_service_boundary()
+
+    def test_frontend_and_forged_post_cap_legacy_database_policy(self):
+        with patch("apps.dashboard.policies.SystemSetting.objects.filter") as policies:
+            policies.return_value.first.return_value = SystemSetting(max_items=10)
+            self.assert_http_boundary()
+
+    def test_service_hard_limit_rejects_even_an_oversized_policy_snapshot(self):
+        with patch("apps.borrowing.services.borrowing_limits", return_value={"max_items": 10, "max_quantity": 3, "max_days": 7}):
+            self.assert_service_boundary()
 
 
 class BorrowingPageTests(BorrowingFixtures, TestCase):

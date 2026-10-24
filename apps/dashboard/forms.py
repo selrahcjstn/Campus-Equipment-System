@@ -41,7 +41,7 @@ class AuditFilterForm(DateRangeForm):
 
 
 class SystemSettingsForm(forms.Form):
-    max_items = forms.IntegerField(min_value=LIMIT_RANGES["max_items"][0], max_value=LIMIT_RANGES["max_items"][1], label="Maximum distinct catalog items", help_text="1–10 distinct catalog items per request. Default: 3.")
+    max_items = forms.IntegerField(min_value=LIMIT_RANGES["max_items"][0], max_value=LIMIT_RANGES["max_items"][1], label="Maximum distinct catalog items", help_text="1–3 distinct catalog items per request. This limit cannot exceed 3.")
     max_quantity = forms.IntegerField(min_value=LIMIT_RANGES["max_quantity"][0], max_value=LIMIT_RANGES["max_quantity"][1], label="Maximum units per catalog item", help_text="1–20 units per catalog item. Default: 3.")
     max_days = forms.IntegerField(min_value=LIMIT_RANGES["max_days"][0], max_value=LIMIT_RANGES["max_days"][1], label="Maximum borrowing duration", help_text="1–30 calendar days in the application timezone. Default: 7.")
     confirm = forms.BooleanField(label="I confirm these borrowing rules for new requests.")

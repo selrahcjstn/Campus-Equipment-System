@@ -4,13 +4,13 @@ from django.db import models
 from django.utils import timezone
 
 
-LIMIT_RANGES = {"max_items": (1, 10), "max_quantity": (1, 20), "max_days": (1, 30)}
+LIMIT_RANGES = {"max_items": (1, 3), "max_quantity": (1, 20), "max_days": (1, 30)}
 
 
 class SystemSetting(models.Model):
     """One optional policy row; without it existing Django defaults still apply."""
     id = models.PositiveSmallIntegerField(primary_key=True, default=1, editable=False)
-    max_items = models.PositiveSmallIntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(10)])
+    max_items = models.PositiveSmallIntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(3)])
     max_quantity = models.PositiveSmallIntegerField(default=3, validators=[MinValueValidator(1), MaxValueValidator(20)])
     max_days = models.PositiveSmallIntegerField(default=7, validators=[MinValueValidator(1), MaxValueValidator(30)])
     updated_at = models.DateTimeField(auto_now=True)
@@ -19,7 +19,7 @@ class SystemSetting(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(condition=models.Q(pk=1), name="dashboard_single_policy"),
-            models.CheckConstraint(condition=models.Q(max_items__gte=1, max_items__lte=10, max_quantity__gte=1, max_quantity__lte=20, max_days__gte=1, max_days__lte=30), name="dashboard_valid_borrowing_limits"),
+            models.CheckConstraint(condition=models.Q(max_items__gte=1, max_items__lte=3, max_quantity__gte=1, max_quantity__lte=20, max_days__gte=1, max_days__lte=30), name="dashboard_valid_borrowing_limits"),
         ]
 
     def as_limits(self):

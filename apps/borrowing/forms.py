@@ -66,6 +66,7 @@ class BaseRequestItemFormSet(BaseFormSet):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.max_num = borrowing_limits()["max_items"]
+        self.error_messages["too_many_forms"] = "Select no more than %(num)d distinct equipment items."
         self.extra = self.max_num
         self.absolute_max = max(self.max_num, 100)
 

@@ -23,6 +23,7 @@ from apps.loans.models import Loan, LoanUnit
 from apps.loans.services import process_returns, release_request
 from apps.maintenance.models import MaintenanceRecord
 from apps.maintenance.services import create_record, record_damaged_return, resolve_record, update_record
+from .forms import SystemSettingsForm
 from .audit import record_event
 from .models import AuditLog, SystemSetting
 from .policies import borrowing_limits
@@ -416,7 +417,7 @@ class SettingsTests(DashboardFixtures, TestCase):
         self.assertEqual(AuditLog.objects.count(), 1)
 
     def test_numeric_type_and_range_validation(self):
-        for name, invalid in [("max_items", 0), ("max_items", 11), ("max_quantity", 21), ("max_days", 31), ("max_days", -1), ("max_days", 1.5), ("max_items", True), ("max_quantity", "2")]:
+        for name, invalid in [("max_items", 0), ("max_items", 4), ("max_items", 11), ("max_quantity", 21), ("max_days", 31), ("max_days", -1), ("max_days", 1.5), ("max_items", True), ("max_quantity", "2")]:
             values = {"max_items": 3, "max_quantity": 3, "max_days": 7, name: invalid}
             with self.subTest(name=name, invalid=invalid), self.assertRaises(ValidationError):
                 update_settings(actor=self.admin, **values)
@@ -424,9 +425,40 @@ class SettingsTests(DashboardFixtures, TestCase):
         self.assertFalse(AuditLog.objects.exists())
 
     def test_database_enforces_singleton_and_limit_ranges(self):
-        for values in [{"id": 2}, {"max_items": 0}, {"max_quantity": 21}, {"max_days": 31}]:
+        for values in [{"id": 2}, {"max_items": 0}, {"max_items": 4}, {"max_quantity": 21}, {"max_days": 31}]:
             with self.subTest(values=values), self.assertRaises(IntegrityError), transaction.atomic():
                 SystemSetting.objects.create(**values)
+
+    def test_settings_form_and_model_reject_four_distinct_items(self):
+        form = SystemSettingsForm({"max_items": 4, "max_quantity": 3, "max_days": 7, "confirm": "on"})
+        self.assertFalse(form.is_valid())
+        self.assertIn("max_items", form.errors)
+        self.assertEqual(form.fields["max_items"].widget.attrs["max"], 3)
+        with self.assertRaises(ValidationError) as error:
+            SystemSetting(max_items=4).full_clean()
+        self.assertIn("max_items", error.exception.message_dict)
+
+    def test_admin_cannot_raise_item_limit_or_change_other_values_on_invalid_post(self):
+        policy = update_settings(actor=self.admin, max_items=2, max_quantity=5, max_days=12)
+        initial = policy.as_limits()
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse("system_settings"), {
+            "max_items": 4, "max_quantity": 6, "max_days": 13, "confirm": "on",
+        })
+        self.assertContains(response, "Ensure this value is less than or equal to 3.")
+        policy.refresh_from_db()
+        self.assertEqual(policy.as_limits(), initial)
+        self.assertEqual(AuditLog.objects.count(), 1)
+
+    def test_quantity_and_duration_remain_configurable_with_three_item_ceiling(self):
+        policy = update_settings(actor=self.admin, max_items=3, max_quantity=20, max_days=30)
+        self.assertEqual(policy.as_limits(), {"max_items": 3, "max_quantity": 20, "max_days": 30})
+        self.assertEqual(borrowing_limits(), policy.as_limits())
+        formset = RequestItemFormSet(prefix="items")
+        self.assertEqual(len(formset.forms), 3)
+        self.assertEqual(formset.forms[0].fields["quantity"].widget.attrs["max"], 20)
+        form = BorrowingRequestForm()
+        self.assertEqual(form.fields["due_date"].widget.attrs["max"], (timezone.localdate() + timedelta(days=30)).isoformat())
 
     def test_basic_anonymous_and_inactive_cannot_update_policy(self):
         inactive = get_user_model().objects.create_user("disabled-admin", role="ADMIN", is_active=False)

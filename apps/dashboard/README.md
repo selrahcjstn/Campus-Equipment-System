@@ -139,7 +139,7 @@ The Admin can save whole-number limits in these ranges:
 
 | Rule | Valid range |
 | --- | --- |
-| Distinct items per request | 1–10 |
+| Distinct items per request | 1–3 (hard maximum: 3) |
 | Units per item | 1–20 |
 | Borrowing duration | 1–30 calendar days |
 
