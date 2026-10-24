@@ -1,6 +1,6 @@
 {% url 'logout' as logout_url %}
 {% if logout_url %}
-<form method="POST" action="{{ logout_url }}">
+<form method="POST" action="{{ logout_url }}" id="logout-form" data-confirm-dialog="logout-confirmation">
     {% csrf_token %}
     <button class="nav-item logout-button" type="submit">{% include "components/icon.html" with name="logout" %}<span>Logout</span></button>
 </form>
