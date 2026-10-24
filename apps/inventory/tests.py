@@ -329,7 +329,8 @@ class ServiceableInventoryTests(InventoryFixtures, TestCase):
                 else:
                     item = response.context["equipment"]
                 self.assertEqual((item.available_count, item.serviceable_count), (available, serviceable))
-                self.assertContains(response, f"<dt>Available</dt><dd>{available}</dd>", html=True)
+                label = "Available" if "page_obj" in response.context else "Available Units"
+                self.assertContains(response, f"<dt>{label}</dt><dd>{available}</dd>", html=True)
                 self.assertContains(response, f"<dt>Total Serviceable</dt><dd>{serviceable}</dd>", html=True)
                 if available:
                     self.assertContains(response, f"?equipment={equipment.pk}")
@@ -426,7 +427,8 @@ class InventoryPageTests(InventoryFixtures, TestCase):
             response = self.client.get(url)
             for private in ["PROJECTOR-1", "PROJECTOR-2", "SPEAKER-PRIVATE-TAG", "Maintenance", "Retired", "Add physical unit", "Review archive", "/manage/equipment/"]:
                 self.assertNotContains(response, private)
-            self.assertContains(response, "<dt>Available</dt><dd>1</dd>", html=True)
+            label = "Available" if url == reverse("equipment_catalog") else "Available Units"
+            self.assertContains(response, f"<dt>{label}</dt><dd>1</dd>", html=True)
             self.assertContains(response, "<dt>Total Serviceable</dt><dd>1</dd>", html=True)
 
     def test_archived_items_hidden_and_detail_returns_404(self):
@@ -481,14 +483,29 @@ class InventoryPageTests(InventoryFixtures, TestCase):
         self.assertNotContains(catalog, "<script>alert(1)</script>")
         detail = self.client.get(reverse("equipment_detail", args=[self.equipment.pk]))
         self.assertContains(detail, "&lt;/script&gt;<br>Includes carrying case.")
-        self.assertContains(detail, "Total Serviceable includes available, reserved, and borrowed units.")
+        self.assertContains(detail, 'aria-describedby="serviceable-help"')
         EquipmentUnit.objects.filter(equipment=self.equipment).update(status="RESERVED")
         for url in [reverse("equipment_catalog"), reverse("equipment_detail", args=[self.equipment.pk])]:
             response = self.client.get(url)
             self.assertContains(response, "Unavailable")
-            self.assertContains(response, "<dt>Available</dt><dd>0</dd>", html=True)
+            label = "Available" if url == reverse("equipment_catalog") else "Available Units"
+            self.assertContains(response, f"<dt>{label}</dt><dd>0</dd>", html=True)
             self.assertContains(response, "<dt>Total Serviceable</dt><dd>2</dd>", html=True)
             self.assertNotContains(response, f"?equipment={self.equipment.pk}")
+
+    def test_equipment_detail_keeps_long_names_and_complete_escaped_descriptions(self):
+        from django.utils.html import escape
+        self.client.force_login(self.borrower)
+        maximum = Equipment._meta.get_field("name").max_length
+        self.equipment.name = "Equipment" + "X" * (maximum - len("Equipment"))
+        self.equipment.description = "Classroom use and presentation equipment. " * 40 + "\nFinal note: <script>private</script>"
+        self.equipment.save(update_fields=["name", "description"])
+        response = self.client.get(reverse("equipment_detail", args=[self.equipment.pk]))
+        self.assertContains(response, f'<h1 id="equipment-title">{self.equipment.name}</h1>', html=True)
+        self.assertContains(response, str(escape(self.equipment.description)).replace("\n", "<br>"))
+        self.assertNotContains(response, "<script>private</script>")
+        self.assertNotContains(response, "Equipment details")
+        self.assertContains(response, f"?equipment={self.equipment.pk}")
 
     def test_request_link_prefills_eligible_equipment_and_handles_invalid_selection(self):
         self.client.force_login(self.borrower)

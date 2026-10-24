@@ -1,12 +1,25 @@
 {% extends "base_user.html" %}
-{% load static ui_assets %}
+{% load ui_assets %}
 {% block title %}{{ equipment.name }} | Equipment Catalog{% endblock %}
 {% block page_styles %}<link rel="stylesheet" href="{% ui_asset 'css/inventory.css' %}">{% endblock %}
 {% block content %}
-<header class="page-heading"><div><span class="eyebrow">{{ equipment.category.name|default:"Uncategorized" }}</span><h1>{{ equipment.name }}</h1></div><a class="button button--secondary" href="{% url 'equipment_catalog' %}">Back to catalog</a></header>
-<section class="card section-stack inventory-detail"><h2>Equipment details</h2><p class="inventory-description">{{ equipment.description|default:"No description provided."|linebreaksbr }}</p>
-    {% include "inventory/_stock_summary.html" with equipment=equipment only %}
-    <p class="caption">Total Serviceable includes available, reserved, and borrowed units.</p>
-    {% if equipment.available_count %}<div><a class="button button--primary" href="{% url 'new_borrowing_request' %}?equipment={{ equipment.pk }}">Request this equipment</a></div><p class="caption">Availability is checked again when your request is submitted and approved.</p>{% else %}<p class="text-secondary">This equipment is currently unavailable for borrowing. Please check the catalog again later.</p>{% endif %}
-</section>
+<div class="inventory-detail">
+    <a class="inventory-detail__back" href="{% url 'equipment_catalog' %}">Back to catalog</a>
+    <article class="card inventory-detail__card" aria-labelledby="equipment-title">
+        <header class="inventory-detail__heading">
+            <div class="inventory-detail__metadata"><span class="caption">{{ equipment.category.name|default:"Uncategorized" }}</span>{% if equipment.available_count %}{% include "components/badge.html" with label="Available" variant="success" %}{% else %}{% include "components/badge.html" with label="Unavailable" variant="inactive" %}{% endif %}</div>
+            <h1 id="equipment-title">{{ equipment.name }}</h1>
+            <p class="inventory-description">{{ equipment.description|default:"No description provided."|linebreaksbr }}</p>
+        </header>
+        <section class="inventory-detail__availability" aria-label="Equipment availability">
+            <dl class="inventory-stock-counts inventory-detail__counts" aria-describedby="serviceable-help">
+                <div><dt>Available Units</dt><dd>{{ equipment.available_count }}</dd></div>
+                <div><dt>Total Serviceable</dt><dd>{{ equipment.serviceable_count }}</dd></div>
+            </dl>
+            <p class="sr-only" id="serviceable-help">Serviceable units include available, reserved, and borrowed units.</p>
+            <p class="caption">{% if equipment.available_count %}Availability is confirmed when your request is submitted and approved.{% else %}No units are available to borrow right now. Please check back later.{% endif %}</p>
+            {% if equipment.available_count %}<div><a class="button button--primary" href="{% url 'new_borrowing_request' %}?equipment={{ equipment.pk }}">Request this equipment</a></div>{% endif %}
+        </section>
+    </article>
+</div>
 {% endblock %}
