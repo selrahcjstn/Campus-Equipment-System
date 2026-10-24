@@ -18,12 +18,9 @@
 .inventory-editor-form > .form-field { max-width: none; }
 .inventory-category-table .table-cell--text { width: 14rem; max-width: 14rem; overflow-wrap: anywhere; }
 .inventory-category-table .table-cell--description { overflow-wrap: anywhere; }
-.inventory-category-table th.table-cell--number { white-space: nowrap; }
-.inventory-category-table .table-cell--actions .page-actions { width: max-content; min-width: max-content; max-width: none; flex-wrap: nowrap; }
 .inventory-category-table .table-cell--actions .caption { white-space: nowrap; }
-.inventory-unit-table .table-cell--identifier { min-width: 10rem; white-space: nowrap; overflow-wrap: normal; }
 .inventory-unit-table .table-cell--status { min-width: 8rem; }
-.inventory-unit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); width: max-content; max-width: 28rem; }
+.inventory-unit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1) var(--space-3); width: max-content; max-width: none; }
 .inventory-unit-actions > .caption { flex-basis: 100%; }
 .inventory-description, .inventory-catalog-card p { overflow-wrap: anywhere; }
 .inventory-counts { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-3); margin: 0; }

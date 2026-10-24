@@ -67,12 +67,12 @@
     --nav-active-border: var(--border-default);
     --motion-duration: 140ms;
     --table-row-height: 48px;
-    --table-header-background: var(--surface-muted);
+    --table-header-background: var(--surface);
     --table-body-background: var(--surface);
     --table-border: var(--border-default);
-    --table-header-text: #52525B;
+    --table-header-text: var(--text-primary);
     --table-body-text: var(--text-primary);
-    --table-hover-background: var(--surface-muted);
+    --table-hover-background: var(--background);
     --button-padding: 7px 12px;
     --icon-size: 20px;
     --z-sidebar: 30;
@@ -207,15 +207,17 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .data-table tr { height: var(--table-row-height); }
 .data-table th, .data-table td { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--table-border); vertical-align: middle; }
 .data-table th { background: var(--table-header-background); color: var(--table-header-text); font-size: var(--font-label); font-weight: var(--weight-medium); }
+.data-table tbody tr { background: var(--table-body-background); }
 .data-table tbody tr:hover, .data-table tbody tr:focus-within { background: var(--table-hover-background); }
 .data-table strong { font-weight: var(--weight-medium); }
 .data-table .table-cell--text { min-width: 10rem; overflow-wrap: break-word; }
 .data-table .table-cell--description { min-width: 14rem; overflow-wrap: break-word; }
-.data-table .table-cell--identifier { width: 1%; min-width: 6.5rem; overflow-wrap: anywhere; }
-.data-table .table-cell--date { width: 1%; min-width: 8rem; font-variant-numeric: tabular-nums; }
+.data-table .table-cell--identifier { width: 1%; white-space: nowrap; overflow-wrap: normal; }
+.data-table .table-cell--date { width: 1%; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .data-table .table-cell--number { width: 1%; white-space: nowrap; text-align: right; font-variant-numeric: tabular-nums; }
-.data-table th.table-cell--number { white-space: normal; min-width: 3.5rem; }
-.data-table .table-cell--status, .data-table .table-cell--role { width: 1%; min-width: 6.25rem; }
+.data-table th.table-cell--number { white-space: nowrap; }
+.data-table .table-cell--status, .data-table .table-cell--role { width: 1%; }
+.data-table th.table-cell--status, .data-table th.table-cell--date { white-space: nowrap; }
 .data-table .table-cell--role { white-space: nowrap; }
 .data-table .table-cell--status .caption { min-width: 6rem; max-width: 14rem; }
 .data-table .table-cell--actions { width: 1%; white-space: nowrap; }
@@ -223,13 +225,13 @@ h3 { font-size: var(--font-card); font-weight: var(--weight-semibold); }
 .data-table .table-cell--actions .button--secondary { border-color: var(--table-border); box-shadow: none; }
 .data-table .table-cell--actions > .badge + .button { margin-top: var(--space-2); }
 .data-table .table-cell--actions .button + .button { margin-left: var(--space-1); }
-.data-table .table-cell--actions .page-actions { gap: var(--space-1); min-width: 7rem; max-width: 18rem; }
+.data-table .table-cell--actions .page-actions { gap: var(--space-2); width: max-content; min-width: 0; max-width: none; flex-wrap: nowrap; }
+.data-table .table-cell--actions .button, .table-action-link, .table-value { white-space: nowrap; }
 .data-table .table-cell--actions .caption { white-space: normal; max-width: 18rem; }
 .table-action-link { display: inline-flex; align-items: center; min-height: 24px; font-size: var(--font-label); font-weight: var(--weight-medium); color: var(--text-primary); text-decoration-color: var(--border-strong); }
 .table-action-link:hover { color: var(--primary-hover); text-decoration-color: currentColor; }
 @media (max-width: 639px), (pointer: coarse) { .table-action-link { min-height: var(--touch-control-height); } }
-.table-datetime { display: block; white-space: nowrap; }
-.table-datetime__time { display: block; }
+.table-datetime { display: inline-block; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .pagination__summary { color: var(--text-secondary); font-size: var(--font-caption); font-variant-numeric: tabular-nums; }
 .pagination__pages { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }

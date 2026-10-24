@@ -6,10 +6,10 @@
         {% for loan in page_obj %}
             <tr>
                 <td class="{% if admin %}table-cell--text{% else %}table-cell--identifier{% endif %}"><strong>#{{ loan.pk }}</strong>{% if admin %}<div>{{ loan.borrower.get_full_name|default:loan.borrower.username }}</div><span class="caption">{{ loan.borrower.username }}</span>{% endif %}</td>
-                <td class="table-cell--text"><ul class="loan-equipment-list">{% for equipment in loan.equipment_summary %}<li>{{ equipment.name }} <span class="caption">× {{ equipment.quantity }}</span></li>{% endfor %}</ul>{% if admin %}<div class="caption">Outstanding units: {% for unit in loan.units.all %}{% if not unit.returned_at %}{{ unit.asset_tag }} {% endif %}{% endfor %}</div>{% endif %}</td>
-                <td class="table-cell--date">{{ loan.issued_at|date:"M j, Y" }}<div class="caption">{{ loan.issued_at|date:"g:i A T" }}</div></td>
-                <td class="table-cell--date">{{ loan.due_at|date:"M j, Y" }}<div class="caption">{{ loan.due_at|date:"g:i A T" }}</div></td>
-                {% if history %}<td class="table-cell--date">{{ loan.completed_at|date:"M j, Y" }}<div class="caption">{{ loan.completed_at|date:"g:i A T" }}</div></td>{% else %}<td class="table-cell--number">{{ loan.outstanding_count }} of {{ loan.quantity }}</td>{% endif %}
+                <td class="table-cell--text"><ul class="loan-equipment-list">{% for equipment in loan.equipment_summary %}<li>{{ equipment.name }} <span class="caption"><span class="table-value">× {{ equipment.quantity }}</span></span></li>{% endfor %}</ul>{% if admin %}<div class="caption">Outstanding units: {% for unit in loan.units.all %}{% if not unit.returned_at %}<span class="table-value">{{ unit.asset_tag }}</span> {% endif %}{% endfor %}</div>{% endif %}</td>
+                <td class="table-cell--date">{% include "components/table_datetime.html" with value=loan.issued_at only %}</td>
+                <td class="table-cell--date">{% include "components/table_datetime.html" with value=loan.due_at only %}</td>
+                {% if history %}<td class="table-cell--date">{% include "components/table_datetime.html" with value=loan.completed_at only %}</td>{% else %}<td class="table-cell--number">{{ loan.outstanding_count }} of {{ loan.quantity }}</td>{% endif %}
                 <td class="table-cell--status">{% include "components/badge.html" with label=loan.status variant=loan.status_variant %}</td>
                 <td class="table-cell--actions"><div class="page-actions">
                     {% if admin %}

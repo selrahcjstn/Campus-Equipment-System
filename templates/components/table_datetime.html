@@ -1,1 +1,1 @@
-<time class="table-datetime" datetime="{{ value|date:'c' }}">{{ value|date:"M j, Y" }}<span class="caption table-datetime__time">{{ value|date:"g:i A T" }}</span></time>
+{% if value %}<time class="table-datetime" datetime="{{ value|date:'c' }}" title="{{ value|date:'e' }}">{{ value|date:"M j, Y" }} · {{ value|date:"g:i A" }}</time>{% else %}<span class="text-secondary">—</span>{% endif %}

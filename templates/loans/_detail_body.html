@@ -18,8 +18,8 @@
         <thead><tr><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--identifier">Asset tag</th><th scope="col" class="table-cell--date">Return date</th><th scope="col" class="table-cell--status">Condition / destination</th><th scope="col" class="table-cell--description">Received by / notes</th></tr></thead>
         <tbody>{% for unit in loan.units.all %}<tr>
             <td class="table-cell--text"><strong>{{ unit.equipment_name }}</strong>{% if unit.equipment_description %}<p class="caption">{{ unit.equipment_description }}</p>{% endif %}</td>
-            <td class="table-cell--identifier">{{ unit.asset_tag }}</td>
-            <td class="table-cell--date">{% if unit.returned_at %}{{ unit.returned_at|date:"M j, Y, g:i A T" }}{% else %}Not returned{% endif %}</td>
+            <td class="table-cell--identifier"><span class="table-value">{{ unit.asset_tag }}</span></td>
+            <td class="table-cell--date">{% if unit.returned_at %}{% include "components/table_datetime.html" with value=unit.returned_at only %}{% else %}Not returned{% endif %}</td>
             <td class="table-cell--status">{% if unit.returned_at %}{{ unit.get_return_condition_display }}<div class="caption">{% if unit.return_condition == 'DAMAGED' %}Sent to Maintenance{% else %}Made Available{% endif %}</div>{% else %}{% include "components/badge.html" with label="On loan" variant="info" %}{% endif %}</td>
             <td class="table-cell--description">{% if unit.received_by %}{{ unit.received_by.get_full_name|default:unit.received_by.username }}{% endif %}{% if unit.return_notes %}<p class="loan-notes">{{ unit.return_notes|linebreaksbr }}</p>{% elif unit.returned_at %}<span class="caption">No additional notes</span>{% else %}—{% endif %}</td>
         </tr>{% endfor %}</tbody>

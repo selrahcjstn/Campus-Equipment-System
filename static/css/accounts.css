@@ -2,4 +2,3 @@
 .account-contact { max-width: 280px; overflow-wrap: anywhere; }
 .account-equipment-list { margin: 0; padding: 0; list-style: none; overflow-wrap: anywhere; }
 .account-equipment-list li + li { margin-top: var(--space-2); }
-.data-table .account-phone { min-width: 10rem; white-space: nowrap; overflow-wrap: normal; }

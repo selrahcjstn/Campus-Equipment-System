@@ -2,7 +2,7 @@
     <caption>Maintenance records</caption>
     <thead><tr><th scope="col" class="table-cell--identifier">Record / physical unit</th><th scope="col" class="table-cell--text">Equipment</th><th scope="col" class="table-cell--description">Reported issue</th><th scope="col" class="table-cell--status">Status</th><th scope="col" class="table-cell--date">Reported / completed</th><th scope="col" class="table-cell--actions">Action</th></tr></thead>
     <tbody>{% for record in page_obj %}<tr>
-        <td class="table-cell--identifier"><strong>#{{ record.pk }}</strong><p><a href="{% url 'maintenance_history' record.unit_id %}">{{ record.unit.asset_tag }}</a></p></td>
+        <td class="table-cell--identifier"><strong>#{{ record.pk }}</strong><p><a href="{% url 'maintenance_history' record.unit_id %}"><span class="table-value">{{ record.unit.asset_tag }}</span></a></p></td>
         <td class="table-cell--text"><a href="{% url 'admin_equipment_detail' record.unit.equipment_id %}">{{ record.unit.equipment.name }}</a>{% if not record.unit.equipment.is_active %}<p class="caption">Archived catalog item</p>{% endif %}</td>
         <td class="table-cell--description maintenance-issue">{{ record.reason|truncatechars:120 }}</td>
         <td class="table-cell--status">{% include "components/badge.html" with label=record.get_status_display variant=record.status_variant %}</td>
