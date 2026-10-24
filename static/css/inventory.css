@@ -1,14 +1,20 @@
 .inventory-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
-.inventory-catalog-card { display: grid; grid-template-rows: auto 1fr auto auto; align-content: start; gap: var(--space-4); }
+.inventory-catalog-card { min-width: 0; display: grid; grid-template-rows: auto 1fr auto auto; align-content: start; gap: var(--space-4); }
 .inventory-catalog-card .page-actions { align-self: end; padding-top: var(--space-3); border-top: var(--border); }
 .inventory-catalog-card h2 { margin-top: var(--space-1); font-size: var(--font-card); }
 .inventory-catalog-card .eyebrow { font-size: var(--font-caption); font-weight: var(--weight-medium); color: var(--text-secondary); letter-spacing: 0; }
 .inventory-catalog-card > p { font-size: var(--font-label); }
+.inventory-catalog-card h2, .inventory-catalog-card .eyebrow { overflow-wrap: anywhere; }
+@supports (grid-template-rows: subgrid) {
+    .inventory-catalog-card { grid-template-rows: subgrid; grid-row: span 4; }
+    .inventory-catalog-card .page-actions { align-self: start; }
+}
 .inventory-stock { display: grid; gap: var(--space-3); padding: var(--space-3); border: var(--border); border-radius: var(--radius-sm); background: var(--background); font-size: var(--font-caption); }
 .inventory-stock-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); margin: 0; }
 .inventory-stock-counts dt { color: var(--text-secondary); font-weight: var(--weight-medium); }
 .inventory-stock-counts dd { margin: var(--space-1) 0 0; color: var(--text-primary); font-size: var(--font-card); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; }
 .inventory-detail { max-width: var(--form-width-wide); }
+.inventory-empty-reset { display: inline-flex; align-items: center; min-height: var(--touch-control-height); margin-top: var(--space-2); color: var(--text-primary); font-weight: var(--weight-medium); }
 .inventory-editor-form > .form-field { max-width: none; }
 .inventory-category-table .table-cell--text { width: 14rem; max-width: 14rem; overflow-wrap: anywhere; }
 .inventory-category-table .table-cell--description { overflow-wrap: anywhere; }

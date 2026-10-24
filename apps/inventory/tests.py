@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from threading import Barrier
+from urllib.parse import parse_qs, urlsplit
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -434,6 +435,60 @@ class InventoryPageTests(InventoryFixtures, TestCase):
         response = self.client.get(reverse("equipment_catalog"), {"state": "archived"})
         self.assertNotContains(response, "<h2>Projector</h2>")
         self.assertEqual(self.client.get(reverse("equipment_detail", args=[self.equipment.pk])).status_code, 404)
+
+    def test_combined_catalog_filters_and_pagination_preserve_query_parameters(self):
+        self.client.force_login(self.borrower)
+        matching = []
+        for index in range(12):
+            item = Equipment.objects.create(name=f"Camera kit {index:02d}", category=self.category)
+            EquipmentUnit.objects.create(equipment=item, asset_tag=f"FILTER-{index}")
+            matching.append(item.pk)
+        Equipment.objects.create(name="Camera unavailable", category=self.category)
+        wrong_category = Equipment.objects.create(name="Camera audio kit", category=self.other_category)
+        EquipmentUnit.objects.create(equipment=wrong_category, asset_tag="FILTER-OTHER")
+        archived = Equipment.objects.create(name="Camera archived", category=self.category, is_active=False)
+        EquipmentUnit.objects.create(equipment=archived, asset_tag="FILTER-ARCHIVED")
+        query = {"q": "cAmErA", "category": str(self.category.pk), "availability": "available"}
+        response = self.client.get(reverse("equipment_catalog"), query)
+        self.assertEqual([item.pk for item in response.context["page_obj"]], matching[:10])
+        self.assertEqual(response.context["page_obj"].paginator.count, 12)
+        links = response.context["links"]
+        self.assertEqual(parse_qs(urlsplit(links["next"]).query), {**{key: [value] for key, value in query.items()}, "page": ["2"]})
+        self.assertContains(response, 'method="get"')
+        self.assertContains(response, 'aria-label="Filter equipment catalog"')
+        second = self.client.get(reverse("equipment_catalog") + links["next"])
+        self.assertEqual([item.pk for item in second.context["page_obj"]], matching[10:])
+        self.assertEqual(parse_qs(urlsplit(second.context["links"]["previous"]).query), {**{key: [value] for key, value in query.items()}, "page": ["1"]})
+        no_match = self.client.get(reverse("equipment_catalog"), {**query, "category": self.other_category.pk, "q": "Projector"})
+        self.assertEqual(no_match.context["page_obj"].paginator.count, 0)
+        self.assertContains(no_match, "No equipment in this view")
+        self.assertContains(no_match, f'<a class="inventory-empty-reset" href="{reverse("equipment_catalog")}">Clear filters</a>', html=True)
+
+    def test_catalog_empty_state_when_only_archived_items_exist(self):
+        Equipment.objects.update(is_active=False)
+        self.client.force_login(self.borrower)
+        response = self.client.get(reverse("equipment_catalog"))
+        self.assertContains(response, "No equipment listed yet")
+        self.assertNotContains(response, "Clear filters")
+        self.assertEqual(response.context["page_obj"].paginator.count, 0)
+
+    def test_public_descriptions_and_text_availability_labels(self):
+        self.equipment.description = "Classroom projector <script>alert(1)</script>\nIncludes carrying case."
+        self.equipment.save(update_fields=["description"])
+        self.client.force_login(self.borrower)
+        catalog = self.client.get(reverse("equipment_catalog"))
+        self.assertContains(catalog, "Classroom projector &lt;script&gt;")
+        self.assertNotContains(catalog, "<script>alert(1)</script>")
+        detail = self.client.get(reverse("equipment_detail", args=[self.equipment.pk]))
+        self.assertContains(detail, "&lt;/script&gt;<br>Includes carrying case.")
+        self.assertContains(detail, "Total Serviceable includes available, reserved, and borrowed units.")
+        EquipmentUnit.objects.filter(equipment=self.equipment).update(status="RESERVED")
+        for url in [reverse("equipment_catalog"), reverse("equipment_detail", args=[self.equipment.pk])]:
+            response = self.client.get(url)
+            self.assertContains(response, "Unavailable")
+            self.assertContains(response, "<dt>Available</dt><dd>0</dd>", html=True)
+            self.assertContains(response, "<dt>Total Serviceable</dt><dd>2</dd>", html=True)
+            self.assertNotContains(response, f"?equipment={self.equipment.pk}")
 
     def test_request_link_prefills_eligible_equipment_and_handles_invalid_selection(self):
         self.client.force_login(self.borrower)

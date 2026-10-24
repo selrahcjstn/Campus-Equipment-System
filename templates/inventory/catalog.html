@@ -5,13 +5,19 @@
 {% block content %}
 <header class="page-heading"><div><h1>Equipment Catalog</h1><p>Browse equipment by category and see what is currently available.</p></div><a class="button button--secondary" href="{% url 'my_requests' %}">My borrowing requests</a></header>
 <div class="section-stack">
-    {% include "components/messages.html" %}{% include "inventory/_filters.html" %}
+    {% include "components/messages.html" %}{% include "components/filter_toolbar.html" with filter_label="Filter equipment catalog" %}
     <div class="content-grid inventory-grid">{% for equipment in page_obj %}<article class="card inventory-catalog-card">
         <div><span class="eyebrow">{{ equipment.category.name|default:"Uncategorized" }}</span><h2>{{ equipment.name }}</h2></div>
         <p class="text-secondary">{{ equipment.description|default:"No description provided."|truncatechars:240 }}</p>
         {% include "inventory/_stock_summary.html" with equipment=equipment only %}
         <div class="page-actions"><a class="button button--secondary" href="{% url 'equipment_detail' equipment.pk %}">View details</a>{% if equipment.available_count %}<a class="button button--primary" href="{% url 'new_borrowing_request' %}?equipment={{ equipment.pk }}">Request equipment</a>{% endif %}</div>
-    </article>{% empty %}<section class="card empty-state"><h2>No equipment in this view</h2><p class="text-secondary">Try clearing your search and category filters. Active catalog items will appear here when added.</p></section>{% endfor %}</div>
+    </article>{% empty %}<section class="card empty-state">
+        {% if filter_form.q.value or filter_form.category.value or filter_form.availability.value %}
+        <h2>No equipment in this view</h2><p class="text-secondary">Try a different equipment name or clear your category and availability filters.</p><a class="inventory-empty-reset" href="{% url 'equipment_catalog' %}">Clear filters</a>
+        {% else %}
+        <h2>No equipment listed yet</h2><p class="text-secondary">Check back later for campus equipment.</p>
+        {% endif %}
+    </section>{% endfor %}</div>
     {% include "inventory/_pagination.html" %}
 </div>
 {% endblock %}
