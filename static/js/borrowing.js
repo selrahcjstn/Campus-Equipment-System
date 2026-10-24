@@ -6,6 +6,9 @@ if (requestForm) {
     const detailsStep = requestForm.querySelector('[data-details-step]');
     const continueButton = requestForm.querySelector('[data-continue]');
     const backButton = requestForm.querySelector('[data-back]');
+    const addAnother = requestForm.querySelector('[data-add-another]');
+    const catalogPicker = requestForm.querySelector('[data-catalog-picker]');
+    const selectedSection = requestForm.querySelector('[data-selected-section]');
     const summary = requestForm.querySelector('[data-selection-summary]');
     const selectionError = requestForm.querySelector('[data-selection-error]');
     const catalogStatus = requestForm.querySelector('[data-catalog-status]');
@@ -52,15 +55,27 @@ if (requestForm) {
             row.querySelector('[data-selected-availability]').textContent = item ? `${item.category} · ${item.available} available` : 'Return to equipment selection to choose an available item.';
             if (!choice.value) return;
             const selected = document.createElement('li');
-            const name = document.createElement('span');
+            const info = document.createElement('div');
+            info.className = 'borrowing-selected-info';
+            const name = document.createElement('strong');
             name.textContent = item?.name || 'Unavailable equipment';
+            const metadata = document.createElement('p');
+            metadata.className = 'caption';
+            metadata.textContent = item ? `${item.category} · ${item.available} available ${item.available === 1 ? 'unit' : 'units'}` : 'Choose another available item.';
+            info.append(name, metadata);
+            const actions = document.createElement('div');
+            actions.className = 'borrowing-selected-actions';
+            const badge = document.createElement('span');
+            badge.className = 'badge badge--inactive';
+            badge.textContent = 'Selected';
             const remove = document.createElement('button');
             remove.type = 'button';
             remove.className = 'borrowing-remove';
             remove.dataset.removeSelection = index;
             remove.textContent = 'Remove';
             remove.setAttribute('aria-label', `Remove ${name.textContent}`);
-            selected.append(name, remove);
+            actions.append(badge, remove);
+            selected.append(info, actions);
             summary.append(selected);
         });
         requestForm.querySelector('[name="items-TOTAL_FORMS"]').value = currentRows.length;
@@ -70,13 +85,33 @@ if (requestForm) {
         equipment.forEach((item, id) => {
             const added = ids.includes(id);
             item.button.disabled = added || item.available === 0 || ids.length >= maximum;
-            item.button.textContent = added ? 'Added' : 'Add';
-            item.button.setAttribute('aria-label', added ? `${item.name} added` : `Add ${item.name}`);
+            item.button.textContent = added ? 'Selected' : 'Add';
+            item.button.setAttribute('aria-label', added ? `${item.name} selected` : `Add ${item.name}`);
         });
         requestForm.querySelector('[data-selection-count]').textContent = `${ids.length} of ${maximum} selected`;
         requestForm.querySelector('[data-selection-empty]').hidden = ids.length > 0;
+        selectedSection.hidden = ids.length === 0;
+        addAnother.hidden = ids.length === 0 || ids.length >= maximum;
         continueButton.hidden = !validSelection();
         selectionError.hidden = true;
+    }
+
+    function filterCatalog(announce = true) {
+        const query = catalogSearch.value.toLocaleLowerCase().trim();
+        let matches = 0;
+        equipment.forEach((item) => {
+            item.entry.hidden = !item.entry.dataset.searchText.toLocaleLowerCase().includes(query);
+            if (!item.entry.hidden) matches += 1;
+        });
+        requestForm.querySelector('[data-search-empty]').hidden = matches > 0;
+        catalogStatus.textContent = announce ? `${matches} equipment ${matches === 1 ? 'item matches' : 'items match'} your search.` : '';
+    }
+
+    function setCatalogOpen(open, focus = false) {
+        catalogPicker.hidden = !open;
+        addAnother.setAttribute('aria-expanded', String(open));
+        addAnother.textContent = open ? 'Hide equipment catalog' : 'Add another equipment';
+        if (open && focus) catalogSearch.focus();
     }
 
     function showStep(step, focus = true) {
@@ -100,6 +135,8 @@ if (requestForm) {
             }
             row.querySelector('select').value = id;
             updateRows();
+            setCatalogOpen(false);
+            (continueButton.hidden ? summary.querySelector('li:last-child button') : continueButton)?.focus();
         });
     });
     summary.addEventListener('click', (event) => {
@@ -107,18 +144,22 @@ if (requestForm) {
         if (!button) return;
         equipmentRows()[+button.dataset.removeSelection].remove();
         updateRows();
-        catalogSearch.focus();
+        if (!selectedRows().length) {
+            catalogSearch.value = '';
+            filterCatalog(false);
+            setCatalogOpen(true, true);
+        } else if (!catalogPicker.hidden) setCatalogOpen(true, true);
+        else addAnother.focus();
     });
-    catalogSearch.addEventListener('input', () => {
-        const query = catalogSearch.value.toLocaleLowerCase().trim();
-        let matches = 0;
-        equipment.forEach((item) => {
-            item.entry.hidden = !item.entry.dataset.searchText.toLocaleLowerCase().includes(query);
-            if (!item.entry.hidden) matches += 1;
-        });
-        requestForm.querySelector('[data-search-empty]').hidden = matches > 0;
-        catalogStatus.textContent = `${matches} equipment ${matches === 1 ? 'item matches' : 'items match'} your search.`;
+    addAnother.addEventListener('click', () => {
+        const open = catalogPicker.hidden;
+        if (open) {
+            catalogSearch.value = '';
+            filterCatalog(false);
+        }
+        setCatalogOpen(open, open);
     });
+    catalogSearch.addEventListener('input', () => filterCatalog());
     catalogSearch.addEventListener('keydown', (event) => {
         if (event.key === 'Enter') event.preventDefault();
     });
@@ -157,6 +198,7 @@ if (requestForm) {
         submit.textContent = 'Submit Borrowing Request';
     });
     updateRows();
+    setCatalogOpen(!validSelection());
     requestForm.noValidate = true;
     requestForm.querySelector('[data-fallback-controls]').hidden = true;
     requestForm.querySelector('[data-step-indicator]').hidden = false;

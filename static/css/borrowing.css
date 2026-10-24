@@ -16,10 +16,14 @@
 .borrowing-catalog-description { flex: 1; }
 .borrowing-catalog-footer, .borrowing-selection-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); }
 .borrowing-catalog-footer .button { min-height: 32px; padding: var(--space-1) var(--space-3); font-size: var(--font-label); }
-.borrowing-selection { border-top: var(--border); padding-top: var(--space-4); }
+.borrowing-selection { min-width: 0; }
+.borrowing-catalog-picker { border-top: var(--border); padding-top: var(--space-4); }
 .borrowing-selected-list { list-style: none; padding: 0; margin: 0; }
 .borrowing-selected-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding-block: var(--space-2); border-bottom: var(--border); font-size: var(--font-label); overflow-wrap: anywhere; }
 .borrowing-selected-list li:last-child { border-bottom: 0; }
+.borrowing-selected-info { min-width: 0; }
+.borrowing-selected-info p { margin-top: var(--space-1); }
+.borrowing-selected-actions { display: flex; align-items: center; gap: var(--space-3); flex-shrink: 0; }
 .borrowing-item-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(88px, 140px); align-items: center; gap: var(--space-3); border: 0; border-bottom: var(--border); padding: 0 0 var(--space-4); margin: 0; min-width: 0; }
 .borrowing-item-row:last-child { border-bottom: 0; padding-bottom: 0; }
 .borrowing-item-row > * { min-width: 0; }
@@ -33,4 +37,5 @@
     .borrowing-steps { gap: var(--space-2); font-size: var(--font-caption); }
     .borrowing-item-row { grid-template-columns: minmax(0, 1fr) minmax(80px, 104px); }
     .borrowing-workflow-actions .button { flex: 1 1 auto; }
+    .borrowing-selected-list li { flex-wrap: wrap; }
 }

@@ -879,6 +879,115 @@ class TwoStepBorrowingPageTests(BorrowingFixtures, TestCase):
         self.assertFalse(Allocation.objects.exists())
 
 
+class EquipmentPreselectionFlowTests(BorrowingFixtures, TestCase):
+    def setUp(self):
+        self.make_records()
+        self.client.force_login(self.borrower)
+        self.url = reverse("new_borrowing_request")
+
+    def test_catalog_link_preselects_item_and_places_selected_details_before_catalog(self):
+        from apps.inventory.models import Category
+        category = Category.objects.create(name="Campus bags")
+        item = self.equipment[0]
+        item.name, item.category = "Bag", category
+        item.save()
+        link = f"{self.url}?equipment={item.pk}"
+        catalog = self.client.get(reverse("equipment_catalog"))
+        self.assertContains(catalog, f'href="{link}">Request equipment</a>')
+        response = self.client.get(link)
+        self.assertEqual(response.context["formset"].forms[0]["equipment"].value(), item.pk)
+        self.assertEqual(response.context["formset"].forms[0]["quantity"].value(), 1)
+        self.assertEqual(response.context["preselected_equipment"].pk, item.pk)
+        self.assertContains(response, 'data-catalog-picker hidden')
+        self.assertContains(response, '<strong>Bag</strong>', html=True)
+        self.assertContains(response, 'Campus bags · 3 available units')
+        self.assertContains(response, '<span class="badge badge--inactive">Selected</span>', html=True)
+        self.assertContains(response, 'aria-label="Remove Bag"')
+        self.assertContains(response, 'Add another equipment')
+        content = response.content.decode()
+        self.assertLess(content.index('data-selection-summary'), content.index('data-catalog-search'))
+        self.assertFalse(BorrowingRequest.objects.exists())
+        self.assertFalse(Allocation.objects.exists())
+
+    def test_direct_navigation_has_no_selected_item_and_shows_normal_catalog(self):
+        response = self.client.get(self.url)
+        self.assertIsNone(response.context["preselected_equipment"])
+        self.assertFalse(response.context["formset"].forms[0]["equipment"].value())
+        self.assertNotContains(response, 'data-catalog-picker hidden')
+        self.assertContains(response, 'data-selected-section hidden')
+        self.assertEqual(len(response.context["catalog"]), 4)
+
+    def test_preselection_keeps_all_categories_and_accepts_one_two_or_three_distinct_items(self):
+        from apps.inventory.models import Category
+        categories = [Category.objects.create(name=name) for name in ["Audio", "Presentation"]]
+        for index, item in enumerate(self.equipment):
+            item.category = categories[index % 2]
+            item.save()
+        response = self.client.get(self.url, {"equipment": self.equipment[0].pk})
+        self.assertEqual({item.pk for item in response.context["catalog"]}, {item.pk for item in self.equipment})
+        for count in [1, 2, 3]:
+            with self.subTest(count=count):
+                selected = self.equipment[:count]
+                response = self.client.post(f"{self.url}?equipment={selected[0].pk}", self.post_data([(item.pk, 1) for item in selected]))
+                self.assertEqual(response.status_code, 302)
+                borrowing = BorrowingRequest.objects.latest("pk")
+                self.assertEqual(set(borrowing.items.values_list("equipment_id", flat=True)), {item.pk for item in selected})
+                self.assertEqual(borrowing.status, "PENDING")
+        self.assertFalse(Allocation.objects.exists())
+        self.assertEqual(EquipmentUnit.objects.filter(status="AVAILABLE").count(), 12)
+
+    def test_duplicate_and_four_item_selections_cannot_bypass_preselection_flow(self):
+        for items in [[(self.equipment[0].pk, 1)] * 2, [(item.pk, 1) for item in self.equipment]]:
+            response = self.client.post(f"{self.url}?equipment={self.equipment[0].pk}", self.post_data(items))
+            self.assertTrue(response.context["formset"].non_form_errors())
+            self.assertFalse(BorrowingRequest.objects.exists())
+            self.assertFalse(BorrowingRequestItem.objects.exists())
+            self.assertFalse(Allocation.objects.exists())
+
+    def test_unavailable_zero_stock_and_archived_items_are_never_preselected(self):
+        item = self.equipment[0]
+        for state in ["RESERVED", "ON_LOAN", "MAINTENANCE", "RETIRED", "zero", "archived"]:
+            with self.subTest(state=state):
+                if state == "zero":
+                    item.units.all().delete()
+                elif state == "archived":
+                    item.is_active = False
+                    item.save()
+                    EquipmentUnit.objects.create(equipment=item, asset_tag="ARCHIVED-PRESELECT")
+                else:
+                    item.units.update(status=state)
+                response = self.client.get(self.url, {"equipment": item.pk})
+                self.assertIsNone(response.context["preselected_equipment"])
+                self.assertFalse(response.context["formset"].forms[0]["equipment"].value())
+                self.assertContains(response, "That equipment is unavailable.")
+                self.assertNotContains(response, 'data-catalog-picker hidden')
+                response = self.client.post(self.url, self.post_data([(item.pk, 1)]))
+                self.assertTrue(response.context["formset"].forms[0].errors["equipment"])
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+    def test_invalid_or_nonexistent_identifiers_fall_back_to_catalog(self):
+        for identifier in ["not-an-id", "1.5", "0", "-1", "999999", "9" * 80, ""]:
+            with self.subTest(identifier=identifier):
+                response = self.client.get(self.url, {"equipment": identifier})
+                self.assertEqual(response.status_code, 200)
+                self.assertIsNone(response.context["preselected_equipment"])
+                self.assertFalse(response.context["formset"].forms[0]["equipment"].value())
+                self.assertNotContains(response, 'data-catalog-picker hidden')
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+    def test_validation_errors_preserve_changed_selection_instead_of_reapplying_url(self):
+        data = self.post_data([(self.equipment[1].pk, 2), (self.equipment[2].pk, 1)])
+        data["purpose"] = ""
+        response = self.client.post(f"{self.url}?equipment={self.equipment[0].pk}", data)
+        self.assertTrue(response.context["form"].errors["purpose"])
+        self.assertIsNone(response.context["preselected_equipment"])
+        self.assertEqual(response.context["formset"].forms[0]["equipment"].value(), str(self.equipment[1].pk))
+        self.assertEqual(response.context["formset"].forms[0]["quantity"].value(), "2")
+        self.assertEqual(response.context["formset"].forms[1]["equipment"].value(), str(self.equipment[2].pk))
+        self.assertEqual(response.context["form"]["due_date"].value(), data["due_date"])
+        self.assertFalse(BorrowingRequest.objects.exists())
+
+
 class RequestSummaryPresentationTests(BorrowingFixtures, TestCase):
     def setUp(self):
         self.make_records()

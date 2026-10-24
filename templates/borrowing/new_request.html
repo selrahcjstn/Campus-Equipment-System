@@ -21,6 +21,14 @@
         {% for item_form in formset %}{% if item_form.equipment.errors %}<div class="alert alert--error" role="alert">Equipment {{ forloop.counter }}: {{ item_form.equipment.errors }}</div>{% endif %}{% endfor %}
         <section class="card section-stack" aria-labelledby="catalog-title" data-selection-step hidden>
             <div><h2 id="catalog-title" tabindex="-1">Select equipment</h2><p class="caption">Choose the equipment you need. Pending requests do not reserve units.</p></div>
+            <div class="borrowing-selection" data-selected-section{% if not preselected_equipment %} hidden{% endif %}>
+                <div class="borrowing-selection-heading"><h3>Selected equipment</h3><span class="caption" data-selection-count role="status" aria-live="polite">{% if preselected_equipment %}1{% else %}0{% endif %} of {{ limits.max_items }} selected</span></div>
+                <ul class="borrowing-selected-list" data-selection-summary>{% if preselected_equipment %}<li><div class="borrowing-selected-info"><strong>{{ preselected_equipment.name }}</strong><p class="caption">{{ preselected_equipment.category.name|default:"Uncategorized" }} · {{ preselected_equipment.available_count }} available unit{{ preselected_equipment.available_count|pluralize }}</p></div><div class="borrowing-selected-actions"><span class="badge badge--inactive">Selected</span><button type="button" class="borrowing-remove" data-remove-selection="0" aria-label="Remove {{ preselected_equipment.name }}">Remove</button></div></li>{% endif %}</ul>
+            </div>
+            <p class="caption" data-selection-empty{% if preselected_equipment %} hidden{% endif %}>Add at least one item to continue.</p>
+            <p class="field-errors" data-selection-error role="alert" hidden></p>
+            <div class="page-actions"><button type="button" class="button button--secondary" data-add-another aria-controls="borrowing-catalog-picker" aria-expanded="false" hidden>Add another equipment</button><button type="button" class="button button--primary" data-continue hidden>Continue</button></div>
+            <div class="section-stack borrowing-catalog-picker" id="borrowing-catalog-picker" data-catalog-picker{% if preselected_equipment %} hidden{% endif %}>
             <div class="form-field borrowing-search"><label for="catalog-search">Search the catalog</label><div class="search-input">{% include "components/icon.html" with name="search" %}<input type="search" id="catalog-search" data-catalog-search placeholder="Search equipment..."></div></div>
             <div class="borrowing-catalog" role="region" aria-label="Available equipment choices">
                 {% for equipment in catalog %}
@@ -33,13 +41,7 @@
             </div>
             <p class="caption" data-search-empty hidden>No equipment matches your search. Try another name or category.</p>
             <p class="caption" data-catalog-status role="status" aria-live="polite"></p>
-            <div class="borrowing-selection">
-                <div class="borrowing-selection-heading"><h3>Selected equipment</h3><span class="caption" data-selection-count role="status" aria-live="polite">0 of {{ limits.max_items }} selected</span></div>
-                <ul class="borrowing-selected-list" data-selection-summary></ul>
-                <p class="caption" data-selection-empty>Add at least one item to continue.</p>
             </div>
-            <p class="field-errors" data-selection-error role="alert" hidden></p>
-            <div class="page-actions"><button type="button" class="button button--primary" data-continue hidden>Continue</button></div>
         </section>
         <section class="card section-stack" aria-labelledby="details-title" data-details-step>
             <div><h2 id="details-title" tabindex="-1">Borrowing details</h2><p class="caption">Set quantities, tell us the purpose, and choose a return date.</p></div>

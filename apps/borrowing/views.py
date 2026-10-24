@@ -58,6 +58,7 @@ def new_request(request):
     data = request.POST if request.method == "POST" else None
     form = BorrowingRequestForm(data)
     initial = None
+    preselected_equipment = None
     if request.method == "GET" and request.GET.get("equipment"):
         try:
             equipment_id = int(request.GET["equipment"])
@@ -66,6 +67,7 @@ def new_request(request):
         equipment = catalog_queryset().filter(pk=equipment_id, available_count__gt=0).first()
         if equipment:
             initial = [{"equipment": equipment.pk, "quantity": 1}]
+            preselected_equipment = equipment
         else:
             messages.info(request, "That equipment is unavailable. Please choose another catalog item.")
     formset = RequestItemFormSet(data, initial=initial, prefix="items")
@@ -105,7 +107,7 @@ def new_request(request):
             else:
                 messages.success(request, f"Request #{borrowing.pk} submitted for Admin review.")
                 return redirect("request_detail", pk=borrowing.pk)
-    return render(request, "borrowing/new_request.html", {"form": form, "formset": formset, "catalog": catalog_queryset(), "limits": borrowing_limits(), "active_nav": "requests"}, status=status)
+    return render(request, "borrowing/new_request.html", {"form": form, "formset": formset, "catalog": catalog_queryset(), "preselected_equipment": preselected_equipment, "limits": borrowing_limits(), "active_nav": "requests"}, status=status)
 
 
 def _detail_context(borrowing, *, admin=False):
