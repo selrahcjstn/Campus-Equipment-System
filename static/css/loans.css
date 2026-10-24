@@ -1,3 +1,5 @@
+.data-table .loan-approved-due { min-width: 11rem; }
+th.loan-approved-due { white-space: nowrap; }
 .loan-equipment-list { margin: 0; padding: 0; list-style: none; }
 .loan-equipment-list li + li { margin-top: var(--space-2); }
 .loan-readiness-error { max-width: 280px; margin: var(--space-2) 0; }
