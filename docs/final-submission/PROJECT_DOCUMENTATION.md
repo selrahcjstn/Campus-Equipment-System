@@ -29,7 +29,7 @@ The **Campus Equipment Borrowing and Inventory System** is a custom web applicat
 
 The system is strictly partitioned into two mutually exclusive access levels: **Basic User** (handling student/faculty equipment browsing, request submission, and loan history) and a 100% custom-built **Admin Portal** (comprising dashboard analytics, user governance, catalog management, inventory reconciliation, repair tracking, CSV report generation, and immutable audit logging). Built-in or third-party automatic admin generators were strictly avoided in compliance with project specifications.
 
-The software utilizes an atomic database transaction model and database-level constraints to prevent common logistical pitfalls such as double allocation of physical units, partial request creation, and unauthorized privilege escalation. The integrated codebase passes **516 automated test cases** with zero failures, verified across comprehensive unit, integration, role security, and multi-threaded concurrency trials.
+The software utilizes an atomic database transaction model and database-level constraints to prevent common logistical pitfalls such as double allocation of physical units, partial request creation, and unauthorized privilege escalation. The integrated codebase passes **524 automated test cases** with zero failures, verified across comprehensive unit, integration, role security, and multi-threaded concurrency trials.
 
 ---
 
@@ -79,7 +79,7 @@ The software utilizes an atomic database transaction model and database-level co
   - [6.4 Fictional Demonstration Data Seeding (`seed_project_demo`)](#64-fictional-demonstration-data-seeding-seed_project_demo)
 - [Chapter 7 — Testing, Verification, and Evaluation](#chapter-7--testing-verification-and-evaluation)
   - [7.1 Quality Assurance Strategy](#71-quality-assurance-strategy)
-  - [7.2 Automated Test Execution Results (516 Passing Tests)](#72-automated-test-execution-results-516-passing-tests)
+  - [7.2 Automated Test Execution Results (524 Passing Tests)](#72-automated-test-execution-results-524-passing-tests)
   - [7.3 Module Test Coverage Breakdown](#73-module-test-coverage-breakdown)
   - [7.4 Concurrency Race Condition Trials (30/30 Passing)](#74-concurrency-race-condition-trials-3030-passing)
   - [7.5 Security and Privilege Escalation Verification](#75-security-and-privilege-escalation-verification)
@@ -310,21 +310,22 @@ The custom management command `seed_project_demo` automates the generation of th
 
 ### 7.1 Test Execution Results
 The test suite was executed against a clean test database using Django's test runner:
-- **Total Tests Executed:** 516
-- **Passed:** 516 (100%)
+- **Total Tests Executed:** 524
+- **Passed:** 524 (100%)
 - **Failures / Errors:** 0
-- **Duration:** 31.9 seconds
+- **Duration:** 54.474 seconds
 
 ### 7.2 Module Test Distribution
 - `apps.accounts`: 80 Tests
 - `apps.borrowing`: 111 Tests
 - `apps.dashboard`: 76 Tests
-- `apps.inventory`: 107 Tests
+- `apps.inventory`: 108 Tests
 - `apps.loans`: 67 Tests
 - `apps.maintenance`: 75 Tests
+- `scripts`: 7 demo/package safety tests
 
 ### 7.3 Concurrency Verification Evidence
-To satisfy Business Rule 3 (BR3), the team conducted **30 automated, isolated, multi-threaded trials** of competing approvals for the last single available unit of an equipment model:
+The earlier isolated BR3 audit recorded **30 automated, isolated, multi-threaded trials** of competing approvals for the last single available unit of an equipment model:
 - **Result:** In **30 out of 30 trials**, exactly one approval succeeded while the competing attempt was cleanly rejected with a validation error. No database deadlocks, orphaned allocations, or dual reservations occurred.
 
 *(See [`TESTING_DOCUMENTATION.md`](TESTING_DOCUMENTATION.md) for full test matrices and trial evidence).*
@@ -342,7 +343,7 @@ The Campus Equipment Borrowing and Inventory System successfully delivers an ins
 - Seamless partial return processing and automatic damaged unit maintenance routing.
 - Real-time executive dashboards, dynamic usage charts, and CSV report exports.
 - Immutable audit logging across 24 distinct operational actions.
-- Verified test suite containing 516 passing automated test cases.
+- Verified test suite containing 524 passing automated test cases.
 
 ### 8.3 Known System Limitations
 - **Local Deployment Configuration:** The current codebase is optimized for local evaluation with SQLite and development settings. Multi-node cloud deployments require migrating to PostgreSQL and configuring static asset CDNs.

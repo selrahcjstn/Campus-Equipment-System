@@ -1,3 +1,5 @@
+> Historical report: this records an earlier audit/implementation pass. For current verified status, see [SYSTEM_COMPLIANCE_AUDIT.md](SYSTEM_COMPLIANCE_AUDIT.md) and [SUBMISSION_READINESS_REPORT.md](docs/final-submission/SUBMISSION_READINESS_REPORT.md).
+
 # Categories and Equipment Inventory — Audit and Targeted Fixes
 
 Date: 25 October 2026, Asia/Manila. Baseline: `cf985ab`.

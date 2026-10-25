@@ -1,0 +1,35 @@
+{
+  "database": "demo.sqlite3",
+  "counts": {
+    "categories": 3,
+    "catalog_items": 6,
+    "physical_units": 18,
+    "admins": 1,
+    "basic_users": 8,
+    "requests": 20,
+    "loans": 8,
+    "maintenance_records": 5
+  },
+  "checks": {
+    "minimum_categories": true,
+    "minimum_catalog_items": true,
+    "minimum_physical_units": true,
+    "minimum_admins": true,
+    "minimum_basic_users": true,
+    "minimum_requests": true,
+    "minimum_loans": true,
+    "minimum_maintenance_records": true,
+    "rejected_request": true,
+    "cancelled_request": true,
+    "partial_return": true,
+    "damaged_return": true,
+    "outstanding_overdue_loan": true,
+    "all_inventory_statuses": true,
+    "complete_unit_metadata": true,
+    "categorized_equipment": true,
+    "no_duplicate_reservation": true,
+    "active_allocation_statuses": true,
+    "foreign_keys": true
+  },
+  "passed": true
+}

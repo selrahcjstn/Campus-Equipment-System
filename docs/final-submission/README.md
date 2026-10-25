@@ -15,27 +15,56 @@ This directory (`docs/final-submission/`) contains a working technical documenta
 
 ```text
 docs/final-submission/
+├── documentation/             # Four rendered submission PDFs (25 October 2026 snapshot)
+├── screenshots/               # 26 actual fictional-data screenshots used by the PDF guide
 ├── README.md                   # Documentation index, submission guide, and manual checklist
 ├── PROJECT_DOCUMENTATION.md    # Comprehensive academic manuscript (Chapters 1 to 8)
 ├── DATABASE_DESIGN.md          # Database schema, table relationships, and data dictionary
 ├── ERD.md                      # Complete Mermaid Entity Relationship Diagram (ERD)
 ├── SYSTEM_ARCHITECTURE.md      # Django MTV architecture diagram, request lifecycle, and tech stack
 ├── SYSTEM_WORKFLOWS.md         # Detailed workflow diagrams, state machines, and narrative explanations
-└── TESTING_DOCUMENTATION.md    # Test methodology, test matrices, and 516 verified test results
+└── TESTING_DOCUMENTATION.md    # Test methodology, test matrices, and 524 verified test results
 ```
 
 ---
 
 ## 2. Document Descriptions
 
+Current operating guides are [BASIC_USER_GUIDE.md](BASIC_USER_GUIDE.md) and
+[ADMIN_GUIDE.md](ADMIN_GUIDE.md). [REHEARSAL_AND_EVIDENCE.md](REHEARSAL_AND_EVIDENCE.md)
+contains a proposed twelve-minute demonstration plan and blank evidence records
+for the team to complete. [TECHNOLOGY_EVALUATION.md](TECHNOLOGY_EVALUATION.md)
+documents future-adoption criteria without claiming hardware or institutional
+integration trials have happened.
+
+The rendered submission documents are available below. They document the
+25 October 2026 snapshot and distinguish executed tests from pending external
+evidence. Section/roster details and real disclosure signatures still require
+team review. The older `Campus_Equipment_Borrowing_System_Documentation.pdf`
+export remains excluded by the source-package script; use these newer PDFs.
+
+| Final PDF | Pages |
+| --- | ---: |
+| [Project documentation](documentation/Group%201%20-%20Documentation.pdf) | 41 |
+| [Test cases and traceability](documentation/Group%201%20-%20Test%20Cases.pdf) | 95 |
+| [Illustrated system user guide](documentation/Group%201%20-%20System%20User%20Guide.pdf) | 38 |
+| [AI disclosure - unsigned draft](documentation/AI%20Disclosure%20Agreement.pdf) | 3 |
+
+The test register covers 80 normalized specification checks through 116
+scenarios: 108 PASS, 0 FAIL, 3 NOT EXECUTED and 5 BLOCKED. The separate permanent
+suite passed all 524 automated methods. All 18 required screenshot filenames,
+plus eight supplementary views, are in [screenshots/](screenshots/).
+Earlier implementation verification is recorded in
+[SUBMISSION_READINESS_REPORT.md](SUBMISSION_READINESS_REPORT.md).
+
 | File Name | Scope & Purpose | Target Course Outcomes |
 |---|---|---|
 | [`PROJECT_DOCUMENTATION.md`](PROJECT_DOCUMENTATION.md) | **Primary academic document** containing Chapters 1 through 8: Project Introduction, System Requirements (A1–A8, U1–U4, BR1–BR6), System Design & Architectural Options Comparison, Database Design, System Workflows, System Implementation, Testing & Verification, and Conclusion with Ethical & Standards Analysis. | CO1, CO2, CO3, CO4, CO5, CO6 |
-| [`DATABASE_DESIGN.md`](DATABASE_DESIGN.md) | In-depth relational database documentation: ERD summary, table specifications, field definitions, primary/foreign keys, uniqueness constraints, database-level check constraints, composite indexes, and complete Data Dictionary for all 10 Django models across 6 modular applications. | CO4, CO5 |
+| [`DATABASE_DESIGN.md`](DATABASE_DESIGN.md) | In-depth relational database documentation: ERD summary, table specifications, field definitions, primary/foreign keys, uniqueness constraints, database-level check constraints, composite indexes, and complete Data Dictionary for all 12 Django models across 6 modular applications. | CO4, CO5 |
 | [`ERD.md`](ERD.md) | Standalone, high-resolution Mermaid Entity Relationship Diagram illustrating entities, attributes, primary keys, foreign keys, cardinality notations (1:N, 1:1), and referential integrity constraints. | CO2, CO5 |
 | [`SYSTEM_ARCHITECTURE.md`](SYSTEM_ARCHITECTURE.md) | Architectural breakdown of the Django Model-Template-View pattern, component interaction diagram, request-response lifecycle, role-based middleware/decorator security layers, transaction isolation, and architectural trade-off analysis. | CO1, CO2, CO4 |
 | [`SYSTEM_WORKFLOWS.md`](SYSTEM_WORKFLOWS.md) | Visual state transitions and Mermaid sequence/activity flowcharts covering User Registration & Login, Equipment Browsing, Borrowing Submission, Admin Approval/Rejection, Allocation Locks, Equipment Release, Partial/Full Returns, Damaged Return Maintenance, and Category Archiving. | CO2, CO3 |
-| [`TESTING_DOCUMENTATION.md`](TESTING_DOCUMENTATION.md) | Comprehensive testing report covering the test strategy, execution environment, unit tests, integration tests, concurrency race-condition trials (30/30 isolated trials), security/permission tests, and the breakdown of **516 verified automated tests**. | CO3, CO4 |
+| [`TESTING_DOCUMENTATION.md`](TESTING_DOCUMENTATION.md) | Comprehensive testing report covering the test strategy, execution environment, unit tests, integration tests, concurrency race-condition trials (30/30 isolated trials), security/permission tests, and the breakdown of **524 verified automated tests**. | CO3, CO4 |
 
 ---
 

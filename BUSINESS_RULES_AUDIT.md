@@ -1,3 +1,5 @@
+> Historical report: this records an earlier audit/implementation pass. For current verified status, see [SYSTEM_COMPLIANCE_AUDIT.md](SYSTEM_COMPLIANCE_AUDIT.md) and [SUBMISSION_READINESS_REPORT.md](docs/final-submission/SUBMISSION_READINESS_REPORT.md).
+
 # Business Rules Audit — IT 401W
 
 Audit date: 24 October 2026 (Asia/Manila). Inspection and testing only.

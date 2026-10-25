@@ -9,7 +9,7 @@
 
 ## 1. Architectural Overview & Django MTV Paradigm
 
-The Campus Equipment Borrowing and Inventory System is engineered strictly in accordance with the **Model-Template-View (MTV)** software architectural design pattern native to the Django web framework. This pattern ensures high cohesion, loose coupling, robust separation of concerns, and institutional security compliance.
+The Campus Equipment Borrowing and Inventory System uses Django's **Model-Template-View (MTV)** pattern to separate persisted data, request handling and presentation. Security and institutional compliance still require appropriate implementation, configuration and review.
 
 ```mermaid
 flowchart TD
@@ -19,8 +19,8 @@ flowchart TD
 
     subgraph SecurityTier["HTTP Security & Middleware Tier"]
         WSGI["WSGI Server (CPython / Gunicorn)"]
-        SecurityMW["SecurityMiddleware & XSS Filter"]
-        SessionMW["SessionMiddleware (Signed Cookies)"]
+        SecurityMW["Django SecurityMiddleware"]
+        SessionMW["SessionMiddleware (Database-backed Sessions)"]
         CSRFMW["CsrfViewMiddleware (Token Validation)"]
         AuthMW["AuthenticationMiddleware (User Hydration)"]
         MessageMW["MessageMiddleware (Flash Notifications)"]
@@ -41,7 +41,7 @@ flowchart TD
 
     subgraph ModelTier["Model & Persistence Layer (Django 'M')"]
         ORM["Django ORM & Model Managers"]
-        Models["Data Models (10 Core Entities)"]
+        Models["Data Models (12 Core Entities)"]
         Constraints["DB Constraints (CHECK, UNIQUE, Foreign Keys)"]
         Transactions["Atomic Transactions (django.db.transaction)"]
     end
@@ -53,7 +53,7 @@ flowchart TD
     end
 
     subgraph DatabaseTier["Database Tier"]
-        RDBMS[("Relational Database (SQLite / PostgreSQL)")]
+        RDBMS[("SQLite (Current Configuration)")]
     end
 
     Browser -->|HTTP GET / POST Request| WSGI
@@ -85,7 +85,7 @@ flowchart TD
 - **Role:** Represents the data structure, encapsulates database tables, defines relationships, and enforces schema-level constraints.
 - **Implementation Highlights:**
   - Standardized custom `User` inheriting from `AbstractUser`.
-  - Zero-orphan deletion safety through ubiquitous `on_delete=models.PROTECT`.
+  - Historical references use protected relationships where deletion would remove transaction context; each migration specifies its own foreign-key deletion behavior.
   - Database-enforced business invariants utilizing `models.CheckConstraint` (e.g., `due_at > requested_at`, `quantity > 0`).
   - Conditional unique constraints preventing double reservations (`borrowing_one_active_allocation`) and concurrent unit checkouts (`loan_one_active_issue_per_unit`).
 
@@ -95,7 +95,7 @@ flowchart TD
 - **Implementation Highlights:**
   - **Two Dedicated Portal Layouts:** `templates/dashboard/admin_portal.html` for administrators and `templates/dashboard/user_portal.html` for campus borrowers.
   - **Reusable Shared Components:** Modular includes under `templates/components/` for navbar, sidebar, pagination, tables, form errors, modals, and status badges.
-  - **Accessible Monochromatic Design:** High-contrast UI adhering to WCAG 2.1 AA guidelines, with status indicators pairing iconography and textual labels with color variants.
+  - **Accessibility support:** Text status labels, visible focus and responsive controls are present. The representative browser checks do not certify complete WCAG conformance.
   - **Strict Separation:** Templates contain zero SQL or mutation logic; they exclusively format context variables passed by the view controllers.
 
 ### 2.3 The View Layer (`V`)
@@ -114,7 +114,7 @@ flowchart TD
 |---|---|---|
 | **Python** | `3.13` | Modern, performant runtime with advanced type hinting, enhanced memory management, and robust enterprise library support. |
 | **Django** | `6.1.2` | High-level web framework providing built-in cryptographic authentication, automated ORM migrations, CSRF protection, and server-rendered templating. |
-| **Relational Database** | `SQLite 3.50+` (Dev) / `PostgreSQL` (Prod) | Zero-configuration single-file database for local development; strict ACID transactional semantics for unit reservations and loan processing. |
+| **Relational Database** | SQLite in the current configuration | A local single-file database with tested transaction/constraint behavior. Other engines require separate configuration and concurrency validation. |
 | **Vanilla JavaScript** | Modern ES6+ | Lightweight, zero-build-step client interactions (modal handling, sidebar toggling, printable slips) minimizing dependency vulnerabilities. |
 | **Native CSS Components** | Modern CSS3 | Custom semantic design system with CSS custom properties (variables), responsive flexbox/grid layouts, and zero heavy external UI framework bloat. |
 
@@ -146,5 +146,5 @@ The system enforces strictly two user levels: `BASIC_USER` and `ADMIN`.
 - Deactivated accounts (`is_active=False`) are blocked immediately from authenticating and are evicted upon their next request through session validation in `@account_required`.
 
 ### 5.2 Cryptographic Standards
-- Passwords are validated using Django's standard validators (minimum length, numeric check, common password check, attribute similarity) and hashed using **PBKDF2 SHA-256** with 870,000 iterations and unique cryptographic salts.
-- Session IDs are cryptographically signed and stored in HTTP-only, SameSite-restricted cookies.
+- Passwords use Django's configured validators and password hashers. Stored hashes include the algorithm, work factor and salt; this document does not hardcode a version-specific iteration count.
+- Opaque session keys use HttpOnly, SameSite cookies. The current configuration uses Django's database-backed session backend.

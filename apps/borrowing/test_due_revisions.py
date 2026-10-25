@@ -219,8 +219,14 @@ class DueDateRevisionConcurrencyTests(BorrowingFixtures, TransactionTestCase):
                 barrier.wait(timeout=10)
                 operation()
                 return "saved"
-            except (ValidationError, IntegrityError, OperationalError):
-                return "rejected"
+            except ValidationError:
+                return "invalid"
+            except OperationalError as error:
+                # SQLite may reject either concurrent writer immediately in
+                # the shared-cache test DB. The UI asks the Admin to retry.
+                if "locked" not in str(error).lower():
+                    raise
+                return "locked"
             finally:
                 connections.close_all()
 
@@ -229,37 +235,68 @@ class DueDateRevisionConcurrencyTests(BorrowingFixtures, TransactionTestCase):
 
     def test_two_revisions_from_same_original_date_have_exactly_one_winner(self):
         results = self.race([self.revise, lambda: self.revise(self.revised+timedelta(days=1))])
-        self.assertEqual(sorted(results), ["rejected", "saved"])
+        self.assertEqual(results.count("saved"), 1)
+        self.assertIn(next(result for result in results if result != "saved"), ["invalid", "locked"])
         self.assertEqual(AuditLog.objects.filter(action="REQUEST_DUE_DATE_REVISED").count(), 1)
         self.assertEqual(Allocation.objects.filter(active=True).count(), 1)
 
     def test_revision_racing_issue_never_changes_date_after_issuance(self):
         results = self.race([self.revise, lambda: release_request(self.request.pk, actor=self.admin)])
         self.request.refresh_from_db()
+        if results[1] == "locked":
+            self.assertEqual(results[0], "saved")
+            self.assertEqual(self.request.status, "APPROVED")
+            self.assertEqual(self.request.due_at, self.revised)
+            self.assertFalse(Loan.objects.exists())
+            self.assertEqual(Allocation.objects.filter(active=True).count(), 1)
+            self.assertEqual(EquipmentUnit.objects.filter(status="RESERVED").count(), 1)
+            self.assertFalse(AuditLog.objects.filter(action="LOAN_RELEASED").exists())
+            release_request(self.request.pk, actor=self.admin)
+            self.request.refresh_from_db()
+        else:
+            self.assertEqual(results[1], "saved")
         self.assertEqual(self.request.status, "ISSUED")
         loan = Loan.objects.get(request=self.request)
         self.assertEqual(loan.due_at, self.request.due_at)
         self.assertEqual(EquipmentUnit.objects.filter(status="ON_LOAN").count(), 1)
         revised = AuditLog.objects.filter(action="REQUEST_DUE_DATE_REVISED").first()
         if revised:
-            self.assertEqual(results, ["saved", "saved"])
+            self.assertEqual(results[0], "saved")
             self.assertEqual(loan.due_at, self.revised)
             self.assertLessEqual(revised.occurred_at, loan.issued_at)
         else:
-            self.assertEqual(results, ["rejected", "saved"])
+            self.assertIn(results[0], ["invalid", "locked"])
             self.assertEqual(loan.due_at, self.previous)
+        with self.assertRaises(ValidationError):
+            revise_due_date(self.request.pk, actor=self.admin, due_at=self.revised+timedelta(days=1),
+                            reason="Must not revise after issue", expected_due_at=self.request.due_at)
 
     def test_revision_racing_cancellation_never_changes_cancelled_agreement(self):
         results = self.race([self.revise, lambda: cancel_request(self.request.pk, actor=self.admin)])
         self.request.refresh_from_db()
+        if results[1] == "locked":
+            self.assertEqual(results[0], "saved")
+            self.assertEqual(self.request.status, "APPROVED")
+            self.assertEqual(self.request.due_at, self.revised)
+            self.assertIsNone(self.request.cancelled_at)
+            self.assertEqual(Allocation.objects.filter(active=True).count(), 1)
+            self.assertEqual(EquipmentUnit.objects.filter(status="RESERVED").count(), 1)
+            self.assertFalse(AuditLog.objects.filter(action="REQUEST_CANCELLED").exists())
+            cancel_request(self.request.pk, actor=self.admin)
+            self.request.refresh_from_db()
+        else:
+            self.assertEqual(results[1], "saved")
         self.assertEqual(self.request.status, "CANCELLED")
         self.assertFalse(Loan.objects.exists())
         self.assertFalse(Allocation.objects.filter(active=True).exists())
         self.assertEqual(EquipmentUnit.objects.filter(status="RESERVED").count(), 0)
         revised = AuditLog.objects.filter(action="REQUEST_DUE_DATE_REVISED").first()
         if revised:
-            self.assertEqual(results, ["saved", "saved"])
+            self.assertEqual(results[0], "saved")
             self.assertLessEqual(revised.occurred_at, self.request.cancelled_at)
         else:
-            self.assertEqual(results, ["rejected", "saved"])
+            self.assertIn(results[0], ["invalid", "locked"])
             self.assertEqual(self.request.due_at, self.previous)
+        with self.assertRaises(ValidationError):
+            revise_due_date(self.request.pk, actor=self.admin, due_at=self.revised+timedelta(days=1),
+                            reason="Must not revise after cancellation", expected_due_at=self.request.due_at)

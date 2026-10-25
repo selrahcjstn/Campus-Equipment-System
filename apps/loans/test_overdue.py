@@ -124,7 +124,9 @@ class CalendarOverdueTests(LoanFixtures, TestCase):
 
     def test_loan_with_no_unit_records_is_not_overdue(self):
         at = self.set_midnight_fixture()
-        request = BorrowingRequest.objects.create(borrower=self.other, purpose="Incomplete historical record", due_at=at+timedelta(days=1))
+        request = BorrowingRequest.objects.create(
+            borrower=self.other, purpose="Incomplete historical record",
+            requested_at=at-timedelta(days=3), due_at=at+timedelta(days=1))
         empty = Loan.objects.create(request=request, borrower=self.other, issued_by=self.admin,
                                     issued_at=at-timedelta(days=2), due_at=at-timedelta(days=1))
         with patch("django.utils.timezone.now", return_value=at):

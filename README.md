@@ -76,12 +76,13 @@ Copy-Item .env.example .env
 ```
 
 Put the generated value after `DJANGO_SECRET_KEY=` in your local `.env`. Do not
-post the value or commit `.env`. Existing installations that moved the previous
-development key into their private file can keep current local sessions. That key
-was previously present in source history: generate and set a new key before
-sharing or deploying the project. Changing it signs out existing sessions and
+post the value or commit `.env`. A previous development key appeared in source
+history; each installation must use a fresh private key before sharing or
+deploying. Changing it signs out existing sessions and
 invalidates signed Django tokens; it does not change passwords or database rows.
-The process environment takes precedence over `.env`.
+The process environment takes precedence over `.env`. For the complete isolated
+fictional demonstration, use `python scripts/demo.py setup` and follow
+[DEMO_SETUP.md](DEMO_SETUP.md); it maintains its own private `.env.demo`.
 
 ### 4. Create the local database
 
@@ -148,7 +149,7 @@ Use the portal sidebar to navigate to the catalog, borrowing requests, loans, an
 .\.venv\Scripts\python.exe manage.py test
 ```
 
-The integrated project passed **516 automated tests** on October 25, 2026. Tests use a separate test database.
+The integrated project passed **524 automated tests** on October 25, 2026. Tests use a separate test database.
 
 Portal lists show 10 records per page with numbered navigation and a record-range summary. Search and filters remain in the URL when changing pages. See the [monochrome UI report](docs/UI_MONOCHROME.md) for the current shared components, modified files, test results, local commits, and browser-verification limitation. The [earlier redesign notes](docs/UI_REDESIGN.md) retain the previous visual review. The [earlier UI review](docs/UI_REVIEW.md) records pagination implementation details.
 
@@ -191,6 +192,10 @@ campus-equipment-system/
 ```
 
 ## Members and module guides
+
+The [final submission documentation index](docs/final-submission/README.md)
+links the four rendered PDFs, actual system screenshots, operating guides,
+requirements traceability and outstanding academic evidence.
 
 | Member | Branch | Deliverable | Documentation |
 | --- | --- | --- | --- |

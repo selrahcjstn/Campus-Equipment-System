@@ -4,7 +4,7 @@
 **System:** Campus Equipment Borrowing and Inventory System
 **Test Framework:** Django Test Suite (`django.test.TestCase` / `unittest`)
 **Execution Environment:** Python 3.13.7, Django 6.1.2, Windows 11
-**Verified Test Total:** **516 Tests Passing (0 Failures, 0 Errors)**
+**Verified Test Total:** **524 Tests Passing (0 Failures, 0 Errors)**
 **Document Code:** TEST-IT401W-2026
 
 ---
@@ -24,19 +24,19 @@ The testing architecture for the Campus Equipment Borrowing and Inventory System
 
 ## 2. Summary of Automated Test Execution
 
-The integrated test suite was executed across all 6 applications using Django's test runner on October 25, 2026.
+The integrated test suite was executed across all 6 applications and the local tooling tests using Django's test runner on October 25, 2026.
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py test
 ```
 
 ### Execution Outcome:
-- **Total Tests Discovered:** 516
-- **Total Tests Passed:** 516
+- **Total Tests Discovered:** 524
+- **Total Tests Passed:** 524
 - **Failures:** 0
 - **Errors:** 0
 - **Skipped:** 0
-- **Execution Duration:** 52.542 seconds
+- **Execution Duration:** 54.474 seconds
 - **Database Status:** Isolated SQLite in-memory/temporary test database destroyed cleanly.
 
 ---
@@ -101,7 +101,7 @@ Focuses on live metric derivation, executive charts, CSV reporting, audit loggin
 
 ---
 
-### 3.4 `apps.inventory` (107 Tests)
+### 3.4 `apps.inventory` (108 Tests)
 Focuses on categories, catalog masters, physical unit tracking, asset tags, archiving, and inventory reconciliation.
 
 | Test Class | Test Count | Scope & Coverage |
@@ -110,7 +110,7 @@ Focuses on categories, catalog masters, physical unit tracking, asset tags, arch
 | `InventoryMigrationSafetyTests` | 1 | Forward/backward migration validation for physical unit metadata. |
 | `PhysicalUnitCategoryFilterTests` | 5 | Admin multi-attribute filtering (category, catalog model, status). |
 | `PhysicalUnitMetadataTests` | 7 | Asset tag formatting, physical condition ratings, and acquisition dates. |
-| `ProjectDemoTests` | 4 | Automated verification of `seed_project_demo` management command. |
+| `ProjectDemoTests` | 5 | Automated verification of `seed_project_demo` management command. |
 | `InventoryIntegrityAuditTests` | 9 | Referential integrity protection (`PROTECT`) and duplicate prevention. |
 | `CategoryModalTests` | 5 | Admin modal dialogs for category creation and modification. |
 | `ConcurrentInventoryTests` | 4 | Simultaneous asset tag creation and category edits. |
@@ -152,6 +152,13 @@ Focuses on repair intake, damaged return quarantine, diagnostic tracking, unit r
 
 ---
 
+### 3.7 Local tooling (7 Tests)
+
+`DemoConfigurationTests` (3) validates dedicated database configuration, saved
+credentials and safe refusal of existing/unrelated databases.
+`SubmissionPackageTests` (4) validates source exclusions, archive/manifest
+integrity, secret-leak rejection and safe section/group filename values.
+
 ## 4. Concurrency Verification: The Last-Unit Allocation Trial
 
 In direct fulfillment of Part 5, Business Rule 3 (BR3) of the IT 401W specifications:
@@ -180,3 +187,24 @@ In direct fulfillment of Part 5, Business Rule 3 (BR3) of the IT 401W specificat
 | **Expired Approved Request** | Admin attempts to release request past due date | Handover validation blocks issue; requires date revision | **PASS** |
 | **Damaged Unit Return** | Return recorded with `condition=DAMAGED` | Unit moves to `MAINTENANCE`; ticket auto-created | **PASS** |
 | **Duplicate Return Attempt** | Attempting to return already returned unit | View disables returned units; service raises error | **PASS** |
+
+## 6. Latest extracted-package verification
+
+A fresh virtual environment installed the pinned dependencies. The source ZIP
+was extracted into a separate directory, and its demo wrapper independently
+migrated, seeded and verified all minimum counts and required scenarios.
+The final suite passed 524 tests in 54.474 seconds. Standard Django checks,
+migration consistency and dependency checks passed. The normal development
+database byte fingerprint was unchanged.
+
+The first fresh run exposed an existing concurrency-test assumption: SQLite
+may reject cancellation/issuance on writer contention while a revision succeeds.
+The tests now distinguish lock conflicts from validation failures, assert no
+partial state/audit writes, retry the intended action, and reject later revisions.
+Unexpected database exceptions remain failures. No production service or rule was
+changed. Thirty additional repeated revision/issue/cancellation race tests passed.
+
+Representative browser checks covered both portals, landing/registration,
+mobile navigation and focus, modal validation/logout, catalog preselection,
+three-item selection, backward-navigation preservation, and tablet loan/table
+layout. This is not an exhaustive assistive-technology or physical print test.

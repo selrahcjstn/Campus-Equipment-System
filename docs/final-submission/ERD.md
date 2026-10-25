@@ -2,7 +2,7 @@
 
 **Project:** Campus Equipment Borrowing and Inventory System
 **Framework:** Django 6.1.2 / Python 3.13
-**Database:** Relational Database (SQLite for development / PostgreSQL ready)
+**Database:** SQLite in the current configuration; other engines are not verified by this report.
 **Document Code:** ERD-IT401W-2026
 
 ---

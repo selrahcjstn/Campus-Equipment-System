@@ -1,5 +1,6 @@
 import os
 import secrets
+from contextlib import redirect_stdout
 from io import StringIO
 from unittest.mock import patch
 
@@ -83,3 +84,16 @@ class ProjectDemoTests(TestCase):
             with self.assertRaises(CommandError):
                 self.seed()
         self.assertFalse(get_user_model().objects.exists())
+
+    def test_read_only_verifier_rejects_active_allocation_on_pending_request(self):
+        from scripts.demo import verify
+        self.seed()
+        with redirect_stdout(StringIO()):
+            verify()
+        request = BorrowingRequest.objects.get(status="APPROVED")
+        BorrowingRequest.objects.filter(pk=request.pk).update(status="PENDING")
+        with redirect_stdout(StringIO()), self.assertRaisesRegex(SystemExit, "verification failed"):
+            verify()
+        request.refresh_from_db()
+        self.assertEqual(request.status, "PENDING")
+        self.assertTrue(request.items.filter(allocations__active=True).exists())

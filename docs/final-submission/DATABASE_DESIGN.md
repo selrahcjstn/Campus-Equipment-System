@@ -3,7 +3,7 @@
 **Course:** IT 401W Web Programming and Frameworks
 **System:** Campus Equipment Borrowing and Inventory System
 **Framework:** Django 6.1.2 ORM / Python 3.13
-**Target RDBMS:** Relational (SQLite 3.50+ development / PostgreSQL 15+ production-ready)
+**Verified database:** SQLite in the project's current configuration; other engines require separate deployment configuration and testing.
 **Document Code:** DB-DESIGN-IT401W-2026
 
 ---
