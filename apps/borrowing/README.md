@@ -39,8 +39,9 @@ refuses to overwrite demo records. No fixtures are added automatically.
 2. Submit and check the Pending detail page. Pending requests do not reserve
    stock. A second Basic User cannot view or cancel the first user's records.
 3. As Admin, open Borrowing Requests. The default view is the Pending queue;
-   Show all and the status/search controls include the other request states.
-4. Review and approve a request. The server automatically chooses Available
+   status, submission-date and search filters combine and remain in pagination.
+4. Review item quantities, current available counts, purpose and due date.
+   Approve with a recorded reason. The server automatically chooses Available
    physical units and reserves every quantity together. Their tags appear on the
    detail page. Equipment is handed over separately through Loan Management.
 5. Try another approval after available stock is exhausted. It fails with no

@@ -66,7 +66,24 @@ py -3.13 -m venv .venv
 
 The commands below call the virtual environment directly, so PowerShell activation is optional.
 
-### 3. Create the local database
+### 3. Add private local configuration
+
+Copy the sample and add a private random signing key. `.env` is ignored by Git.
+
+```powershell
+Copy-Item .env.example .env
+.\.venv\Scripts\python.exe -c "import secrets; print(secrets.token_urlsafe(50))"
+```
+
+Put the generated value after `DJANGO_SECRET_KEY=` in your local `.env`. Do not
+post the value or commit `.env`. Existing installations that moved the previous
+development key into their private file can keep current local sessions. That key
+was previously present in source history: generate and set a new key before
+sharing or deploying the project. Changing it signs out existing sessions and
+invalidates signed Django tokens; it does not change passwords or database rows.
+The process environment takes precedence over `.env`.
+
+### 4. Create the local database
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py migrate
@@ -74,7 +91,7 @@ The commands below call the virtual environment directly, so PowerShell activati
 
 The database file, local backups, and account data are excluded from Git. A fresh clone starts with an empty database; setup does not automatically create users or equipment.
 
-### 4. Start the application
+### 5. Start the application
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py runserver
@@ -82,7 +99,7 @@ The database file, local backups, and account data are excluded from Git. A fres
 
 Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/) for the public landing page. Get Started opens registration; Sign In opens login. Browse Equipment requires login through the existing catalog route. Signed-in visitors to the home page go directly to their role's portal. Use `Ctrl+C` to stop the server.
 
-### 5. Set up the first Admin
+### 6. Set up the first Admin
 
 On a fresh local database, register the account that will become the first Admin. Before submitting borrowing requests with that account, open another terminal in the project directory:
 
@@ -131,7 +148,7 @@ Use the portal sidebar to navigate to the catalog, borrowing requests, loans, an
 .\.venv\Scripts\python.exe manage.py test
 ```
 
-The integrated project passed **365 automated tests** on October 24, 2026. Coverage includes stylesheet cache invalidation, landing-page links and role redirects, shared pagination, role permissions, account management, inventory availability, request approval, release, partial and damaged returns, maintenance, reports, audit logs, and borrowing settings. Tests use a separate test database.
+The integrated project passed **516 automated tests** on October 25, 2026. Tests use a separate test database.
 
 Portal lists show 10 records per page with numbered navigation and a record-range summary. Search and filters remain in the URL when changing pages. See the [monochrome UI report](docs/UI_MONOCHROME.md) for the current shared components, modified files, test results, local commits, and browser-verification limitation. The [earlier redesign notes](docs/UI_REDESIGN.md) retain the previous visual review. The [earlier UI review](docs/UI_REVIEW.md) records pagination implementation details.
 
@@ -190,4 +207,4 @@ For new work, create a branch from the latest `main`, test the change locally, a
 
 ## Deployment configuration
 
-The committed settings are for local development: SQLite, `DEBUG=True`, and a development secret key. Before a public deployment, configure a private secret key, disable debug mode, set allowed hosts, and configure the production database, static-file serving, and HTTPS. The current settings do not automatically load a `.env` file.
+Local settings use SQLite, `DEBUG=True`, a local host allowlist, and a private signing key loaded from the process environment or ignored `.env`. Before a public deployment, set a newly generated secret key, `DJANGO_DEBUG=false`, explicit `DJANGO_ALLOWED_HOSTS`, and the appropriate production database, static-file serving, HTTPS, and secure cookie settings. The development server is not a production deployment. Run `manage.py check --deploy` after configuring the production environment.

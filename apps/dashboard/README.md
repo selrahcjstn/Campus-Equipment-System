@@ -31,16 +31,23 @@ maintenance notes, other borrowers and Admin destinations are not included.
 
 ## Admin KPI and chart definitions
 
-1. **Total inventory:** all physical `EquipmentUnit` rows, including archived
-   catalog equipment and Retired units. The card explicitly labels this scope.
-2. **Available equipment:** Inventory's existing `eligible_units()` query, requiring
+1. **Available units:** Inventory's existing `eligible_units()` query, requiring
    Available status and an active catalog item, with no active allocation,
    outstanding loan or active maintenance record.
+2. **Pending requests:** requests still awaiting an Admin decision.
 3. **Active loans:** existing `Loan.objects.active()` records with at least one
    outstanding `LoanUnit`, counted once per loan, including partial returns.
-4. **Overdue loans:** those active loans with a due time strictly before now.
+4. **Overdue loans:** those active loans whose agreed due date is before the
+   current Asia/Manila calendar date.
    Fully returned loans are excluded, including inconsistent legacy completion
    metadata where all units have actually been returned.
+
+The **Monthly Issued Loans** chart groups actual `Loan.issued_at` records by
+Asia/Manila month. Each loan is counted once regardless of physical-unit count.
+The **Equipment-category usage** chart counts each issued physical unit once by
+its equipment's current category; returns remain part of historical use. Both
+charts share the validated inclusive date range. Historical usage follows the
+current category because category is not snapshotted at issue time.
 
 The Borrowing Activity chart counts actual `BorrowingRequest.requested_at`
 records by local calendar date. It includes all submission statuses, fills missing
@@ -48,7 +55,7 @@ dates with zero and supports an inclusive range of up to 366 dates. The default
 is the last 30 dates. Its responsive SVG has tooltips; the expandable data table
 shows only the latest seven dates of the selected period.
 
-The Equipment Status Distribution chart groups every physical unit's recorded
+The optional Equipment Status Distribution chart groups every physical unit's recorded
 status into Available, Reserved, Issued (`ON_LOAN`), Maintenance and Retired. It
 includes archived inventory, displays zero-count categories and shows counts
 beside labeled proportional bars. The different scopes of recorded Available
@@ -72,7 +79,8 @@ ISO 8601 offset. Overdue calculations require both a past due time and outstandi
 returns; a loan exactly at its due time is not overdue. Partial returns remain
 active until their last unit is returned. Overdue days use Asia/Manila calendar
 date differences, not elapsed 24-hour periods. Crossing local midnight counts
-as one day. HTML and CSV use the same calendar-day value; the former additional
+as one day, and a loan is not overdue until the local date advances. HTML and CSV
+use the same calendar-day value; the former additional
 hours column is omitted to avoid mixing elapsed time with calendar days.
 
 The paginated report shows borrower name/username, equipment and unit issue
