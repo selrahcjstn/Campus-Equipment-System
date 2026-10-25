@@ -32,7 +32,7 @@ class LoanFixtures:
         self.item = BorrowingRequestItem.objects.create(request=self.request, equipment=self.equipment, quantity=2)
 
     def approve(self):
-        return approve_request(self.request.pk, actor=self.admin, allocations={self.item.pk: [unit.pk for unit in self.units]})
+        return approve_request(self.request.pk, reason="Approved for the test borrowing activity.", actor=self.admin, allocations={self.item.pk: [unit.pk for unit in self.units]})
 
     def issue(self):
         self.approve()
@@ -46,7 +46,7 @@ class LoanFixtures:
         unit = EquipmentUnit.objects.create(equipment=equipment, asset_tag="OTHER-SECRET-UNIT")
         request = BorrowingRequest.objects.create(borrower=self.other, purpose="Other person's request", due_at=timezone.now() + timedelta(days=3))
         item = BorrowingRequestItem.objects.create(request=request, equipment=equipment, quantity=1)
-        approve_request(request.pk, actor=self.admin, allocations={item.pk: [unit.pk]})
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin, allocations={item.pk: [unit.pk]})
         return release_request(request.pk, actor=self.admin)
 
     def return_post(self, loan, selected=None):
@@ -281,7 +281,7 @@ class LoanServiceTests(LoanFixtures, TestCase):
         self.return_all(first)
         request = BorrowingRequest.objects.create(borrower=self.borrower, purpose="Another presentation", due_at=timezone.now() + timedelta(days=3))
         item = BorrowingRequestItem.objects.create(request=request, equipment=self.equipment, quantity=1)
-        approve_request(request.pk, actor=self.admin, allocations={item.pk: [self.units[0].pk]})
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin, allocations={item.pk: [self.units[0].pk]})
         second = release_request(request.pk, actor=self.admin)
         self.assertEqual(second.quantity, 1)
         self.assertEqual(LoanUnit.objects.filter(unit=self.units[0], returned_at__isnull=True).count(), 1)
@@ -292,7 +292,7 @@ class LoanServiceTests(LoanFixtures, TestCase):
         with patch("apps.loans.models.timezone.now", return_value=loan.due_at):
             self.assertFalse(loan.is_overdue)
             self.assertFalse(Loan.objects.overdue().exists())
-        with patch("apps.loans.models.timezone.now", return_value=loan.due_at + timedelta(seconds=1)):
+        with patch("apps.loans.models.timezone.now", return_value=loan.due_at + timedelta(days=1)):
             self.assertTrue(loan.is_overdue)
             self.assertEqual(loan.status, "Overdue")
             self.assertEqual(Loan.objects.overdue().count(), 1)
@@ -340,10 +340,10 @@ class FoundationTests(LoanFixtures, TestCase):
 
     def test_approval_rejects_wrong_role_duplicate_units_and_wrong_quantities(self):
         with self.assertRaises(PermissionDenied):
-            approve_request(self.request.pk, actor=self.borrower, allocations={self.item.pk: [u.pk for u in self.units]})
+            approve_request(self.request.pk, reason="Approved for the test borrowing activity.", actor=self.borrower, allocations={self.item.pk: [u.pk for u in self.units]})
         for allocations in [{}, {self.item.pk: [self.units[0].pk]}, {self.item.pk: [self.units[0].pk] * 2}]:
             with self.subTest(allocations=allocations), self.assertRaises(ValidationError):
-                approve_request(self.request.pk, actor=self.admin, allocations=allocations)
+                approve_request(self.request.pk, reason="Approved for the test borrowing activity.", actor=self.admin, allocations=allocations)
         self.request.refresh_from_db()
         self.assertEqual(self.request.status, "PENDING")
         self.assertFalse(Allocation.objects.exists())
@@ -363,7 +363,7 @@ class FoundationTests(LoanFixtures, TestCase):
         request = BorrowingRequest.objects.create(borrower=self.borrower, purpose="New request", due_at=timezone.now() + timedelta(days=3))
         new_item = BorrowingRequestItem.objects.create(request=request, equipment=self.equipment, quantity=1)
         with self.assertRaises(ValidationError):
-            approve_request(request.pk, actor=self.admin, allocations={new_item.pk: [item.unit_id]})
+            approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin, allocations={new_item.pk: [item.unit_id]})
 
 
 class LoanPageTests(LoanFixtures, TestCase):
@@ -476,7 +476,7 @@ class LoanPageTests(LoanFixtures, TestCase):
         loan = self.issue()
         self.client.force_login(self.borrower)
         self.assertNotContains(self.client.get(reverse("my_loans"), {"status": "overdue"}), "Projector")
-        with patch("apps.loans.models.timezone.now", return_value=loan.due_at + timedelta(seconds=1)):
+        with patch("apps.loans.models.timezone.now", return_value=loan.due_at + timedelta(days=1)):
             response = self.client.get(reverse("my_loans"), {"status": "overdue"})
             self.assertContains(response, "Projector")
             self.assertContains(response, "Overdue")
@@ -594,7 +594,7 @@ class LoanPageTests(LoanFixtures, TestCase):
             request = BorrowingRequest.objects.create(borrower=self.borrower, purpose="Pagination test", due_at=timezone.now() + timedelta(days=2))
             item = BorrowingRequestItem.objects.create(request=request, equipment=self.equipment, quantity=1)
             unit = EquipmentUnit.objects.create(equipment=self.equipment, asset_tag=f"PAGE-{index}")
-            approve_request(request.pk, actor=self.admin, allocations={item.pk: [unit.pk]})
+            approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin, allocations={item.pk: [unit.pk]})
             release_request(request.pk, actor=self.admin)
         self.client.force_login(self.borrower)
         first = self.client.get(reverse("my_loans"), {"q": "Projector"})
@@ -665,7 +665,7 @@ class LoanSummaryPresentationTests(LoanFixtures, TestCase):
 
     def test_overdue_summary_keeps_warning_and_return_permissions(self):
         loan = self.issue()
-        with patch("apps.loans.models.timezone.now", return_value=loan.due_at + timedelta(seconds=1)):
+        with patch("apps.loans.models.timezone.now", return_value=loan.due_at + timedelta(days=1)):
             self.assert_summary(loan, status="Overdue", outstanding=2)
             self.assertContains(self.client.get(reverse("admin_loan_detail", args=[loan.pk])), "This loan is overdue.")
 

@@ -95,9 +95,11 @@ def submit_request(*, borrower, purpose, due_at, items):
 
 
 @transaction.atomic
-def approve_request(request_id, *, actor, allocations=None):
+def approve_request(request_id, *, actor, reason, allocations=None):
     """Auto-allocate units; explicit mappings remain compatible with Loans."""
     _require_role(actor, "ADMIN")
+    if not isinstance(reason, str) or not reason.strip() or len(reason) > 300:
+        raise ValidationError("Provide an approval reason of at most 300 characters.")
     # Claim first, including on SQLite where SELECT FOR UPDATE has no effect.
     claimed = BorrowingRequest.objects.filter(
         pk=request_id, status=BorrowingRequest.Status.PENDING,
@@ -157,8 +159,9 @@ def approve_request(request_id, *, actor, allocations=None):
             Allocation.objects.create(request_item=item, unit=unit)
     request.approved_at = timezone.now()
     request.approved_by = actor
-    request.save(update_fields=["approved_at", "approved_by"])
-    record_event(actor=actor, action="REQUEST_APPROVED", entity_type="borrowing_request", entity_id=request.pk, description=f"Approved request and reserved {len(ids)} physical unit(s).")
+    request.approval_reason = reason.strip()
+    request.save(update_fields=["approved_at", "approved_by", "approval_reason"])
+    record_event(actor=actor, action="REQUEST_APPROVED", entity_type="borrowing_request", entity_id=request.pk, description=f"Approved request and reserved {len(ids)} physical unit(s). Reason: {request.approval_reason}")
     return request
 
 

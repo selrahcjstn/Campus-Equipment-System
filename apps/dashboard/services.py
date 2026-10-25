@@ -4,13 +4,13 @@ from datetime import datetime, time, timedelta
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import Count, Exists, F, OuterRef, Q
-from django.db.models.functions import TruncDate
+from django.db.models.functions import TruncDate, TruncMonth
 from django.utils import timezone
 
 from apps.borrowing.models import BorrowingRequest
 from apps.inventory.models import EquipmentUnit
 from apps.inventory.services import eligible_units
-from apps.loans.models import Loan, LoanUnit
+from apps.loans.models import Loan, LoanUnit, local_day_start
 from .audit import record_event
 from .models import AuditLog, LIMIT_RANGES, SystemSetting
 from .policies import borrowing_limits
@@ -48,7 +48,7 @@ def update_settings(*, actor, max_items, max_quantity, max_days):
 def filter_dates(records, field, values):
     # Half-open timestamp ranges include the whole selected local end date and
     # continue to use timestamp indexes; no date casts on report queries.
-    zone = timezone.get_current_timezone()
+    zone = timezone.get_default_timezone()
     start, end = values.get("start_date"), values.get("end_date")
     if start:
         records = records.filter(**{field + "__gte": timezone.make_aware(datetime.combine(start, time.min), zone)})
@@ -95,8 +95,35 @@ def report_row(loan, *, at):
 
 
 def dashboard_statistics(*, at):
-    loan_counts = active_loans().aggregate(active=Count("pk"), overdue=Count("pk", filter=Q(due_at__lt=at)))
-    return {"total_units": EquipmentUnit.objects.count(), "available_units": eligible_units().count(), "active_loans": loan_counts["active"], "overdue_loans": loan_counts["overdue"]}
+    loan_counts = active_loans().aggregate(active=Count("pk"), overdue=Count("pk", filter=Q(due_at__lt=local_day_start(at))))
+    return {"total_units": EquipmentUnit.objects.count(), "available_units": eligible_units().count(), "pending_requests": BorrowingRequest.objects.filter(status="PENDING").count(), "active_loans": loan_counts["active"], "overdue_loans": loan_counts["overdue"]}
+
+
+def monthly_issued_loans(start, end):
+    records = filter_dates(Loan.objects.all(), "issued_at", {"start_date": start, "end_date": end})
+    counts = {month.date(): count for month, count in records.annotate(
+        month=TruncMonth("issued_at", tzinfo=timezone.get_default_timezone()),
+    ).values("month").annotate(total=Count("pk")).values_list("month", "total")}
+    month = start.replace(day=1)
+    series = []
+    while month <= end:
+        series.append({"date": month, "count": counts.get(month, 0)})
+        month = (month.replace(day=28) + timedelta(days=4)).replace(day=1)
+    maximum = max(counts.values(), default=1) or 1
+    width = 960 / len(series)
+    for index, point in enumerate(series):
+        height = point["count"] / maximum * 180
+        point.update(x=20 + index * width, y=200-height, width=width * .8, height=height)
+    return series
+
+
+def category_usage(start, end):
+    # Each LoanUnit is one physical-unit issuance. Joins are only many-to-one,
+    # so multiple items, returns and maintenance events cannot multiply counts.
+    units = filter_dates(LoanUnit.objects.all(), "loan__issued_at", {"start_date": start, "end_date": end})
+    rows = list(units.values("unit__equipment__category_id", "unit__equipment__category__name").annotate(count=Count("pk")).order_by("-count", "unit__equipment__category__name", "unit__equipment__category_id"))
+    total = sum(row["count"] for row in rows)
+    return [{"label": row["unit__equipment__category__name"] or "Uncategorized (legacy)", "count": row["count"], "percentage": row["count"] * 100 / total} for row in rows]
 
 
 def status_distribution():
@@ -143,7 +170,7 @@ def personal_summary(user, *, at):
         "pending_count": request_counts["pending"], "approved_count": request_counts["approved"],
         "borrowed_count": LoanUnit.objects.filter(loan__in=active, returned_at__isnull=True).count(),
         "overdue_count": active.overdue(at=at).count(),
-        "upcoming": [report_row(loan, at=at) for loan in active.filter(due_at__gte=at).order_by("due_at", "pk")[:5]],
+        "upcoming": [report_row(loan, at=at) for loan in active.filter(due_at__gte=local_day_start(at)).order_by("due_at", "pk")[:5]],
         "overdue": [report_row(loan, at=at) for loan in active.overdue(at=at).order_by("due_at", "pk")[:5]],
         "recent_requests": requests.select_related("loan").prefetch_related("items__equipment", "loan__units")[:5],
     }

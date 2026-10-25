@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from apps.inventory.models import Equipment, EquipmentUnit
+from apps.inventory.models import Category, Equipment, EquipmentUnit
 from apps.borrowing.services import submit_request
 
 
@@ -28,11 +28,18 @@ class Command(BaseCommand):
             raise CommandError("Provide an existing active Basic User account.") from error
         if EquipmentUnit.objects.filter(asset_tag__startswith="BORROW-DEMO-").exists():
             raise CommandError("Borrowing demo records already exist; existing records were left untouched.")
+        category = Category(name="Borrowing demo equipment", description="Synthetic test inventory")
+        category.full_clean()
+        category.save()
         equipment = []
         for kind in ["Projector", "Speaker"]:
-            item = Equipment.objects.create(name=f"Borrowing demo {kind.lower()}", description="Local test equipment for borrowing and approval")
+            item = Equipment(name=f"Borrowing demo {kind.lower()}", category=category, description="Local test equipment for borrowing and approval")
+            item.full_clean()
+            item.save()
             equipment.append(item)
             for number in range(1, 4):
-                EquipmentUnit.objects.create(equipment=item, asset_tag=f"BORROW-DEMO-{kind.upper()}-{number}")
+                unit = EquipmentUnit(equipment=item, asset_tag=f"BORROW-DEMO-{kind.upper()}-{number}", condition="GOOD", acquisition_date=timezone.localdate()-timedelta(days=30))
+                unit.full_clean()
+                unit.save()
         request = submit_request(borrower=borrower, purpose="Borrowing demo: class presentation", due_at=timezone.now() + timedelta(days=3), items=[(equipment[0].pk, 2), (equipment[1].pk, 1)])
         self.stdout.write(self.style.SUCCESS(f"Created six available demo units and Pending request #{request.pk}. Review it in the Admin Borrowing Requests queue."))

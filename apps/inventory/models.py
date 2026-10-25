@@ -1,11 +1,15 @@
+from datetime import date
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.db.models.functions import Lower, Trim
+from django.utils import timezone
 
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
 
     class Meta:
         ordering = ["name", "pk"]
@@ -41,9 +45,28 @@ class Equipment(models.Model):
         self.name = self.name.strip()
         if not self.name:
             raise ValidationError({"name": "Enter an equipment name."})
+        if not self.category_id:
+            raise ValidationError({"category": "Select an existing category."})
+        if Category.objects.filter(pk=self.category_id, is_active=False).exists():
+            previous_category = None if self._state.adding else Equipment.objects.filter(pk=self.pk).values_list("category_id", flat=True).first()
+            if previous_category != self.category_id:
+                raise ValidationError({"category": "Select an active category. An archived category can only be kept on its existing equipment."})
+        # Different categories or descriptions can represent legitimate models.
+        # Exact catalog copies should receive physical units, not another entry.
+        duplicate = Equipment.objects.annotate(name_key=Lower(Trim("name"))).filter(
+            name_key=self.name.lower(), category_id=self.category_id, description=self.description,
+        ).exclude(pk=self.pk)
+        if duplicate.exists():
+            raise ValidationError({"name": "A catalog item with this name, category and description already exists. Add physical units to it, or use a distinct description for a different model."})
 
 
 class EquipmentUnit(models.Model):
+    class Condition(models.TextChoices):
+        GOOD = "GOOD", "Good"
+        FAIR = "FAIR", "Fair"
+        POOR = "POOR", "Poor"
+        DAMAGED = "DAMAGED", "Damaged"
+
     class Status(models.TextChoices):
         AVAILABLE = "AVAILABLE", "Available"
         RESERVED = "RESERVED", "Reserved"
@@ -54,11 +77,14 @@ class EquipmentUnit(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.PROTECT, related_name="units")
     asset_tag = models.CharField(max_length=80, unique=True)
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.AVAILABLE)
+    condition = models.CharField(max_length=7, choices=Condition.choices, null=True, blank=True)
+    acquisition_date = models.DateField(null=True, blank=True)
 
     class Meta:
         ordering = ["asset_tag"]
         constraints = [
             models.CheckConstraint(condition=models.Q(status__in=["AVAILABLE", "RESERVED", "ON_LOAN", "MAINTENANCE", "RETIRED"]), name="inventory_valid_unit_status"),
+            models.CheckConstraint(condition=models.Q(condition__isnull=True) | models.Q(condition__in=["GOOD", "FAIR", "POOR", "DAMAGED"]), name="inventory_valid_unit_condition"),
             models.UniqueConstraint(Lower(Trim("asset_tag")), name="inventory_unit_asset_tag_ci"),
         ]
 
@@ -69,6 +95,8 @@ class EquipmentUnit(models.Model):
         duplicate = EquipmentUnit.objects.annotate(tag_key=Lower(Trim("asset_tag"))).filter(tag_key=self.asset_tag.lower()).exclude(pk=self.pk)
         if duplicate.exists():
             raise ValidationError({"asset_tag": "This physical unit identifier is already in use."})
+        if isinstance(self.acquisition_date, date) and self.acquisition_date > timezone.localdate():
+            raise ValidationError({"acquisition_date": "The acquisition date cannot be in the future."})
 
     @property
     def inventory_status_label(self):

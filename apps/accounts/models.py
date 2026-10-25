@@ -18,5 +18,10 @@ class User(AbstractUser):
         blank=True
     )
 
+    class Meta(AbstractUser.Meta):
+        constraints = [models.CheckConstraint(
+            condition=models.Q(role__in=["BASIC_USER", "ADMIN"]), name="accounts_valid_campus_role",
+        )]
+
     def __str__(self):
         return self.username

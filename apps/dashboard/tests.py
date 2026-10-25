@@ -46,7 +46,7 @@ class DashboardFixtures:
 
     def issue(self, *, quantity=1, borrower=None, overdue=False):
         request = self.pending(quantity=quantity, borrower=borrower)
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         loan = release_request(request.pk, actor=self.admin)
         if overdue:
             now = timezone.now()
@@ -133,7 +133,7 @@ class StatisticsAndChartsTests(DashboardFixtures, TestCase):
     def test_kpis_count_physical_units_and_loans(self):
         loan = self.issue(quantity=2, overdue=True)
         statistics = dashboard_statistics(at=timezone.now())
-        self.assertEqual(statistics, {"total_units": 3, "available_units": 1, "active_loans": 1, "overdue_loans": 1})
+        self.assertEqual(statistics, {"total_units": 3, "available_units": 1, "pending_requests": 0, "active_loans": 1, "overdue_loans": 1})
         process_returns(loan.pk, actor=self.admin, returns=[(loan.units.first().pk, "GOOD", "")])
         statistics = dashboard_statistics(at=timezone.now())
         self.assertEqual(statistics["active_loans"], 1)
@@ -168,7 +168,7 @@ class StatisticsAndChartsTests(DashboardFixtures, TestCase):
         EquipmentUnit.objects.all().delete()
         self.client.force_login(self.admin)
         response = self.client.get(reverse("admin_dashboard"))
-        self.assertEqual(response.context["statistics"], {"total_units": 0, "available_units": 0, "active_loans": 0, "overdue_loans": 0})
+        self.assertEqual(response.context["statistics"], {"total_units": 0, "available_units": 0, "pending_requests": 0, "active_loans": 0, "overdue_loans": 0})
         self.assertEqual(response.context["activity_total"], 0)
         self.assertContains(response, "No borrowing requests were submitted")
         self.assertContains(response, "Equipment status distribution")
@@ -209,7 +209,7 @@ class StatisticsAndChartsTests(DashboardFixtures, TestCase):
         with CaptureQueriesContext(connection) as expanded:
             self.client.get(reverse("admin_dashboard"))
         self.assertEqual(len(first), len(expanded))
-        self.assertLessEqual(len(expanded), 8)
+        self.assertLessEqual(len(expanded), 11)  # Three new constant queries: pending and two prescribed charts.
 
     def test_fully_returned_units_not_overdue_even_if_completion_metadata_is_stale(self):
         loan = self.issue(overdue=True)
@@ -237,7 +237,7 @@ class PersonalDashboardTests(DashboardFixtures, TestCase):
     def test_counts_recent_requests_and_upcoming_loans_belong_to_user(self):
         pending = self.pending()
         approved = self.pending()
-        approve_request(approved.pk, actor=self.admin)
+        approve_request(approved.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         loan = self.issue()
         response = self.client.get(reverse("user_dashboard"))
         self.assertEqual(response.context["pending_count"], 1)
@@ -310,11 +310,13 @@ class ReportsTests(DashboardFixtures, TestCase):
         self.complete(loan)
         self.assertFalse(self.csv_rows(self.client.get(reverse("export_reports"), {"report": "overdue"})))
 
-    def test_due_time_boundary_is_not_overdue(self):
+    def test_due_calendar_boundary_is_not_overdue(self):
         loan = self.issue()
         values = {"report": "overdue"}
         self.assertFalse(loan_report(values, at=loan.due_at).exists())
-        self.assertTrue(loan_report(values, at=loan.due_at + timedelta(microseconds=1)).exists())
+        midnight = timezone.localtime(loan.due_at).replace(hour=0, minute=0, second=0, microsecond=0)+timedelta(days=1)
+        self.assertFalse(loan_report(values, at=midnight-timedelta(microseconds=1)).exists())
+        self.assertTrue(loan_report(values, at=midnight).exists())
 
     def test_invalid_date_range_report_and_export(self):
         for query in [{"start_date": "2026-10-15", "end_date": "2026-10-14"}, {"start_date": "not-a-date"}, {"start_date": "0001-01-01"}, {"end_date": "9999-12-31"}, {"report": "INVALID"}]:
@@ -366,8 +368,9 @@ class ReportsTests(DashboardFixtures, TestCase):
 
     def test_overdue_label_uses_calendar_days_even_for_short_delays(self):
         loan = self.issue()
-        row = report_row(loan, at=loan.due_at + timedelta(minutes=5))
-        self.assertEqual(row["overdue_label"], f"{loan.overdue_days(at=loan.due_at + timedelta(minutes=5))} calendar day(s) overdue")
+        loan.due_at = timezone.localtime(loan.due_at).replace(hour=23, minute=59, second=59, microsecond=0)
+        row = report_row(loan, at=loan.due_at + timedelta(seconds=1))
+        self.assertEqual(row["overdue_label"], "1 calendar day(s) overdue")
 
     def test_loan_without_unit_rows_is_reported_as_needing_review(self):
         request = self.pending()
@@ -491,7 +494,7 @@ class SettingsTests(DashboardFixtures, TestCase):
 
     def test_existing_approved_request_can_release_after_limits_are_lowered(self):
         request = self.pending(quantity=2)
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         original_due = request.due_at
         update_settings(actor=self.admin, max_items=1, max_quantity=1, max_days=1)
         loan = release_request(request.pk, actor=self.admin)
@@ -556,7 +559,7 @@ class AuditIntegrationTests(DashboardFixtures, TestCase):
 
     def test_approval_rejection_and_cancellation_are_audited_once(self):
         approved, rejected = self.pending(), self.pending()
-        approve_request(approved.pk, actor=self.admin)
+        approve_request(approved.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         reject_request(rejected.pk, actor=self.admin, reason="PRIVATE-REJECTION")
         cancel_request(approved.pk, actor=self.basic)
         self.assertEqual(set(AuditLog.objects.values_list("action", flat=True)), {"REQUEST_APPROVED", "REQUEST_REJECTED", "REQUEST_CANCELLED"})

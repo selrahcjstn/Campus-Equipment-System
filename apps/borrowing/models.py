@@ -19,6 +19,7 @@ class BorrowingRequest(models.Model):
     due_at = models.DateTimeField()
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
     approved_at = models.DateTimeField(null=True, blank=True)
+    approval_reason = models.TextField(max_length=300, blank=True)
     approved_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="approved_borrowing_requests", null=True, blank=True)
     rejection_reason = models.TextField(max_length=1000, blank=True)
     rejected_at = models.DateTimeField(null=True, blank=True)

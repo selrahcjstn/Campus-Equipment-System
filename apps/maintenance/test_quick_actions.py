@@ -196,7 +196,7 @@ class MaintenanceBorrowingGuardTests(MaintenanceFixtures, TestCase):
 
     def test_reserved_and_issued_units_reject_new_maintenance_in_form_and_service(self):
         request = self.pending()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         for expected_status in ["RESERVED", "ON_LOAN"]:
             with self.subTest(status=expected_status):
                 response = self.client.post(reverse("maintenance_create"), {"unit": self.unit.pk, "reason": "Not eligible"})

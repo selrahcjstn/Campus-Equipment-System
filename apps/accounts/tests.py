@@ -128,7 +128,7 @@ class AccountFixtures:
 
     def issue(self, *, borrower=None):
         request = self.pending(borrower=borrower)
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         return release_request(request.pk, actor=self.admin)
 
     def return_loan(self, loan):
@@ -205,9 +205,14 @@ class AuthenticationTests(AccountsTestCase):
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_unsupported_legacy_roles_cannot_login(self):
-        User.objects.filter(pk=self.other.pk).update(role="UNKNOWN")
-        response = self.client.post(reverse("login"), {"username": self.other.username, "password": self.password})
-        self.assertTrue(response.context["form"].errors)
+        from django.db import transaction
+        from .forms import LoginForm
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            User.objects.filter(pk=self.other.pk).update(role="UNKNOWN")
+        # Defense in depth still refuses an unsupported in-memory legacy user.
+        self.other.role = "UNKNOWN"
+        with self.assertRaises(ValidationError):
+            LoginForm().confirm_login_allowed(self.other)
         self.assertNotIn("_auth_user_id", self.client.session)
 
     def test_authenticated_login_and_registration_redirect_to_role_home(self):
@@ -534,7 +539,7 @@ class AccountServiceSecurityTests(AccountsTestCase):
         request = self.pending()
         with self.assertRaises(ValidationError):
             set_user_role(self.basic.pk, actor=self.admin, role="ADMIN")
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         with self.assertRaises(ValidationError):
             set_user_role(self.basic.pk, actor=self.admin, role="ADMIN")
 

@@ -24,7 +24,7 @@ class DueDateRevisionTests(BorrowingFixtures, TestCase):
     def setUp(self):
         self.make_records()
         self.request = self.submit(items=[(self.equipment[0].pk, 1)])
-        approve_request(self.request.pk, actor=self.admin)
+        approve_request(self.request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.request.refresh_from_db()
         self.previous = self.request.due_at
         self.url = reverse("revise_request_due_date", args=[self.request.pk])
@@ -201,7 +201,7 @@ class DueDateRevisionConcurrencyTests(BorrowingFixtures, TransactionTestCase):
     def setUp(self):
         self.make_records()
         self.request = self.submit(items=[(self.equipment[0].pk, 1)])
-        approve_request(self.request.pk, actor=self.admin)
+        approve_request(self.request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.request.refresh_from_db()
         self.previous = self.request.due_at
         self.revised = timezone.now()+timedelta(days=4)

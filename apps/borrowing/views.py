@@ -8,6 +8,8 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
 from django.views.decorators.vary import vary_on_headers
+from apps.dashboard.services import filter_dates
+from apps.inventory.services import inventory_queryset
 
 from .forms import BorrowingRequestForm, DueDateRevisionForm, RequestFilterForm, RequestItemFormSet, ReviewForm
 from .models import BorrowingRequest
@@ -41,6 +43,8 @@ def _list_context(request, *, admin=False):
             records = records.filter(status="ISSUED", loan__completed_at__isnull=True, loan__units__returned_at__isnull=False).distinct()
         elif values.get("status"):
             records = records.filter(status=values["status"])
+        if admin:
+            records = filter_dates(records, "requested_at", values)
     else:
         records = records.none()
     return {"page_obj": Paginator(records, 10).get_page(request.GET.get("page")), "filter_form": form, "pending_count": pending_count, "admin_view": admin, "active_nav": "requests"}
@@ -113,6 +117,11 @@ def new_request(request):
 
 
 def _detail_context(borrowing, *, admin=False):
+    if admin:
+        items = list(borrowing.items.all())
+        counts = dict(inventory_queryset().filter(pk__in=[item.equipment_id for item in items]).values_list("pk", "available_count"))
+        for item in items:
+            item.current_available = counts.get(item.equipment_id, 0)
     return {"borrowing": borrowing, "loan": getattr(borrowing, "loan", None), "admin_view": admin, "active_nav": "requests"}
 
 
@@ -198,7 +207,7 @@ def _action(request, pk, action, *, admin):
     if request.method == "POST" and form.is_valid():
         try:
             if action == "approve":
-                approve_request(borrowing.pk, actor=request.user)
+                approve_request(borrowing.pk, actor=request.user, reason=form.cleaned_data["approval_reason"])
             elif action == "reject":
                 reject_request(borrowing.pk, actor=request.user, reason=form.cleaned_data["rejection_reason"])
             else:

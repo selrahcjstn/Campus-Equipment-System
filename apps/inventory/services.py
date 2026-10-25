@@ -13,6 +13,8 @@ from apps.loans.models import LoanUnit
 from apps.maintenance.models import ACTIVE_STATUSES, MaintenanceRecord
 from .models import Category, Equipment, EquipmentUnit
 
+_UNCHANGED = object()
+
 
 def _require_admin(actor):
     if not actor.is_authenticated or not actor.is_active or actor.role != "ADMIN":
@@ -73,6 +75,26 @@ def save_category(*, actor, name, description="", category_id=None):
 
 
 @transaction.atomic
+def archive_category(category_id, *, actor):
+    _require_admin(actor)
+    if Category.objects.filter(pk=category_id, is_active=True).update(is_active=False) != 1:
+        raise ValidationError("This category is already archived or does not exist.")
+    record_event(actor=actor, action="CATEGORY_UPDATED", entity_type="category", entity_id=category_id,
+                 description="Archived category. Existing equipment links and inventory remain unchanged.")
+    return Category.objects.get(pk=category_id)
+
+
+@transaction.atomic
+def restore_category(category_id, *, actor):
+    _require_admin(actor)
+    if Category.objects.filter(pk=category_id, is_active=False).update(is_active=True) != 1:
+        raise ValidationError("Only archived categories can be restored.")
+    record_event(actor=actor, action="CATEGORY_UPDATED", entity_type="category", entity_id=category_id,
+                 description="Restored category for new equipment assignments.")
+    return Category.objects.get(pk=category_id)
+
+
+@transaction.atomic
 def delete_category(category_id, *, actor):
     _require_admin(actor)
     Category.objects.filter(pk=category_id).update(description=F("description"))
@@ -89,14 +111,17 @@ def delete_category(category_id, *, actor):
 @transaction.atomic
 def save_equipment(*, actor, name, category_id, description="", equipment_id=None):
     _require_admin(actor)
+    # Serialize catalog validation with another save or category deletion.
+    # The first write also protects duplicate checks on SQLite.
+    if Category.objects.filter(pk=category_id).update(description=F("description")) != 1:
+        raise ValidationError({"category": "Select an existing category."})
+    Category.objects.select_for_update().get(pk=category_id)
     if equipment_id:
         Equipment.objects.filter(pk=equipment_id).update(is_active=F("is_active"))
         equipment = Equipment.objects.select_for_update().get(pk=equipment_id)
     else:
         equipment = Equipment()
     previous = (equipment.name, equipment.category_id, equipment.description)
-    if not Category.objects.filter(pk=category_id).exists():
-        raise ValidationError({"category": "Select an existing category."})
     equipment.name, equipment.category_id, equipment.description = name, category_id, description
     # is_active and stock quantities are deliberately not accepted as inputs.
     equipment.full_clean()
@@ -137,13 +162,13 @@ def restore_equipment(equipment_id, *, actor):
 
 
 @transaction.atomic
-def add_unit(equipment_id, *, actor, asset_tag):
+def add_unit(equipment_id, *, actor, asset_tag, condition=None, acquisition_date=None):
     _require_admin(actor)
     # Lock the same catalog row used by submission/approval and archiving.
     if Equipment.objects.filter(pk=equipment_id, is_active=True).update(is_active=F("is_active")) != 1:
         raise ValidationError("New physical units can only be added to active catalog items.")
     equipment = Equipment.objects.select_for_update().get(pk=equipment_id)
-    unit = EquipmentUnit(equipment=equipment, asset_tag=asset_tag)
+    unit = EquipmentUnit(equipment=equipment, asset_tag=asset_tag, condition=condition, acquisition_date=acquisition_date)
     unit.full_clean()
     unit.save()
     record_event(actor=actor, action="UNIT_ADDED", entity_type="equipment_unit", entity_id=unit.pk, description=f"Added physical unit to equipment #{equipment_id}.")
@@ -163,15 +188,19 @@ def _idle_unit(unit_id):
 
 
 @transaction.atomic
-def edit_unit(unit_id, *, actor, asset_tag):
+def edit_unit(unit_id, *, actor, asset_tag, condition=_UNCHANGED, acquisition_date=_UNCHANGED):
     _require_admin(actor)
     unit = _idle_unit(unit_id)
-    previous = unit.asset_tag
+    previous = (unit.asset_tag, unit.condition, unit.acquisition_date)
     unit.asset_tag = asset_tag
+    if condition is not _UNCHANGED:
+        unit.condition = condition
+    if acquisition_date is not _UNCHANGED:
+        unit.acquisition_date = acquisition_date
     unit.full_clean()
-    unit.save(update_fields=["asset_tag"])
-    if previous != unit.asset_tag:
-        record_event(actor=actor, action="UNIT_UPDATED", entity_type="equipment_unit", entity_id=unit.pk, description="Updated physical unit identifier.")
+    unit.save(update_fields=["asset_tag", "condition", "acquisition_date"])
+    if previous != (unit.asset_tag, unit.condition, unit.acquisition_date):
+        record_event(actor=actor, action="UNIT_UPDATED", entity_type="equipment_unit", entity_id=unit.pk, description="Updated physical unit identifier, condition or acquisition date.")
     return unit
 
 

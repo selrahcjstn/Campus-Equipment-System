@@ -2,6 +2,14 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from collections import Counter
+from datetime import datetime, time
+
+
+def local_day_start(at=None):
+    """Inclusive start of the application calendar date, independent of viewer TZ."""
+    zone = timezone.get_default_timezone()
+    day = timezone.localdate(at or timezone.now(), zone)
+    return timezone.make_aware(datetime.combine(day, time.min), zone)
 
 
 class LoanQuerySet(models.QuerySet):
@@ -13,7 +21,7 @@ class LoanQuerySet(models.QuerySet):
 
     def overdue(self, at=None):
         outstanding = LoanUnit.objects.filter(loan_id=models.OuterRef("pk"), returned_at__isnull=True)
-        return self.active().filter(models.Exists(outstanding), due_at__lt=at or timezone.now())
+        return self.active().filter(models.Exists(outstanding), due_at__lt=local_day_start(at))
 
 
 class Loan(models.Model):
@@ -39,7 +47,7 @@ class Loan(models.Model):
         return self.is_overdue_at(timezone.now())
 
     def is_overdue_at(self, at):
-        return self.completed_at is None and self.due_at < at and self.outstanding_count > 0
+        return self.completed_at is None and self.due_at < local_day_start(at) and self.outstanding_count > 0
 
     def overdue_days(self, at=None):
         at = at or timezone.now()

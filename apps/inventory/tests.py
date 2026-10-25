@@ -40,7 +40,7 @@ class InventoryFixtures:
 
     def issue(self):
         request = self.pending()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         return release_request(request.pk, actor=self.admin)
 
     def return_all(self, loan):
@@ -139,7 +139,7 @@ class InventoryServiceTests(InventoryFixtures, TestCase):
         with self.assertRaises(ValidationError):
             add_unit(self.equipment.pk, actor=self.admin, asset_tag="ARCHIVED-NEW")
         with self.assertRaises(ValidationError):
-            approve_request(pending.pk, actor=self.admin)
+            approve_request(pending.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         pending.refresh_from_db()
         self.assertEqual(pending.status, "PENDING")
         self.assertFalse(Allocation.objects.exists())
@@ -151,7 +151,7 @@ class InventoryServiceTests(InventoryFixtures, TestCase):
 
     def test_reserved_and_issued_catalogs_cannot_be_archived(self):
         request = self.pending()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         with self.assertRaises(ValidationError):
             archive_equipment(self.equipment.pk, actor=self.admin)
         loan = release_request(request.pk, actor=self.admin)
@@ -219,6 +219,8 @@ class InventoryServiceTests(InventoryFixtures, TestCase):
         self.assertEqual(counts.serviceable_count, 4)
         self.assertEqual(counts.available_count, 2)
         self.assertEqual((counts.reserved_count, counts.issued_count, counts.maintenance_count, counts.retired_count), (1, 1, 1, 1))
+        self.assertEqual(counts.total_count, sum([counts.available_count, counts.reserved_count, counts.issued_count,
+                                                counts.maintenance_count, counts.retired_count]))
         self.assertEqual(eligible_units().filter(equipment=self.equipment).count(), 2)
 
     def test_aggregate_catalog_order_is_explicit_and_stable(self):
@@ -229,7 +231,7 @@ class InventoryServiceTests(InventoryFixtures, TestCase):
 
     def test_allocation_excludes_available_status_inconsistency_and_blocks_edits_archive(self):
         request = self.pending()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         EquipmentUnit.objects.filter(equipment=self.equipment).update(status="AVAILABLE")
         self.assertEqual(self.counts().available_count, 0)
         self.assertFalse(unit_queryset().get(pk=self.units[0].pk).can_edit)
@@ -252,7 +254,7 @@ class InventoryServiceTests(InventoryFixtures, TestCase):
     def test_borrowing_cancellation_updates_availability_immediately(self):
         request = self.pending()
         self.assertEqual(self.counts().available_count, 2)
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.assertEqual(self.counts().available_count, 0)
         self.assertEqual(self.counts().reserved_count, 2)
         cancel_request(request.pk, actor=self.borrower)
@@ -370,7 +372,7 @@ class ServiceableInventoryTests(InventoryFixtures, TestCase):
         request = self.pending()
         with self.subTest(phase="pending"):
             self.assert_public_stock(2, 2)
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         with self.subTest(phase="reserved"):
             self.assert_public_stock(0, 2)
         cancel_request(request.pk, actor=self.borrower)
@@ -607,7 +609,7 @@ class InventoryPageTests(InventoryFixtures, TestCase):
 
     def test_archive_reserved_equipment_rejected_and_no_form_on_review(self):
         request = self.pending()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.client.force_login(self.admin)
         url = reverse("archive_equipment", args=[self.equipment.pk])
         self.assertNotContains(self.client.get(url), 'id="inventory-action"')
@@ -916,7 +918,7 @@ class ConcurrentInventoryTests(InventoryFixtures, TransactionTestCase):
 
     def test_archiving_and_approval_serialize_without_bypassing_reservations(self):
         request = self.pending()
-        self.race([lambda: archive_equipment(self.equipment.pk, actor=self.admin), lambda: approve_request(request.pk, actor=self.admin)])
+        self.race([lambda: archive_equipment(self.equipment.pk, actor=self.admin), lambda: approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)])
         self.equipment.refresh_from_db()
         request.refresh_from_db()
         if self.equipment.is_active:
@@ -930,9 +932,14 @@ class ConcurrentInventoryTests(InventoryFixtures, TransactionTestCase):
         self.race([lambda: add_unit(self.equipment.pk, actor=self.admin, asset_tag="RACING-TAG")] * 2)
         self.assertEqual(EquipmentUnit.objects.filter(asset_tag="RACING-TAG").count(), 1)
 
+    def test_two_catalog_creations_cannot_duplicate_identical_metadata(self):
+        self.race([lambda: save_equipment(actor=self.admin, name="Concurrent camera", category_id=self.category.pk,
+                                         description="Same specifications")] * 2)
+        self.assertEqual(Equipment.objects.filter(name="Concurrent camera", category=self.category).count(), 1)
+
     def test_retirement_and_approval_cannot_allocate_retired_equipment(self):
         request = self.pending()
-        self.race([lambda: retire_unit(self.units[0].pk, actor=self.admin), lambda: approve_request(request.pk, actor=self.admin)])
+        self.race([lambda: retire_unit(self.units[0].pk, actor=self.admin), lambda: approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)])
         self.units[0].refresh_from_db()
         request.refresh_from_db()
         if request.status == "APPROVED":

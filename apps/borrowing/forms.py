@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from .models import BorrowingRequest
 from .services import borrowing_limits, catalog_queryset, validate_due_date
+from apps.dashboard.forms import DateRangeForm
 
 
 class BorrowingRequestForm(forms.Form):
@@ -110,6 +111,7 @@ RequestItemFormSet = formset_factory(RequestItemForm, formset=BaseRequestItemFor
 
 
 class ReviewForm(forms.Form):
+    approval_reason = forms.CharField(max_length=300, widget=forms.Textarea(attrs={"rows": 3}), label="Approval reason")
     rejection_reason = forms.CharField(max_length=1000, widget=forms.Textarea(attrs={"rows": 3}))
     confirm = forms.BooleanField(label="I confirm this action.", error_messages={"required": "Confirm this action before continuing."})
 
@@ -117,9 +119,11 @@ class ReviewForm(forms.Form):
         super().__init__(*args, **kwargs)
         if action != "reject":
             self.fields.pop("rejection_reason")
+        if action != "approve":
+            self.fields.pop("approval_reason")
 
 
-class RequestFilterForm(forms.Form):
+class RequestFilterForm(DateRangeForm):
     q = forms.CharField(label="Search equipment or purpose", max_length=150, required=False)
     status = forms.ChoiceField(required=False, choices=[
         ("", "All requests"), ("PENDING", "Pending"), ("APPROVED", "Approved"),
@@ -131,3 +135,9 @@ class RequestFilterForm(forms.Form):
         super().__init__(*args, **kwargs)
         if admin:
             self.fields["q"].label = "Search borrower, equipment or purpose"
+            self.fields["start_date"].label = "Submitted from"
+            self.fields["end_date"].label = "Submitted through"
+            self.order_fields(["q", "status", "start_date", "end_date"])
+        else:
+            self.fields.pop("start_date")
+            self.fields.pop("end_date")

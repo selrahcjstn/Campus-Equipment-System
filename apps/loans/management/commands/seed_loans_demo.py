@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from apps.borrowing.models import BorrowingRequest, BorrowingRequestItem
 from apps.borrowing.services import approve_request
-from apps.inventory.models import Equipment, EquipmentUnit
+from apps.inventory.models import Category, Equipment, EquipmentUnit
 from apps.loans.models import Loan
 from apps.loans.services import release_request
 
@@ -35,13 +35,23 @@ class Command(BaseCommand):
             raise CommandError("Loans demo records already exist. Existing demo data was left untouched.")
 
         now = timezone.now()
-        equipment = Equipment.objects.create(name="Loans demo projector", description="Demo equipment for testing releases and returns")
+        category = Category(name="Loans demo equipment", description="Synthetic test inventory")
+        category.full_clean()
+        category.save()
+        equipment = Equipment(name="Loans demo projector", category=category, description="Demo equipment for testing releases and returns")
+        equipment.full_clean()
+        equipment.save()
         ready = None
         for scenario in ["ready", "overdue"]:
             request = BorrowingRequest.objects.create(borrower=borrower, purpose=f"Loans demo: {scenario}", due_at=now + timedelta(days=7))
             item = BorrowingRequestItem.objects.create(request=request, equipment=equipment, quantity=2)
-            units = [EquipmentUnit.objects.create(equipment=equipment, asset_tag=f"LOANS-DEMO-{scenario.upper()}-{index}") for index in [1, 2]]
-            approve_request(request.pk, actor=admin, allocations={item.pk: [unit.pk for unit in units]})
+            units = []
+            for index in [1, 2]:
+                unit = EquipmentUnit(equipment=equipment, asset_tag=f"LOANS-DEMO-{scenario.upper()}-{index}", condition="GOOD", acquisition_date=timezone.localdate()-timedelta(days=30))
+                unit.full_clean()
+                unit.save()
+                units.append(unit)
+            approve_request(request.pk, actor=admin, reason="Approved for the synthetic loan fixture.", allocations={item.pk: [unit.pk for unit in units]})
             if scenario == "ready":
                 ready = request
                 continue

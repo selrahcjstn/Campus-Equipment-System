@@ -12,7 +12,7 @@ from django.views.decorators.http import require_http_methods, require_GET
 
 from apps.borrowing.models import BorrowingRequest
 from .forms import LoanFilterForm, ReleaseForm, RequestFilterForm, ReturnConfirmationForm, ReturnUnitFormSet
-from .models import Loan
+from .models import Loan, local_day_start
 from .services import process_returns, release_request, validate_handover
 
 
@@ -45,7 +45,7 @@ def _filtered_loans(queryset, form, *, admin=False):
     if data.get("status") == "overdue":
         queryset = queryset.overdue(at=now)
     elif data.get("status") == "active":
-        queryset = queryset.active().filter(due_at__gte=now)
+        queryset = queryset.active().filter(due_at__gte=local_day_start(now))
     elif data.get("status") == "partial":
         queryset = queryset.active().filter(units__returned_at__isnull=False).distinct()
     if data.get("due_from"):

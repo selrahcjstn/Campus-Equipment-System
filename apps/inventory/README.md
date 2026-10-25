@@ -66,9 +66,59 @@ Migration `inventory.0002_category_equipment_is_active_and_more`:
   unique asset-tag constraint. New/explicitly edited tags are normalized; the
   migration does not rewrite historical identifiers.
 
-Legacy uncategorized equipment remains valid and is shown as Uncategorized. New
-catalog items created through the Admin UI require a category. Existing initial
-migrations and all stored unit status values are preserved.
+Legacy uncategorized rows remain readable and are shown as Uncategorized. Model
+validation, service saves and Admin create/edit forms require an existing category;
+raw ORM writes still require callers to invoke validation. The nullable legacy
+database field is retained without assigning categories or migrating stored data.
+Existing initial migrations and all stored unit status values are preserved.
+
+Catalog validation rejects an identical category/name/description combination,
+including case/space variations of the name and matches against archived items.
+Different categories or descriptions can distinguish legitimate models. Add more
+physical units to an existing identical catalog item instead of duplicating it.
+Service saves serialize on the category before validating, preventing competing
+requests from creating the same catalog metadata. Category name and asset-tag
+uniqueness additionally retain their existing database constraints.
+
+Admin inventory search matches equipment names and physical unit identifiers,
+while public catalog search stays name-only. Category, availability and state
+filters combine with the search, and Reset filters returns to the default active
+listing. Physical-unit search and both portals' existing layouts are preserved.
+
+## A2 category lifecycle and unit metadata
+
+- Categories have an Active/Archived state, shown on the existing Admin list.
+  Archive and Restore reuse the confirmed action pages and record actor/time in
+  category audit events. Name uniqueness and referenced-category deletion
+  protection include archived categories.
+- New equipment and category reassignment require an active category. Existing
+  equipment can retain its own archived category during metadata edits. Category
+  archiving never cascades into equipment activity, unit statuses, reservations
+  or loans; it controls new assignments only.
+- Units record condition (Good, Fair, Poor or Damaged) and acquisition date in the
+  existing create/edit forms and shared management table. Unknown values are
+  nullable and shown as **Not recorded**; no condition/date is inferred or seeded.
+  Acquisition dates cannot be in the future. These are inventory metadata,
+  separate from the existing status and historical return-condition snapshots.
+  Changing condition alone does not change eligibility or open maintenance.
+- Ordinary unit edits retain their Available/Retired and idle-record guards.
+  Existing service callers that edit only asset tags preserve recorded metadata;
+  explicit blank metadata fields clear a previously recorded value.
+- The global physical-unit listing combines category, equipment, status and
+  identifier/name search. Archived categories remain filterable for Admin history.
+  Reset clears these filters, and pagination preserves them. The per-equipment
+  unit table already fixes its category/item and retains its original filters.
+
+Two additive migrations are required: `inventory.0003_category_archiving` sets
+existing categories Active; `inventory.0004_unit_condition_and_acquisition_date`
+adds nullable metadata and a valid-condition constraint. IDs, category relations,
+unit statuses and existing histories remain unchanged. No fabricated acquisition
+dates or default physical conditions are assigned. The legacy nullable category
+FK is retained. Apply the migrations before starting this updated application:
+
+```powershell
+.\.venv\Scripts\python.exe manage.py migrate inventory
+```
 
 ## Availability and integration
 

@@ -131,7 +131,7 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
 
     def test_catalog_excludes_active_reservations_even_if_status_is_inconsistent(self):
         request = self.submit(items=[(self.equipment[0].pk, 1)])
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         allocated = Allocation.objects.get(request_item__request=request)
         EquipmentUnit.objects.filter(pk=allocated.unit_id).update(status="AVAILABLE")
         self.assertEqual(catalog_queryset().get(pk=self.equipment[0].pk).available_count, 2)
@@ -140,7 +140,7 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
 
     def test_successful_automatic_allocation_reserves_exact_quantities(self):
         request = self.submit(items=[(self.equipment[0].pk, 2), (self.equipment[1].pk, 1)])
-        approved = approve_request(request.pk, actor=self.admin)
+        approved = approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.assertEqual(approved.status, "APPROVED")
         self.assertEqual(approved.approved_by, self.admin)
         self.assertIsNotNone(approved.approved_at)
@@ -152,7 +152,7 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
         request = self.submit(items=[(self.equipment[0].pk, 2), (self.equipment[1].pk, 2)])
         EquipmentUnit.objects.filter(equipment=self.equipment[1]).update(status="MAINTENANCE")
         with self.assertRaises(ValidationError):
-            approve_request(request.pk, actor=self.admin)
+            approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         request.refresh_from_db()
         self.assertEqual(request.status, "PENDING")
         self.assertIsNone(request.approved_at)
@@ -164,21 +164,21 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
         EquipmentUnit.objects.filter(pk=units[0].pk).update(status="MAINTENANCE")
         EquipmentUnit.objects.filter(pk=units[1].pk).update(status="RETIRED")
         request = self.submit(items=[(self.equipment[0].pk, 1)])
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.assertEqual(Allocation.objects.get(request_item__request=request).unit_id, units[2].pk)
 
     def test_duplicate_approval_does_not_allocate_again(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         with self.assertRaises(ValidationError):
-            approve_request(request.pk, actor=self.admin)
+            approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.assertEqual(Allocation.objects.count(), 2)
 
     def test_approval_revalidates_limits_for_legacy_or_tampered_rows(self):
         request = self.submit()
         request.items.update(quantity=4)
         with self.assertRaises(ValidationError):
-            approve_request(request.pk, actor=self.admin)
+            approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         request.refresh_from_db()
         self.assertEqual(request.status, "PENDING")
 
@@ -186,15 +186,15 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
         request = self.submit()
         with patch("django.utils.timezone.now", return_value=self.due + timedelta(days=1)):
             with self.assertRaises(ValidationError):
-                approve_request(request.pk, actor=self.admin)
+                approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
 
     def test_inactive_borrower_and_non_admin_cannot_approve(self):
         request = self.submit()
         with self.assertRaises(PermissionDenied):
-            approve_request(request.pk, actor=self.borrower)
+            approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.borrower)
         get_user_model().objects.filter(pk=self.borrower.pk).update(is_active=False)
         with self.assertRaises(ValidationError):
-            approve_request(request.pk, actor=self.admin)
+            approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.assertFalse(Allocation.objects.exists())
 
     def test_rejection_records_reason_date_and_admin(self):
@@ -226,7 +226,7 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
 
     def test_approved_cancellation_releases_reservations_and_preserves_history(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         cancel_request(request.pk, actor=self.borrower)
         request.refresh_from_db()
         self.assertEqual(request.status, "CANCELLED")
@@ -237,7 +237,7 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
 
     def test_admin_can_cancel_approved_request(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         cancelled = cancel_request(request.pk, actor=self.admin)
         self.assertEqual(cancelled.cancelled_by, self.admin)
 
@@ -250,7 +250,7 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
 
     def test_cancellation_rolls_back_if_a_reserved_unit_has_changed(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         allocations = list(Allocation.objects.filter(request_item__request=request).order_by("unit_id"))
         EquipmentUnit.objects.filter(pk=allocations[1].unit_id).update(status="ON_LOAN")
         with self.assertRaises(ValidationError):
@@ -266,7 +266,7 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
             request = self.submit()
             BorrowingRequest.objects.filter(pk=request.pk).update(status=status)
             for operation in [
-                lambda: approve_request(request.pk, actor=self.admin),
+                lambda: approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin),
                 lambda: reject_request(request.pk, actor=self.admin, reason="Reason"),
                 lambda: cancel_request(request.pk, actor=self.borrower),
             ]:
@@ -275,24 +275,24 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
 
     def test_approved_request_cannot_be_rejected(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         with self.assertRaises(ValidationError):
             reject_request(request.pk, actor=self.admin, reason="No")
         self.assertEqual(Allocation.objects.filter(active=True).count(), 2)
 
     def test_cancelled_request_cannot_be_issued_and_units_can_be_reserved_again(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         cancel_request(request.pk, actor=self.admin)
         with self.assertRaises(ValidationError):
             release_request(request.pk, actor=self.admin)
         new = self.submit(items=[(self.equipment[0].pk, 3)])
-        approve_request(new.pk, actor=self.admin)
+        approve_request(new.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.assertEqual(Allocation.objects.filter(active=True).count(), 3)
 
     def test_approval_to_issue_partial_return_and_full_return_integration(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         loan = release_request(request.pk, actor=self.admin)
         request.refresh_from_db()
         self.assertEqual(request.status, "ISSUED")
@@ -312,9 +312,9 @@ class BorrowingServiceTests(BorrowingFixtures, TestCase):
 
     def test_overdue_does_not_create_a_request_status(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         loan = release_request(request.pk, actor=self.admin)
-        with patch("django.utils.timezone.now", return_value=loan.due_at + timedelta(seconds=1)):
+        with patch("django.utils.timezone.now", return_value=loan.due_at + timedelta(days=1)):
             self.assertTrue(loan.is_overdue)
         request.refresh_from_db()
         self.assertEqual(request.status, "ISSUED")
@@ -476,13 +476,20 @@ class BorrowingPageTests(BorrowingFixtures, TestCase):
         self.borrower.is_staff = True
         self.borrower.is_superuser = True
         self.borrower.save()
-        for role in ["BASIC_USER", "OTHER"]:
-            self.borrower.role = role
-            self.borrower.save()
-            self.client.force_login(self.borrower)
-            for name in ["approve_borrowing_request", "reject_borrowing_request", "admin_cancel_borrowing_request"]:
-                self.assertEqual(self.client.post(reverse(name, args=[request.pk]), {"confirm": "on", "rejection_reason": "No"}).status_code, 403)
-            self.assertEqual(self.client.get(reverse("borrowing_requests")).status_code, 403)
+        self.client.force_login(self.borrower)
+        for name in ["approve_borrowing_request", "reject_borrowing_request", "admin_cancel_borrowing_request"]:
+            self.assertEqual(self.client.post(reverse(name, args=[request.pk]), {"confirm": "on", "rejection_reason": "No"}).status_code, 403)
+        self.assertEqual(self.client.get(reverse("borrowing_requests")).status_code, 403)
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            get_user_model().objects.filter(pk=self.borrower.pk).update(role="OTHER")
+        from django.test import RequestFactory
+        from . import views
+        self.borrower.role = "OTHER"
+        forged = RequestFactory().post("/", {"confirm": "on"})
+        forged.user = self.borrower
+        for view in [views.approve, views.reject, views.admin_cancel]:
+            with self.assertRaises(PermissionDenied):
+                view(forged, request.pk)
 
     def test_admin_queue_defaults_pending_and_all_search_status_filters_work(self):
         pending = self.submit(purpose="Awaiting review")
@@ -515,19 +522,19 @@ class BorrowingPageTests(BorrowingFixtures, TestCase):
         self.client.force_login(self.admin)
         url = reverse("approve_borrowing_request", args=[request.pk])
         self.assertContains(self.client.post(url, {}), "Confirm this action")
-        response = self.client.post(url, {"confirm": "on", "unit_ids": "999999"}, follow=True)
+        response = self.client.post(url, {"confirm": "on", "approval_reason": "Class presentation approved.", "unit_ids": "999999"}, follow=True)
         self.assertContains(response, "approved and equipment reserved")
         self.assertContains(response, "EQ-0-0")
         self.assertContains(response, "Review equipment release")
         self.assertEqual(Allocation.objects.count(), 2)
-        self.assertEqual(self.client.post(url, {"confirm": "on"}).status_code, 409)
+        self.assertEqual(self.client.post(url, {"confirm": "on", "approval_reason": "Class presentation approved."}).status_code, 409)
         self.assertContains(self.client.get(reverse("loan_management")), "Equipment 0")
 
     def test_admin_approval_insufficient_units_reports_error_without_partial_changes(self):
         request = self.submit()
         EquipmentUnit.objects.filter(equipment=self.equipment[0]).update(status="MAINTENANCE")
         self.client.force_login(self.admin)
-        response = self.client.post(reverse("approve_borrowing_request", args=[request.pk]), {"confirm": "on"})
+        response = self.client.post(reverse("approve_borrowing_request", args=[request.pk]), {"confirm": "on", "approval_reason": "Class presentation approved."})
         self.assertContains(response, "Nothing was reserved", status_code=409)
         request.refresh_from_db()
         self.assertEqual(request.status, "PENDING")
@@ -548,7 +555,7 @@ class BorrowingPageTests(BorrowingFixtures, TestCase):
         for actor, approved in [(self.borrower, False), (self.borrower, True), (self.admin, True)]:
             request = self.submit()
             if approved:
-                approve_request(request.pk, actor=self.admin)
+                approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
             self.client.force_login(actor)
             name = "admin_cancel_borrowing_request" if actor.role == "ADMIN" else "cancel_borrowing_request"
             response = self.client.post(reverse(name, args=[request.pk]), {"confirm": "on"}, follow=True)
@@ -559,7 +566,7 @@ class BorrowingPageTests(BorrowingFixtures, TestCase):
 
     def test_issued_request_cannot_be_cancelled_through_any_route(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         release_request(request.pk, actor=self.admin)
         for actor, name in [(self.admin, "admin_cancel_borrowing_request"), (self.borrower, "cancel_borrowing_request")]:
             self.client.force_login(actor)
@@ -570,7 +577,7 @@ class BorrowingPageTests(BorrowingFixtures, TestCase):
 
     def test_partial_and_returned_filters_use_loans_records(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         loan = release_request(request.pk, actor=self.admin)
         items = list(loan.units.all())
         process_returns(loan.pk, actor=self.admin, returns=[(items[0].pk, "GOOD", "")])
@@ -673,7 +680,7 @@ class ConcurrentBorrowingTests(BorrowingFixtures, TransactionTestCase):
     def test_competing_requests_cannot_reserve_the_same_units(self):
         first = self.submit()
         second = self.submit()
-        self.race([lambda: approve_request(first.pk, actor=self.admin), lambda: approve_request(second.pk, actor=self.admin)])
+        self.race([lambda: approve_request(first.pk, reason="Approved for the test borrowing activity.", actor=self.admin), lambda: approve_request(second.pk, reason="Approved for the test borrowing activity.", actor=self.admin)])
         self.assertEqual(BorrowingRequest.objects.filter(status="APPROVED").count(), 1)
         self.assertEqual(BorrowingRequest.objects.filter(status="PENDING").count(), 1)
         self.assertEqual(Allocation.objects.filter(active=True).count(), 2)
@@ -681,12 +688,12 @@ class ConcurrentBorrowingTests(BorrowingFixtures, TransactionTestCase):
 
     def test_same_request_cannot_be_approved_twice(self):
         request = self.submit()
-        self.race([lambda: approve_request(request.pk, actor=self.admin)] * 2)
+        self.race([lambda: approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)] * 2)
         self.assertEqual(Allocation.objects.count(), 2)
 
     def test_cancellation_and_issuance_cannot_partially_release_the_same_reservation(self):
         request = self.submit()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         self.race([lambda: cancel_request(request.pk, actor=self.borrower), lambda: release_request(request.pk, actor=self.admin)])
         request.refresh_from_db()
         self.assertIn(request.status, ["CANCELLED", "ISSUED"])
@@ -1017,7 +1024,7 @@ class RequestSummaryPresentationTests(BorrowingFixtures, TestCase):
 
     def test_approval_and_cancellation_keep_dates_and_recorded_actors(self):
         borrowing = self.submit()
-        approve_request(borrowing.pk, actor=self.admin)
+        approve_request(borrowing.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         response = self.assert_summary(borrowing, "Approved")
         self.assertContains(response, "Approved by")
         self.assertContains(response, self.admin.username)
@@ -1038,7 +1045,7 @@ class RequestSummaryPresentationTests(BorrowingFixtures, TestCase):
 
     def test_issued_partial_and_returned_summary_labels_follow_existing_workflow(self):
         borrowing = self.submit()
-        approve_request(borrowing.pk, actor=self.admin)
+        approve_request(borrowing.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         loan = release_request(borrowing.pk, actor=self.admin)
         self.assert_summary(borrowing, "Issued")
         units = list(loan.units.all())

@@ -51,7 +51,7 @@ class MaintenanceFixtures:
 
     def issue(self, quantity=1):
         request = self.pending(quantity)
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         return release_request(request.pk, actor=self.admin)
 
     def damage(self, loan):
@@ -241,7 +241,7 @@ class MaintenanceServiceTests(MaintenanceFixtures, TestCase):
             submit_request(borrower=self.basic, purpose="Class", due_at=timezone.now() + timedelta(days=1), items=[(self.equipment.pk, 1)])
         request = self.pending()
         with self.assertRaises(ValidationError):
-            approve_request(request.pk, actor=self.admin, allocations={request.items.get().pk: [self.unit.pk]})
+            approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin, allocations={request.items.get().pk: [self.unit.pk]})
         request.refresh_from_db()
         self.assertEqual(request.status, "PENDING")
         self.assertFalse(Allocation.objects.exists())
@@ -346,7 +346,7 @@ class MaintenanceIntegrationTests(MaintenanceFixtures, TestCase):
 
     def test_active_allocation_blocks_manual_creation_even_with_wrong_status(self):
         request = self.pending()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         EquipmentUnit.objects.filter(pk=self.unit.pk).update(status="AVAILABLE")
         with self.assertRaises(ValidationError):
             self.create()
@@ -366,7 +366,7 @@ class MaintenanceIntegrationTests(MaintenanceFixtures, TestCase):
 
     def test_conflicting_maintenance_blocks_loan_release(self):
         request = self.pending()
-        approve_request(request.pk, actor=self.admin)
+        approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)
         MaintenanceRecord.objects.create(unit=self.unit, reason="Conflicting active record")
         with self.assertRaises(ValidationError):
             release_request(request.pk, actor=self.admin)
@@ -669,7 +669,7 @@ class ConcurrentMaintenanceTests(MaintenanceFixtures, TransactionTestCase):
 
     def test_approval_and_maintenance_cannot_take_the_same_unit(self):
         request = self.pending()
-        self.race([self.create, lambda: approve_request(request.pk, actor=self.admin)])
+        self.race([self.create, lambda: approve_request(request.pk, reason="Approved for the test borrowing activity.", actor=self.admin)])
         self.unit.refresh_from_db()
         request.refresh_from_db()
         if request.status == "APPROVED":

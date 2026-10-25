@@ -11,7 +11,7 @@ from django.views.decorators.vary import vary_on_headers
 
 from .forms import CatalogFilterForm, CategoryFilterForm, CategoryForm, ConfirmationForm, EquipmentFilterForm, EquipmentForm, UnitFilterForm, UnitForm
 from .models import Category, Equipment, EquipmentUnit
-from .services import add_unit, archive_equipment, delete_category, edit_unit, equipment_in_use, inventory_queryset, restore_equipment, retire_unit, save_category, save_equipment, unit_queryset
+from .services import add_unit, archive_category, archive_equipment, delete_category, edit_unit, equipment_in_use, inventory_queryset, restore_category, restore_equipment, retire_unit, save_category, save_equipment, unit_queryset
 
 
 def _role(request, role):
@@ -23,12 +23,15 @@ def _page(request, records):
     return Paginator(records, 10).get_page(request.GET.get("page"))
 
 
-def _filter_catalog(records, form):
+def _filter_catalog(records, form, *, include_unit_identifiers=False):
     if not form.is_valid():
         return records.none()
     data = form.cleaned_data
     if data.get("q"):
-        records = records.filter(name__icontains=data["q"])
+        query = Q(name__icontains=data["q"])
+        if include_unit_identifiers:
+            query |= Q(units__asset_tag__icontains=data["q"])
+        records = records.filter(query).distinct()
     if data.get("category"):
         records = records.filter(category=data["category"])
     if data.get("availability") == "available":
@@ -46,6 +49,8 @@ def _filter_units(records, form):
     data = form.cleaned_data
     if data.get("q"):
         records = records.filter(Q(asset_tag__icontains=data["q"]) | Q(equipment__name__icontains=data["q"]))
+    if data.get("category"):
+        records = records.filter(equipment__category=data["category"])
     if data.get("equipment"):
         records = records.filter(equipment=data["equipment"])
     if data.get("status"):
@@ -82,7 +87,7 @@ def equipment_detail(request, pk):
 def equipment_inventory(request):
     _role(request, "ADMIN")
     form = EquipmentFilterForm(request.GET if request.GET else {"state": "active"})
-    records = _filter_catalog(inventory_queryset(), form)
+    records = _filter_catalog(inventory_queryset(), form, include_unit_identifiers=True)
     return render(request, "inventory/admin/equipment_list.html", {"page_obj": _page(request, records), "filter_form": form, "active_nav": "inventory"})
 
 
@@ -157,6 +162,7 @@ def admin_equipment_detail(request, pk):
     equipment = get_object_or_404(inventory_queryset(), pk=pk)
     form = UnitFilterForm(request.GET)
     form.fields.pop("equipment")
+    form.fields.pop("category")  # This page already fixes the equipment and its category.
     records = _filter_units(unit_queryset().filter(equipment=equipment), form)
     return render(request, "inventory/admin/equipment_detail.html", {"equipment": equipment, "page_obj": _page(request, records), "filter_form": form, "active_nav": "inventory"})
 
@@ -182,9 +188,9 @@ def unit_form(request, equipment_pk=None, pk=None):
     if request.method == "POST" and form.is_valid():
         try:
             if unit:
-                edit_unit(unit.pk, actor=request.user, asset_tag=form.cleaned_data["asset_tag"])
+                edit_unit(unit.pk, actor=request.user, **form.cleaned_data)
             else:
-                add_unit(equipment.pk, actor=request.user, asset_tag=form.cleaned_data["asset_tag"])
+                add_unit(equipment.pk, actor=request.user, **form.cleaned_data)
         except (ValidationError, IntegrityError, OperationalError) as error:
             _form_error(form, error)
             status = 409
@@ -210,15 +216,17 @@ def unit_form(request, equipment_pk=None, pk=None):
 
 def _action(request, pk, action):
     form = ConfirmationForm(request.POST if request.method == "POST" else None)
-    category = get_object_or_404(Category, pk=pk) if action == "delete_category" else None
+    category = get_object_or_404(Category, pk=pk) if action in {"delete_category", "archive_category", "restore_category"} else None
     unit = get_object_or_404(unit_queryset(), pk=pk) if action == "retire" else None
     equipment = unit.equipment if unit else (None if category else get_object_or_404(inventory_queryset(), pk=pk))
-    titles = {"archive": "Archive catalog item", "restore": "Restore catalog item", "delete_category": "Delete category", "retire": "Retire physical unit"}
+    titles = {"archive": "Archive catalog item", "restore": "Restore catalog item", "delete_category": "Delete category", "retire": "Retire physical unit", "archive_category": "Archive category", "restore_category": "Restore category"}
     descriptions = {"archive": "Archiving keeps all historical records and prevents new borrowing. Active reservations and issued units must be resolved first.", "restore": "This catalog item will become active again. Physical unit statuses are preserved.", "delete_category": "Only an unreferenced category can be deleted. Categories linked to active or archived equipment are protected.", "retire": "Only an Available, unallocated unit can be retired. The unit and its history remain on record; it will be unavailable for borrowing."}
+    descriptions.update(archive_category="Stop new equipment assignments to this category. Existing equipment, borrowing and physical units remain unchanged.",
+                        restore_category="Allow this category to be selected for new equipment again. Existing records remain unchanged.")
     status = 200
     if request.method == "POST" and form.is_valid():
         try:
-            operations = {"archive": archive_equipment, "restore": restore_equipment, "delete_category": delete_category, "retire": retire_unit}
+            operations = {"archive": archive_equipment, "restore": restore_equipment, "delete_category": delete_category, "retire": retire_unit, "archive_category": archive_category, "restore_category": restore_category}
             operations[action](pk, actor=request.user)
         except (ValidationError, IntegrityError, OperationalError) as error:
             _form_error(form, error)
@@ -226,7 +234,10 @@ def _action(request, pk, action):
         else:
             messages.success(request, f"{titles[action]} completed.")
             return redirect("equipment_categories") if category else redirect("admin_equipment_detail", pk=equipment.pk)
-    allowed = not category.equipment.exists() if category else (unit.can_retire if unit else (equipment.is_active and not equipment_in_use(equipment.pk) if action == "archive" else not equipment.is_active))
+    if category:
+        allowed = category.is_active if action == "archive_category" else not category.is_active if action == "restore_category" else not category.equipment.exists()
+    else:
+        allowed = unit.can_retire if unit else (equipment.is_active and not equipment_in_use(equipment.pk) if action == "archive" else not equipment.is_active)
     return render(request, "inventory/admin/action.html", {"form": form, "category": category, "equipment": equipment, "unit": unit, "allowed": allowed, "page_title": titles[action], "description": descriptions[action], "active_nav": "categories" if category else "inventory"}, status=status)
 
 
@@ -249,6 +260,20 @@ def restore(request, pk):
 def category_delete(request, pk):
     _role(request, "ADMIN")
     return _action(request, pk, "delete_category")
+
+
+@login_required(login_url="login")
+@require_http_methods(["GET", "POST"])
+def category_archive(request, pk):
+    _role(request, "ADMIN")
+    return _action(request, pk, "archive_category")
+
+
+@login_required(login_url="login")
+@require_http_methods(["GET", "POST"])
+def category_restore(request, pk):
+    _role(request, "ADMIN")
+    return _action(request, pk, "restore_category")
 
 
 @login_required(login_url="login")

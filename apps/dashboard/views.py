@@ -15,7 +15,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from .forms import AuditFilterForm, ChartPeriodForm, ReportFilterForm, SystemSettingsForm
 from .models import SystemSetting
 from .policies import borrowing_limits
-from .services import audit_records, borrowing_activity, dashboard_statistics, loan_report, personal_summary, report_row, status_distribution, update_settings
+from .services import monthly_issued_loans, category_usage, audit_records, borrowing_activity, dashboard_statistics, loan_report, personal_summary, report_row, status_distribution, update_settings
 
 
 def role_required(role):
@@ -45,8 +45,12 @@ def admin_dashboard(request):
     today = timezone.localdate(now)
     data = request.GET if request.GET else {"start_date": today - timedelta(days=29), "end_date": today}
     form = ChartPeriodForm(data)
-    series = borrowing_activity(form.cleaned_data["start_date"], form.cleaned_data["end_date"]) if form.is_valid() else []
-    return render(request, "dashboard/admin/dashboard.html", {"active_nav": "dashboard", "statistics": dashboard_statistics(at=now), "filter_form": form, "activity": series, "activity_total": sum(point["count"] for point in series), "distribution": status_distribution(), "timezone_name": timezone.get_current_timezone_name()})
+    valid = form.is_valid()
+    start, end = form.cleaned_data.get("start_date"), form.cleaned_data.get("end_date")
+    series = borrowing_activity(start, end) if valid else []
+    monthly = monthly_issued_loans(start, end) if valid else []
+    categories = category_usage(start, end) if valid else []
+    return render(request, "dashboard/admin/dashboard.html", {"active_nav": "dashboard", "statistics": dashboard_statistics(at=now), "filter_form": form, "monthly": monthly, "monthly_total": sum(point["count"] for point in monthly), "category_usage": categories, "activity": series, "activity_total": sum(point["count"] for point in series), "distribution": status_distribution(), "timezone_name": timezone.get_current_timezone_name()})
 
 
 def _report_form(request):
